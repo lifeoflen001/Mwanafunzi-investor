@@ -57,3 +57,30 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Mwanafunzi Investor platform
+
+This repository contains the Laravel public platform and CMS foundation for Mwanafunzi Investor. The approved homepage remains the visual source of truth; public learning, course, tool, journal, contact, legal and disclosure routes are database-backed.
+
+### Local XAMPP setup
+
+From `C:\xampp\htdocs\Mwanafunzi-investor`:
+
+```bash
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+npm install
+npm run build
+```
+
+Serve the app through Apache at `/public/`:
+
+`http://localhost/Mwanafunzi-investor/public/`
+
+Create an authorised CMS user locally with `php artisan app:make-admin your@email.example --name="Your Name"`, then open `/admin/login`. The command prompts for the password if `--password` is omitted.
+
+### Verification
+
+Run `php artisan test`, `php artisan view:cache` and `npm run build` before pushing changes. The default local database is SQLite; the XAMPP MySQL service can be configured later through `.env` if the platform needs it.

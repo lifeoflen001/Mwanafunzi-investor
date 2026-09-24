@@ -1,7 +1,94 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PublicSiteController;
+use App\Http\Controllers\MediaController;
+use App\Http\Controllers\SiteSettingsController;
+use App\Http\Controllers\AdminTaxonomyController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::controller(PublicSiteController::class)->group(function () {
+    Route::get('/', 'home')->name('home');
+    Route::get('/learn', 'learn')->name('learn');
+    Route::get('/courses', 'courses')->name('courses');
+    Route::get('/courses/{course:slug}', 'course')->name('courses.show');
+    Route::get('/tools', 'tools')->name('tools');
+    Route::get('/tools/{product:slug}', 'tool')->name('tools.show');
+    Route::get('/journal', 'journal')->name('journal');
+    Route::get('/journal/{article:slug}', 'article')->name('journal.show');
+    Route::get('/about', 'page')->defaults('page', 'about')->name('about');
+    Route::get('/student-of-money', 'page')->defaults('page', 'student-of-money')->name('student-of-money');
+    Route::get('/contact', 'contact')->name('contact');
+    Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
+    Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
+    Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
+    Route::post('/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('logout');
+
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/preview/{type}/{id}', [PublicSiteController::class, 'preview'])->middleware('signed')->name('preview');
+        Route::get('/courses', [AdminController::class, 'courses'])->name('courses');
+        Route::get('/courses/create', [AdminController::class, 'courseCreate'])->name('courses.create');
+        Route::post('/courses', [AdminController::class, 'courseStore'])->name('courses.store');
+        Route::get('/courses/{course}/edit', [AdminController::class, 'courseEdit'])->name('courses.edit');
+        Route::put('/courses/{course}', [AdminController::class, 'courseUpdate'])->name('courses.update');
+        Route::delete('/courses/{course}', [AdminController::class, 'courseDestroy'])->name('courses.destroy');
+        Route::post('/courses/{course}/restore', [AdminController::class, 'courseRestore'])->name('courses.restore');
+        Route::post('/courses/{course}/modules', [AdminController::class, 'moduleStore'])->name('courses.modules.store');
+        Route::delete('/modules/{module}', [AdminController::class, 'moduleDestroy'])->name('modules.destroy');
+        Route::post('/modules/{module}/lessons', [AdminController::class, 'lessonStore'])->name('modules.lessons.store');
+        Route::delete('/lessons/{lesson}', [AdminController::class, 'lessonDestroy'])->name('lessons.destroy');
+        Route::post('/courses/{course}/faqs', [AdminController::class, 'courseFaqStore'])->name('courses.faqs.store');
+        Route::delete('/course-faqs/{faq}', [AdminController::class, 'courseFaqDestroy'])->name('course-faqs.destroy');
+        Route::get('/products', [AdminController::class, 'products'])->name('products');
+        Route::get('/products/create', [AdminController::class, 'productCreate'])->name('products.create');
+        Route::post('/products', [AdminController::class, 'productStore'])->name('products.store');
+        Route::get('/products/{product}/edit', [AdminController::class, 'productEdit'])->name('products.edit');
+        Route::put('/products/{product}', [AdminController::class, 'productUpdate'])->name('products.update');
+        Route::delete('/products/{product}', [AdminController::class, 'productDestroy'])->name('products.destroy');
+        Route::post('/products/{product}/restore', [AdminController::class, 'productRestore'])->name('products.restore');
+        Route::post('/products/{product}/features', [AdminController::class, 'featureStore'])->name('products.features.store');
+        Route::delete('/features/{feature}', [AdminController::class, 'featureDestroy'])->name('features.destroy');
+        Route::post('/products/{product}/versions', [AdminController::class, 'versionStore'])->name('products.versions.store');
+        Route::delete('/versions/{version}', [AdminController::class, 'versionDestroy'])->name('versions.destroy');
+        Route::post('/products/{product}/faqs', [AdminController::class, 'productFaqStore'])->name('products.faqs.store');
+        Route::delete('/faqs/{faq}', [AdminController::class, 'productFaqDestroy'])->name('faqs.destroy');
+        Route::post('/products/{product}/images', [AdminController::class, 'productImageStore'])->name('products.images.store');
+        Route::delete('/product-images/{image}', [AdminController::class, 'productImageDestroy'])->name('product-images.destroy');
+        Route::get('/articles', [AdminController::class, 'articles'])->name('articles');
+        Route::get('/articles/create', [AdminController::class, 'articleCreate'])->name('articles.create');
+        Route::post('/articles', [AdminController::class, 'articleStore'])->name('articles.store');
+        Route::get('/articles/{article}/edit', [AdminController::class, 'articleEdit'])->name('articles.edit');
+        Route::put('/articles/{article}', [AdminController::class, 'articleUpdate'])->name('articles.update');
+        Route::delete('/articles/{article}', [AdminController::class, 'articleDestroy'])->name('articles.destroy');
+        Route::post('/articles/{article}/restore', [AdminController::class, 'articleRestore'])->name('articles.restore');
+        Route::get('/messages', [AdminController::class, 'messages'])->name('messages');
+        Route::patch('/messages/{message}', [AdminController::class, 'messageUpdate'])->name('messages.update');
+        Route::post('/messages/{message}/read', [AdminController::class, 'messageRead'])->name('messages.read');
+        Route::get('/topics', [AdminController::class, 'topics'])->name('topics');
+        Route::get('/topics/create', [AdminController::class, 'topicCreate'])->name('topics.create');
+        Route::post('/topics', [AdminController::class, 'topicStore'])->name('topics.store');
+        Route::get('/topics/{topic}/edit', [AdminController::class, 'topicEdit'])->name('topics.edit');
+        Route::put('/topics/{topic}', [AdminController::class, 'topicUpdate'])->name('topics.update');
+        Route::get('/media', [MediaController::class, 'index'])->name('media');
+        Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+        Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+        Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
+        Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::get('/categories', [AdminTaxonomyController::class, 'categories'])->name('categories');
+        Route::post('/categories', [AdminTaxonomyController::class, 'categoryStore'])->name('categories.store');
+        Route::delete('/categories/{category}', [AdminTaxonomyController::class, 'categoryDestroy'])->name('categories.destroy');
+        Route::get('/tags', [AdminTaxonomyController::class, 'tags'])->name('tags');
+        Route::post('/tags', [AdminTaxonomyController::class, 'tagStore'])->name('tags.store');
+        Route::delete('/tags/{tag}', [AdminTaxonomyController::class, 'tagDestroy'])->name('tags.destroy');
+        Route::get('/social-links', [AdminTaxonomyController::class, 'socialLinks'])->name('social-links');
+        Route::post('/social-links', [AdminTaxonomyController::class, 'socialLinkStore'])->name('social-links.store');
+        Route::delete('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkDestroy'])->name('social-links.destroy');
+    });
 });

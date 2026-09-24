@@ -35,3 +35,33 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => link.addEventListene
     event.preventDefault();
     target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }));
+
+document.querySelectorAll('[data-media-picker]').forEach((picker) => {
+    const search = picker.querySelector('.media-picker-search');
+    const select = picker.querySelector('[data-media-select]');
+    const preview = picker.querySelector('[data-media-preview]');
+    const options = [...select.options];
+    const updatePreview = () => {
+        const option = select.selectedOptions[0];
+        preview.replaceChildren();
+        if (!option?.dataset.url) { preview.hidden = true; return; }
+        const image = document.createElement('img');
+        image.src = option.dataset.url;
+        image.alt = 'Selected media preview';
+        preview.append(image);
+        preview.hidden = false;
+    };
+    search?.addEventListener('input', () => {
+        const term = search.value.toLowerCase();
+        options.forEach((option) => { option.hidden = option.value !== '' && !option.text.toLowerCase().includes(term); });
+    });
+    select?.addEventListener('change', updatePreview);
+});
+
+document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
+    const method = form.querySelector('input[name="_method"]')?.value?.toLowerCase();
+    const button = form.querySelector('button[type="submit"]')?.textContent?.trim().toLowerCase() || '';
+    if (method === 'delete' || /archive|remove|permanently delete/.test(button)) {
+        if (!window.confirm('Please confirm this destructive action.')) event.preventDefault();
+    }
+}));
