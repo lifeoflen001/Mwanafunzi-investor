@@ -16,5 +16,9 @@ class Product extends Model
     public function images() { return $this->hasMany(ProductImage::class)->orderBy('sort_order'); }
     public function versions() { return $this->hasMany(ProductVersion::class)->latest('released_at'); }
     public function faqs() { return $this->morphMany(Faq::class, 'faqable')->orderBy('sort_order'); }
+    public function assets() { return $this->hasMany(ProductAsset::class)->orderBy('sort_order'); }
+    public function entitlements() { return $this->hasMany(Entitlement::class); }
+    public function isPurchasable(): bool { return in_array($this->availability, ['available'], true); }
+    public function effectivePrice(): string { return (string) ($this->sale_price !== null ? $this->sale_price : ($this->price ?? '0.00')); }
     public function scopeAvailable($query) { return $query->whereIn('availability', ['available', 'coming_soon', 'waitlist']); }
 }

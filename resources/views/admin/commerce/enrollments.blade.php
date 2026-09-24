@@ -1,0 +1,3 @@
+@extends('layouts.admin')
+@section('title', 'Commerce enrollments')
+@section('content')<div class="admin-heading"><div><p class="eyebrow">Commerce / Courses</p><h1>Enrollments</h1></div></div><div class="admin-table"><div class="admin-table-head"><span>Student</span><span>Course</span><span>Order</span><span>Status</span></div>@forelse($enrollments as $enrollment)<div class="admin-table-row"><span>{{ $enrollment->user->email }}</span><span>{{ $enrollment->course->title }}</span><span>{{ $enrollment->order?->order_number ?: 'Free enrollment' }}</span><span>{{ $enrollment->status->value }}</span></div>@empty<div class="empty-state"><p>No enrollments yet.</p></div>@endforelse</div>{{ $enrollments->links() }}@endsection

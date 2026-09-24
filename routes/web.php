@@ -6,6 +6,12 @@ use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\SiteSettingsController;
 use App\Http\Controllers\AdminTaxonomyController;
+use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\CommerceController;
+use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\WaitlistController;
+use App\Http\Controllers\AdminCommerceController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -23,6 +29,45 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
+});
+
+Route::get('/login', [CustomerAuthController::class, 'login'])->name('login');
+Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->middleware('throttle:5,1')->name('login.store');
+Route::get('/register', [CustomerAuthController::class, 'register'])->name('register');
+Route::post('/register', [CustomerAuthController::class, 'storeRegister'])->middleware('throttle:5,1')->name('register.store');
+Route::get('/email/verify', [CustomerAuthController::class, 'verificationNotice'])->middleware('auth')->name('verification.notice');
+Route::get('/email/verify/{id}/{hash}', [CustomerAuthController::class, 'verify'])->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+Route::post('/email/verification-notification', [CustomerAuthController::class, 'resendVerification'])->middleware(['auth', 'throttle:3,1'])->name('verification.send');
+Route::post('/logout', [CustomerAuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/checkout/product/{product:slug}', [CommerceController::class, 'productCheckout'])->name('checkout.product');
+    Route::post('/checkout/product/{product:slug}', [CommerceController::class, 'storeProduct'])->middleware('throttle:8,1')->name('checkout.product.store');
+    Route::get('/checkout/course/{course:slug}', [CommerceController::class, 'courseCheckout'])->name('checkout.course');
+    Route::post('/checkout/course/{course:slug}', [CommerceController::class, 'storeCourse'])->middleware('throttle:8,1')->name('checkout.course.store');
+    Route::get('/payments/success/{order:order_number}', [CommerceController::class, 'success'])->name('payments.success');
+    Route::get('/payments/failure/{order:order_number}', [CommerceController::class, 'failure'])->name('payments.failure');
+    Route::get('/payments/processing/{order:order_number}', [CommerceController::class, 'processing'])->name('payments.processing');
+    Route::get('/payments/sandbox/{payment}', [CommerceController::class, 'sandbox'])->name('payments.sandbox');
+    Route::post('/payments/sandbox/{payment}', [CommerceController::class, 'completeSandbox'])->name('payments.sandbox.complete');
+    Route::get('/payments/flutterwave/return', [CommerceController::class, 'flutterwaveReturn'])->name('payments.flutterwave.return');
+    Route::get('/downloads/{asset}', DownloadController::class)->middleware('signed')->name('downloads.asset');
+});
+Route::post('/payments/flutterwave/webhook', [CommerceController::class, 'flutterwaveWebhook'])->name('payments.flutterwave.webhook');
+Route::post('/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist');
+
+Route::middleware(['auth'])->prefix('account')->name('account.')->group(function () {
+    Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
+    Route::get('/orders', [CustomerAccountController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [CustomerAccountController::class, 'order'])->name('orders.show');
+    Route::get('/orders/{order}/receipt', [CustomerAccountController::class, 'receipt'])->name('orders.receipt');
+    Route::get('/downloads', [CustomerAccountController::class, 'downloads'])->name('downloads');
+    Route::get('/courses', [CustomerAccountController::class, 'courses'])->name('courses');
+    Route::get('/courses/{enrollment}', [CustomerAccountController::class, 'course'])->name('courses.show');
+    Route::get('/profile', [CustomerAccountController::class, 'profile'])->name('profile');
+    Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/security', [CustomerAccountController::class, 'security'])->name('security');
+    Route::put('/security/password', [CustomerAccountController::class, 'updatePassword'])->name('security.password');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -90,5 +135,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/social-links', [AdminTaxonomyController::class, 'socialLinks'])->name('social-links');
         Route::post('/social-links', [AdminTaxonomyController::class, 'socialLinkStore'])->name('social-links.store');
         Route::delete('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkDestroy'])->name('social-links.destroy');
+        Route::get('/commerce', [AdminCommerceController::class, 'dashboard'])->name('commerce.dashboard');
+        Route::get('/commerce/orders', [AdminCommerceController::class, 'orders'])->name('commerce.orders');
+        Route::get('/commerce/orders/{order}', [AdminCommerceController::class, 'order'])->name('commerce.orders.show');
+        Route::post('/commerce/orders/{order}/refund', [AdminCommerceController::class, 'refund'])->name('commerce.orders.refund');
+        Route::get('/commerce/payments', [AdminCommerceController::class, 'payments'])->name('commerce.payments');
+        Route::get('/commerce/entitlements', [AdminCommerceController::class, 'entitlements'])->name('commerce.entitlements');
+        Route::get('/commerce/enrollments', [AdminCommerceController::class, 'enrollments'])->name('commerce.enrollments');
+        Route::get('/commerce/waitlists', [AdminCommerceController::class, 'waitlists'])->name('commerce.waitlists');
+        Route::get('/commerce/waitlists/export', [AdminCommerceController::class, 'waitlistExport'])->name('commerce.waitlists.export');
+        Route::post('/products/{product}/assets', [AdminCommerceController::class, 'assetStore'])->name('products.assets.store');
+        Route::delete('/product-assets/{asset}', [AdminCommerceController::class, 'assetDestroy'])->name('product-assets.destroy');
     });
 });

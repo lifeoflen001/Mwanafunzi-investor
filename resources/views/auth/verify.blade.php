@@ -1,0 +1,3 @@
+@extends('layouts.public')
+@section('title', 'Verify your email — Mwanafunzi Investor')
+@section('content')<section class="page-hero"><div class="container narrow"><p class="eyebrow">Customer portal</p><h1>Check your email.</h1><p class="lede">Verify your email address before starting a purchase or enrollment. In local XAMPP mode, verification mail is written to the Laravel log.</p>@include('partials.form-feedback')<form method="post" action="{{ route('verification.send') }}">@csrf<button class="button button-dark" type="submit">Resend verification email <span aria-hidden="true">↗</span></button></form></div></section>@endsection

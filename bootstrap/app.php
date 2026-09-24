@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
-        $middleware->redirectGuestsTo(fn () => \route('admin.login'));
+        $middleware->redirectGuestsTo(fn ($request) => $request->routeIs('admin.*') ? \route('admin.login') : \route('login'));
+        $middleware->validateCsrfTokens(except: ['payments/flutterwave/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

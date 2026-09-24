@@ -20,5 +20,10 @@ class Course extends Model
     public function modules() { return $this->hasMany(CourseModule::class)->orderBy('sort_order'); }
     public function faqs() { return $this->hasMany(CourseFaq::class)->orderBy('sort_order'); }
     public function learningTopics() { return $this->belongsToMany(LearningTopic::class); }
-    public function scopePublished($query) { return $query->whereIn('status', ['published', 'coming_soon']); }
+    public function entitlements() { return $this->hasMany(Entitlement::class); }
+    public function enrollments() { return $this->hasMany(Enrollment::class); }
+    public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
+    public function isPublishedForPurchase(): bool { return in_array($this->status, ['published', 'open'], true); }
+    public function effectivePrice(): string { return (string) ($this->price ?? '0.00'); }
+    public function scopePublished($query) { return $query->whereIn('status', ['published', 'open', 'coming_soon']); }
 }

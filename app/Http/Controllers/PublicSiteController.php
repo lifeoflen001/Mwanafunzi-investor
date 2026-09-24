@@ -37,7 +37,7 @@ class PublicSiteController extends Controller
 
     public function course(Course $course)
     {
-        abort_unless(in_array($course->status, ['published', 'coming_soon'], true), 404);
+        abort_unless(in_array($course->status, ['published', 'open', 'coming_soon'], true), 404);
         $course->load(['modules.lessons', 'faqs']);
         return view('public.courses.show', compact('course'));
     }

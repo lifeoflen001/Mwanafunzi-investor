@@ -6,9 +6,10 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -23,6 +24,9 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
+        'phone',
+        'country',
+        'status',
     ];
 
     /**
@@ -48,4 +52,9 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
         ];
     }
+
+    public function orders() { return $this->hasMany(Order::class); }
+    public function entitlements() { return $this->hasMany(Entitlement::class); }
+    public function enrollments() { return $this->hasMany(Enrollment::class); }
+    public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
 }
