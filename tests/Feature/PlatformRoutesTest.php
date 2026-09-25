@@ -198,6 +198,7 @@ class PlatformRoutesTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $page = Page::where('key', 'about')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.pages'))->assertOk()->assertSee('Pages');
+        $this->actingAs($admin)->get(route('admin.policies'))->assertOk()->assertSee('Policies')->assertSee('Privacy Policy');
         $this->actingAs($admin)->get(route('admin.pages.edit', $page))->assertOk()->assertSee('Hero image');
         $this->actingAs($admin)->put(route('admin.pages.update', $page), [
             'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
@@ -255,6 +256,15 @@ class PlatformRoutesTest extends TestCase
             ]],
         ])->assertRedirect();
         $this->get('/')->assertOk()->assertSee('A new pillar')->assertSee('Managed without Blade.');
+
+        $this->actingAs($admin)->put(route('admin.pages.update', $home), [
+            'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'strong', 'hero_alignment' => 'left', 'sections' => [$framework->id => [
+                'sort_order' => 100, 'is_enabled' => 1,
+            ]],
+        ])->assertRedirect();
+        $homepage = $this->get('/')->assertOk()->getContent();
+        $this->assertLessThan(strpos($homepage, 'The Student of Money Framework.'), strpos($homepage, 'Make the process visible.'));
 
         $navigation = NavigationItem::where('location', 'header')->where('label', 'About')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.navigation'))->assertOk()->assertSee('Navigation');

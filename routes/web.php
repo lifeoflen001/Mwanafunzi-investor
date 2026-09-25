@@ -137,6 +137,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
         Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
+        Route::get('/policies', [AdminPageController::class, 'policies'])->name('policies');
         Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
         Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');
         Route::get('/pages/{page}/edit', [AdminPageController::class, 'edit'])->name('pages.edit');

@@ -235,13 +235,21 @@
                             </div>
                         @endif
 
-                        @if(array_key_exists('visual_caption', $sectionPayload) || array_key_exists('visual_index', $sectionPayload))
+                        @if(array_key_exists('visual_caption', $sectionPayload) || array_key_exists('visual_index', $sectionPayload) || array_key_exists('visual_note', $sectionPayload) || array_key_exists('visual_note_emphasis', $sectionPayload))
                             <div class="form-row">
                                 <label>Visual caption
                                     <input name="sections[{{ $section->id }}][visual_caption]" value="{{ old('sections.'.$section->id.'.visual_caption', $sectionPayload['visual_caption'] ?? '') }}">
                                 </label>
                                 <label>Visual index
                                     <input name="sections[{{ $section->id }}][visual_index]" value="{{ old('sections.'.$section->id.'.visual_index', $sectionPayload['visual_index'] ?? '') }}">
+                                </label>
+                            </div>
+                            <div class="form-row">
+                                <label>Visual note
+                                    <input name="sections[{{ $section->id }}][visual_note]" value="{{ old('sections.'.$section->id.'.visual_note', $sectionPayload['visual_note'] ?? '') }}">
+                                </label>
+                                <label>Visual note emphasis
+                                    <input name="sections[{{ $section->id }}][visual_note_emphasis]" value="{{ old('sections.'.$section->id.'.visual_note_emphasis', $sectionPayload['visual_note_emphasis'] ?? '') }}">
                                 </label>
                             </div>
                         @endif
@@ -262,6 +270,34 @@
                                 <textarea name="sections[{{ $section->id }}][metrics]" rows="5">{{ old('sections.'.$section->id.'.metrics', collect($sectionPayload['metrics'] ?? [])->map(fn($metric) => ($metric['label'] ?? '').' | '.($metric['value'] ?? ''))->implode("\n")) }}</textarea>
                                 <small>One metric per line using <code>Label | Value</code>.</small>
                             </label>
+                        @endif
+
+                        @if(array_key_exists('card_cta_label', $sectionPayload))
+                            <label>Card CTA label
+                                <input name="sections[{{ $section->id }}][card_cta_label]" value="{{ old('sections.'.$section->id.'.card_cta_label', $sectionPayload['card_cta_label'] ?? '') }}">
+                            </label>
+                        @endif
+
+                        @if(array_key_exists('empty_index', $sectionPayload) || array_key_exists('empty_heading', $sectionPayload) || array_key_exists('empty_body', $sectionPayload) || array_key_exists('empty_cta_label', $sectionPayload) || array_key_exists('empty_cta_url', $sectionPayload))
+                            <div class="form-row">
+                                <label>Empty state index
+                                    <input name="sections[{{ $section->id }}][empty_index]" value="{{ old('sections.'.$section->id.'.empty_index', $sectionPayload['empty_index'] ?? '') }}">
+                                </label>
+                                <label>Empty state heading
+                                    <input name="sections[{{ $section->id }}][empty_heading]" value="{{ old('sections.'.$section->id.'.empty_heading', $sectionPayload['empty_heading'] ?? '') }}">
+                                </label>
+                            </div>
+                            <label>Empty state copy
+                                <textarea name="sections[{{ $section->id }}][empty_body]" rows="2">{{ old('sections.'.$section->id.'.empty_body', $sectionPayload['empty_body'] ?? '') }}</textarea>
+                            </label>
+                            <div class="form-row">
+                                <label>Empty state CTA label
+                                    <input name="sections[{{ $section->id }}][empty_cta_label]" value="{{ old('sections.'.$section->id.'.empty_cta_label', $sectionPayload['empty_cta_label'] ?? '') }}">
+                                </label>
+                                <label>Empty state CTA URL
+                                    <input name="sections[{{ $section->id }}][empty_cta_url]" value="{{ old('sections.'.$section->id.'.empty_cta_url', $sectionPayload['empty_cta_url'] ?? '') }}">
+                                </label>
+                            </div>
                         @endif
 
                         <label class="checkbox-field">

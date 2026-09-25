@@ -13,12 +13,30 @@ class AdminPageController extends Controller
 {
     public function index()
     {
-        return view('admin.pages.index', ['pages' => Page::withTrashed()->withCount('sections')->orderBy('name')->paginate(20)]);
+        return view('admin.pages.index', [
+            'pages' => Page::withTrashed()->withCount('sections')->orderBy('name')->paginate(20),
+            'pageIndexTitle' => 'Pages',
+            'pageIndexEyebrow' => 'Website / Pages',
+            'pageIndexDescription' => 'Manage page identity, hero content, visibility and SEO without editing templates.',
+            'pageIndexCreateLabel' => 'Add page',
+        ]);
+    }
+
+    public function policies()
+    {
+        return view('admin.pages.index', [
+            'pages' => Page::withTrashed()->where('page_type', 'policy')->withCount('sections')->orderBy('name')->paginate(20),
+            'pageIndexTitle' => 'Policies',
+            'pageIndexEyebrow' => 'Website / Policies',
+            'pageIndexDescription' => 'Manage policy metadata, structured sections, effective dates and support copy.',
+            'pageIndexCreateLabel' => 'Add policy',
+            'pageIndexCreateType' => 'policy',
+        ]);
     }
 
     public function create()
     {
-        return view('admin.pages.form', ['page' => new Page(['status' => 'draft', 'is_visible' => true, 'hero_overlay' => 'medium', 'hero_alignment' => 'left']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.pages.store')]);
+        return view('admin.pages.form', ['page' => new Page(['status' => 'draft', 'is_visible' => true, 'page_type' => request('page_type', 'standard'), 'hero_overlay' => 'medium', 'hero_alignment' => 'left']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.pages.store')]);
     }
 
     public function store(Request $request)
@@ -99,6 +117,14 @@ class AdminPageController extends Controller
             'sections.*.dashboard_title' => ['nullable', 'string', 'max:120'],
             'sections.*.dashboard_status' => ['nullable', 'string', 'max:120'],
             'sections.*.metrics' => ['nullable', 'string', 'max:5000'],
+            'sections.*.visual_note' => ['nullable', 'string', 'max:120'],
+            'sections.*.visual_note_emphasis' => ['nullable', 'string', 'max:120'],
+            'sections.*.card_cta_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.empty_index' => ['nullable', 'string', 'max:80'],
+            'sections.*.empty_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.empty_body' => ['nullable', 'string', 'max:1000'],
+            'sections.*.empty_cta_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.empty_cta_url' => ['nullable', 'string', 'max:500'],
             'new_section_key' => ['nullable', 'string', 'max:80', 'alpha_dash'],
             'new_section_type' => ['nullable', 'in:rich_text,split_content,featured_topics,featured_courses,featured_products,latest_journal,framework,faq,quote,feature_grid,contact_block,cta'],
             'new_section_heading' => ['nullable', 'string', 'max:190'],
@@ -147,7 +173,7 @@ class AdminPageController extends Controller
                     ->values()
                     ->all();
             }
-            foreach (['eyebrow', 'secondary_cta_label', 'secondary_cta_url', 'visual_caption', 'visual_index', 'dashboard_title', 'dashboard_status'] as $payloadKey) {
+            foreach (['eyebrow', 'secondary_cta_label', 'secondary_cta_url', 'visual_caption', 'visual_index', 'visual_note', 'visual_note_emphasis', 'dashboard_title', 'dashboard_status', 'card_cta_label', 'empty_index', 'empty_heading', 'empty_body', 'empty_cta_label', 'empty_cta_url'] as $payloadKey) {
                 if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = trim((string) $input[$payloadKey]) ?: null;
             }
             if (array_key_exists('metrics', $input)) {

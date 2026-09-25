@@ -79,15 +79,32 @@
             </x-slot:aside>
             <a class="scroll-cue" href="#philosophy"><span>Scroll to explore</span><i aria-hidden="true">↓</i></a>
         </x-public-hero>
-        @if($homeSections->get('philosophy')?->is_enabled ?? true) @include('public.home.philosophy', ['section' => $homeSections->get('philosophy')]) @endif
-        @if($homeSections->get('learning')?->is_enabled ?? true) @include('public.home.learning', ['section' => $homeSections->get('learning'), 'learningTopics' => $learningTopics]) @endif
-        @if($homeSections->get('framework')?->is_enabled ?? true) @include('public.home.framework', ['section' => $homeSections->get('framework')]) @endif
-        @if($homeSections->get('tools')?->is_enabled ?? true) @include('public.home.tools', ['section' => $homeSections->get('tools'), 'products' => $products]) @endif
-        @if($homeSections->get('probability')?->is_enabled ?? true) @include('public.home.probability', ['section' => $homeSections->get('probability')]) @endif
-        @if($homeSections->get('discipline')?->is_enabled ?? true) @include('public.home.discipline', ['section' => $homeSections->get('discipline')]) @endif
-        @if($homeSections->get('journal')?->is_enabled ?? true) @include('public.home.journal', ['section' => $homeSections->get('journal'), 'featuredArticle' => $featuredArticle]) @endif
-        @if($homeSections->get('courses')?->is_enabled ?? true) @include('public.home.courses', ['section' => $homeSections->get('courses'), 'courses' => $courses]) @endif
-        @if($homeSections->get('final_cta')?->is_enabled ?? true) @include('public.home.final-cta', ['section' => $homeSections->get('final_cta'), 'email' => $email]) @endif
+        @if($homeSections->isNotEmpty())
+            @foreach($homeSections->sortBy('sort_order') as $homeSection)
+                @if(! $homeSection->is_enabled) @continue @endif
+                @switch($homeSection->key)
+                    @case('philosophy') @include('public.home.philosophy', ['section' => $homeSection]) @break
+                    @case('learning') @include('public.home.learning', ['section' => $homeSection, 'learningTopics' => $learningTopics]) @break
+                    @case('framework') @include('public.home.framework', ['section' => $homeSection]) @break
+                    @case('tools') @include('public.home.tools', ['section' => $homeSection, 'products' => $products]) @break
+                    @case('probability') @include('public.home.probability', ['section' => $homeSection]) @break
+                    @case('discipline') @include('public.home.discipline', ['section' => $homeSection]) @break
+                    @case('journal') @include('public.home.journal', ['section' => $homeSection, 'featuredArticle' => $featuredArticle]) @break
+                    @case('courses') @include('public.home.courses', ['section' => $homeSection, 'courses' => $courses]) @break
+                    @case('final_cta') @include('public.home.final-cta', ['section' => $homeSection, 'email' => $email]) @break
+                @endswitch
+            @endforeach
+        @else
+            @include('public.home.philosophy', ['section' => null])
+            @include('public.home.learning', ['section' => null, 'learningTopics' => $learningTopics])
+            @include('public.home.framework', ['section' => null])
+            @include('public.home.tools', ['section' => null, 'products' => $products])
+            @include('public.home.probability', ['section' => null])
+            @include('public.home.discipline', ['section' => null])
+            @include('public.home.journal', ['section' => null, 'featuredArticle' => $featuredArticle])
+            @include('public.home.courses', ['section' => null, 'courses' => $courses])
+            @include('public.home.final-cta', ['section' => null, 'email' => $email])
+        @endif
     </main>
     <footer class="site-footer"><div class="container"><div class="footer-top"><div class="footer-brand"><a class="brand" href="#top">@if($brandLogoData)<img class="brand-image" src="{{ $brandLogoData['url'] }}" alt="{{ $brandName }}">@else<span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span class="brand-copy"><strong>MWANAFUNZI</strong><small>INVESTOR</small></span>@endif</a><p>{!! nl2br(e($footerCopy)) !!}</p></div><div class="footer-nav">@forelse($footerNavigation as $group => $items)<div><span>{{ ucfirst($group) }}</span>@foreach($items as $item)<a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->label }}</a>@foreach($item->children->where('is_visible', true)->sortBy('sort_order') as $child)<a class="footer-sub-link" href="{{ $child->href() }}" target="{{ $child->target }}">{{ $child->label }}</a>@endforeach @endforeach</div>@empty<div><span>Explore</span><a href="{{ route('learn') }}">Learn</a><a href="{{ route('courses') }}">Courses</a><a href="{{ route('tools') }}">Tools</a></div><div><span>Company</span><a href="{{ route('journal') }}">Journal</a><a href="{{ route('about') }}">About</a><a href="{{ route('contact') }}">Contact</a></div>@endforelse<div class="footer-contact"><span>Contact</span><a href="mailto:{{ $email }}">{{ $email }}</a><a href="tel:{{ preg_replace('/\D+/', '', $phone) }}">{{ $phone }}</a>@if($whatsapp)<a href="https://wa.me/{{ preg_replace('/\D+/', '', $whatsapp) }}" target="_blank" rel="noopener">WhatsApp {{ $whatsapp }}</a>@endif<p>{{ $location }}</p>@if($socialLinks->isNotEmpty())<div class="footer-social"><span>Follow</span>@foreach($socialLinks as $social)<a href="{{ $social->url }}" target="_blank" rel="noopener noreferrer">{{ $social->label }} <span aria-hidden="true">↗</span></a>@endforeach</div>@endif</div></div></div><div class="footer-bottom"><span>{{ $footerCopyright }}</span><div>@if(isset($footerNavigation['legal'])) @foreach($footerNavigation['legal'] as $item)<a href="{{ $item->href() }}">{{ $item->label }}</a>@endforeach @else<a href="{{ route('legal', 'privacy-policy') }}">Privacy</a><a href="{{ route('legal', 'terms') }}">Terms</a><a href="{{ route('legal', 'risk-disclosure') }}">Risk disclosure</a>@endif</div><strong>{{ $footerBottomStatement }}</strong></div><p class="site-disclaimer">{{ $riskDisclaimer }}</p></div></footer>
     <div class="toast" role="status" aria-live="polite" data-toast></div>
