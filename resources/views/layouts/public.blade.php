@@ -7,6 +7,9 @@
     $disclaimer = \App\Models\SiteSetting::getValue('risk_disclaimer', 'Educational content only. This is not personalised financial advice. Trading involves risk.');
     $favicon = \App\Models\SiteSetting::getValue('favicon', 'favicon.svg') ?: 'favicon.svg';
     $faviconUrl = str_starts_with($favicon, 'http') || str_starts_with($favicon, '/') || $favicon === 'favicon.svg' ? asset($favicon) : asset('storage/'.$favicon);
+    $socialImage = \App\Models\SiteSetting::getValue('default_social_image') ?: (request()->routeIs('legal') ? config('public.hero_defaults.legal') : config('public.hero_defaults.default'));
+    $socialImageData = \App\Support\PublicHero::candidate($socialImage);
+    $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
     $businessUnits = \App\Models\BusinessUnit::query()->active()->orderBy('sort_order')->get();
 @endphp
 <!DOCTYPE html>
@@ -21,7 +24,9 @@
     <meta property="og:description" content="@yield('description', $disclaimer)">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="@yield('og_image', $socialImageUrl)">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="@yield('og_image', $socialImageUrl)">
     <link rel="icon" href="{{ $faviconUrl }}">
     <title>@yield('title', $brandName)</title>
     <script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>

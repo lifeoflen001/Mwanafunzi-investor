@@ -2,6 +2,6 @@
 @section('title', 'Tools — Mwanafunzi Investor')
 @section('description', 'Focused digital tools for deliberate practice, journaling and risk-first trading decisions.')
 @section('content')
-<section class="page-hero"><div class="container narrow"><x-section-label label="Tools for deliberate practice"/><h1>Make the process visible.</h1><p class="lede">Simple, focused tools for turning a good intention into a record you can learn from.</p></div></section>
+<x-public-hero class="public-page-hero" eyebrow="Tools for deliberate practice" title="Make the process visible." summary="Simple, focused tools for turning a good intention into a record you can learn from." setting="hero_tools_image" :fallback-image="config('public.hero_defaults.tools')" />
 <section class="platform-section"><div class="container"><div class="platform-card-grid">@forelse($products as $product)<a class="platform-card" href="{{ route('tools.show', $product) }}"><div class="card-top"><span class="eyebrow">{{ $product->product_type }}</span><span class="card-icon">↗</span></div><h2>{{ $product->name }}</h2><p>{{ $product->short_description }}</p><div class="card-footer"><span>{{ str_replace('_', ' ', $product->availability) }}</span><span>View tool ↗</span></div></a>@empty<div class="empty-state"><span class="empty-index">TOOLS</span><h2>The first tools are being prepared.</h2><p>Check back soon for deliberate practice tools.</p></div>@endforelse</div>{{ $products->links() }}</div></section>
 @endsection

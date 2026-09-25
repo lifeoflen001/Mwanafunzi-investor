@@ -4,26 +4,7 @@
 @section('description', $module->description)
 
 @section('content')
-    <section class="page-hero studio-hero" style="--module-accent: {{ $module->accent_color ?: 'var(--copper)' }}">
-        <div class="container">
-            <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Mwanafunzi Investor / Creative Studio</p>
-            <div class="studio-hero-layout">
-                <div>
-                    <h1>Make the moment <em>stay.</em></h1>
-                    <p class="lede">Photography and video for people, brands and organisations with something worth seeing, remembering and sharing.</p>
-                    <div class="detail-actions">
-                        <a class="button button-accent" href="{{ route('contact', ['module' => $module->slug]) }}">Plan a shoot <span aria-hidden="true">↗</span></a>
-                        <a class="text-link text-link-light" href="#services">Explore the studio <span aria-hidden="true">↓</span></a>
-                    </div>
-                </div>
-                <div class="studio-visual" aria-label="Abstract studio light and camera frame" role="img">
-                    <span class="studio-visual-label">Light / Frame / Story</span>
-                    <strong>03 / 03</strong>
-                    <i aria-hidden="true"></i>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-public-hero class="studio-hero" eyebrow="Mwanafunzi Investor / Creative Studio" title-html="Make the moment <em>stay.</em>" summary="Photography and video for people, brands and organisations with something worth seeing, remembering and sharing." setting="hero_about_image" :fallback-image="config('public.hero_defaults.about')"><div class="detail-actions"><a class="button button-accent" href="{{ route('contact', ['module' => $module->slug]) }}">Plan a shoot <span aria-hidden="true">↗</span></a><a class="text-link text-link-light" href="#services">Explore the studio <span aria-hidden="true">↓</span></a></div></x-public-hero>
 
     <section class="platform-section studio-services" id="services">
         <div class="container">

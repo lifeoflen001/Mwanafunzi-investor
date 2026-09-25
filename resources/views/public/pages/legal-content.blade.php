@@ -1,1 +1,42 @@
-<section class="page-hero"><div class="container narrow"><p class="eyebrow"><span class="eyebrow-line"></span> Mwanafunzi Investor</p><h1>{{ $heading }}</h1><p class="lede">{{ $intro }}</p></div></section><section class="platform-section"><div class="container editorial-copy"><p class="eyebrow">Plain-language foundation</p><h2>Clear, careful and understandable.</h2><p>We aim to keep the platform useful, honest and respectful of the uncertainty involved in financial markets. Specific product, course and data-handling details will be updated here as the platform grows.</p><p>For questions about these policies, please <a class="inline-link" href="{{ route('contact') }}">contact the desk</a>.</p></div></section>
+@php
+    $updated = $updated ?? null;
+    $sections = $sections ?? [];
+    $related = $related ?? [];
+    $supportHeading = $supportHeading ?? 'Questions about this policy?';
+    $supportCopy = $supportCopy ?? 'Contact the Mwanafunzi Investor desk and tell us which part needs clarification.';
+@endphp
+
+<x-public-hero class="legal-hero" compact :eyebrow="$eyebrow ?? 'Policies and legal information'" :title="$heading" :summary="$intro" setting="hero_legal_image" :fallback-image="config('public.hero_defaults.legal')" />
+
+<section class="platform-section legal-page">
+    <div class="container legal-layout">
+        <aside class="legal-toc" aria-label="On this page">
+            <strong>On this page</strong>
+            <ol>
+                @foreach($sections as $section)
+                    <li><a href="#{{ $section['id'] }}">{{ $section['title'] }}</a></li>
+                @endforeach
+                <li><a href="#support">Contact</a></li>
+            </ol>
+        </aside>
+        <article class="legal-body">
+            @if($updated)<p class="legal-updated">Last updated: {{ $updated }}</p>@endif
+            <p class="legal-intro">{{ $intro }}</p>
+            @foreach($sections as $section)
+                <section class="legal-section" id="{{ $section['id'] }}">
+                    <h2>{{ $section['title'] }}</h2>
+                    @foreach($section['paragraphs'] ?? [] as $paragraph)<p>{{ $paragraph }}</p>@endforeach
+                    @if(!empty($section['list']))<ul>@foreach($section['list'] as $item)<li>{{ $item }}</li>@endforeach</ul>@endif
+                    @if(!empty($section['callout']))<p class="legal-callout">{{ $section['callout'] }}</p>@endif
+                </section>
+            @endforeach
+            <section class="legal-support" id="support">
+                <p class="eyebrow">Policy support</p>
+                <h2>{{ $supportHeading }}</h2>
+                <p>{{ $supportCopy }}</p>
+                <a class="button button-accent" href="{{ route('contact') }}">Contact us <span aria-hidden="true">↗</span></a>
+            </section>
+            @if($related)<div class="legal-related"><strong>Related policies</strong><div class="legal-related-links">@foreach($related as $slug => $label)<a href="{{ route('legal', $slug) }}">{{ $label }} <span aria-hidden="true">↗</span></a>@endforeach</div></div>@endif
+        </article>
+    </div>
+</section>

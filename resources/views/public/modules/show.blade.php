@@ -4,13 +4,7 @@
 @section('description', $module->description)
 
 @section('content')
-    <section class="page-hero module-hero" style="--module-accent: {{ $module->accent_color ?: 'var(--copper)' }}">
-        <div class="container narrow">
-            <p class="eyebrow"><span class="eyebrow-line"></span> Mwanafunzi Investor / {{ $module->name }}</p>
-            <h1>{{ $module->tagline }}</h1>
-            <p class="lede">{{ $module->description }}</p>
-        </div>
-    </section>
+    <x-public-hero class="module-hero" :eyebrow="'Mwanafunzi Investor / '.$module->name" :title="$module->tagline" :summary="$module->description" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')" />
 
     <section class="platform-section module-placeholder">
         <div class="container two-column">

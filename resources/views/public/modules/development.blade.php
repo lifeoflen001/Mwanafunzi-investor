@@ -4,26 +4,7 @@
 @section('description', $module->description)
 
 @section('content')
-    <section class="page-hero development-hero" style="--module-accent: {{ $module->accent_color ?: 'var(--copper)' }}">
-        <div class="container">
-            <p class="eyebrow"><span class="eyebrow-line"></span> Mwanafunzi Investor / Digital Systems</p>
-            <div class="dev-hero-grid">
-                <div>
-                    <h1>Digital tools for work that needs to <em>move.</em></h1>
-                    <p class="lede">We design and build clear, dependable websites and software for organisations that are ready to work with less friction.</p>
-                    <div class="detail-actions">
-                        <a class="button button-dark" href="{{ route('contact', ['module' => $module->slug]) }}">Discuss a project <span aria-hidden="true">↗</span></a>
-                        <a class="text-link" href="#capabilities">See what we build <span aria-hidden="true">↓</span></a>
-                    </div>
-                </div>
-                <div class="dev-hero-note">
-                    <span class="dev-hero-rule"></span>
-                    <p>Thoughtful design.<br>Useful technology.<br>Long-term thinking.</p>
-                    <strong>02 / 03</strong>
-                </div>
-            </div>
-        </div>
-    </section>
+    <x-public-hero class="development-hero" eyebrow="Mwanafunzi Investor / Digital Systems" title-html="Digital tools for work that needs to <em>move.</em>" summary="We design and build clear, dependable websites and software for organisations that are ready to work with less friction." setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')"><div class="detail-actions"><a class="button button-dark" href="{{ route('contact', ['module' => $module->slug]) }}">Discuss a project <span aria-hidden="true">↗</span></a><a class="text-link text-link-light" href="#capabilities">See what we build <span aria-hidden="true">↓</span></a></div></x-public-hero>
 
     <section class="platform-section platform-muted" id="capabilities">
         <div class="container">
