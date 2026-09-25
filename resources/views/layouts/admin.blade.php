@@ -31,6 +31,7 @@
                     <a class="{{ request()->routeIs('admin.articles*') ? 'is-active' : '' }}" href="{{ route('admin.articles') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span>Journal</a>
                     <a class="{{ request()->routeIs('admin.categories*') ? 'is-active' : '' }}" href="{{ route('admin.categories') }}"><span class="portal-nav-icon" aria-hidden="true">#</span>Categories</a>
                     <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span>Tags</a>
+                    <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span>FAQs</a>
                     <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
                 </nav>
                 <p class="portal-section-label">Commerce</p>

@@ -224,6 +224,13 @@ class PlatformRoutesTest extends TestCase
         ])->assertRedirect();
         $this->get('/terms')->assertOk()->assertSee('Acceptance of the updated terms')->assertSee('This policy section is now controlled by the structured CMS editor.');
 
+        $this->actingAs($admin)->get(route('admin.faqs'))->assertOk()->assertSee('Frequently asked questions');
+        $this->actingAs($admin)->post(route('admin.faqs.store'), [
+            'target_type' => 'page', 'target_id' => $terms->id, 'question' => 'Where can I ask about these terms?', 'answer' => 'Contact the desk for clarification.', 'sort_order' => 1,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('faqs', ['faqable_type' => Page::class, 'faqable_id' => $terms->id, 'question' => 'Where can I ask about these terms?']);
+        $this->get('/terms')->assertOk()->assertSee('Where can I ask about these terms?')->assertSee('Contact the desk for clarification.');
+
         $home = Page::where('key', 'home')->firstOrFail();
         $learning = $home->sections()->where('key', 'learning')->firstOrFail();
         $this->actingAs($admin)->put(route('admin.pages.update', $home), [

@@ -85,7 +85,7 @@ class PublicSiteController extends Controller
             return view('public.learn-preview', compact('topic'))->with('preview', true);
         }
         if ($type === 'page') {
-            $page = Page::withTrashed()->with('sections')->findOrFail($id);
+            $page = Page::withTrashed()->with(['sections', 'faqs'])->findOrFail($id);
             return view('public.pages.cms', compact('page'))->with('preview', true);
         }
         abort(404);
@@ -94,7 +94,7 @@ class PublicSiteController extends Controller
     public function pageBySlug(Page $page)
     {
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
-        $page->load('sections');
+        $page->load(['sections', 'faqs']);
         return view('public.pages.cms', compact('page'));
     }
 
@@ -186,6 +186,6 @@ class PublicSiteController extends Controller
         $page = Page::where('key', $key)->first();
         if (! $page) return null;
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
-        return $page->load('sections');
+        return $page->load(['sections', 'faqs']);
     }
 }

@@ -21,4 +21,9 @@ class LearningTopic extends Model
     {
         return $this->belongsToMany(Course::class);
     }
+
+    public function faqs()
+    {
+        return $this->morphMany(Faq::class, 'faqable')->orderBy('sort_order');
+    }
 }

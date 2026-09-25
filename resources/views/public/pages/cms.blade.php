@@ -8,4 +8,7 @@
     @php($sectionImage = $section->image ? \App\Support\PublicHero::candidate($section->image) : null)
     <section class="platform-section cms-public-section cms-section-{{ $section->section_type }}"><div class="container editorial-copy"><p class="eyebrow">{{ $section->section_type }}</p>@if($sectionImage)<img class="cms-section-image" src="{{ $sectionImage['url'] }}" alt="" loading="lazy">@endif @if($section->heading)<h2>{{ $section->heading }}</h2>@endif @if($section->body)<div class="rich-copy">{!! \App\Support\RichText::render($section->body) !!}</div>@endif @if($section->cta_label && $section->cta_url)<a class="button button-accent" href="{{ $section->cta_url }}">{{ $section->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></section>
 @endforeach
+@if($page->faqs?->isNotEmpty())
+    <section class="platform-section cms-faq-section"><div class="container editorial-copy"><p class="eyebrow">Questions</p><h2>Frequently asked questions</h2>@foreach($page->faqs as $faq)<details><summary>{{ $faq->question }} <span>+</span></summary><p>{{ $faq->answer }}</p></details>@endforeach</div></section>
+@endif
 @endsection

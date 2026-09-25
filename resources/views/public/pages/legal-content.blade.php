@@ -35,6 +35,7 @@
                 @foreach($sections as $section)
                     <li><a href="#{{ $section['id'] }}">{{ $section['title'] }}</a></li>
                 @endforeach
+                @if($page?->faqs?->isNotEmpty())<li><a href="#faq">Questions</a></li>@endif
                 <li><a href="#support">Contact</a></li>
             </ol>
         </aside>
@@ -55,6 +56,12 @@
                 <p>{{ $supportCopy }}</p>
                 <a class="button button-accent" href="{{ route('contact') }}">Contact us <span aria-hidden="true">↗</span></a>
             </section>
+            @if($page?->faqs?->isNotEmpty())
+                <section class="legal-section legal-faqs" id="faq">
+                    <h2>Questions</h2>
+                    @foreach($page->faqs as $faq)<details><summary>{{ $faq->question }} <span>+</span></summary><p>{{ $faq->answer }}</p></details>@endforeach
+                </section>
+            @endif
             @if($related)<div class="legal-related"><strong>Related policies</strong><div class="legal-related-links">@foreach($related as $slug => $label)<a href="{{ route('legal', $slug) }}">{{ $label }} <span aria-hidden="true">↗</span></a>@endforeach</div></div>@endif
         </article>
     </div>

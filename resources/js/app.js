@@ -75,6 +75,22 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
     select?.addEventListener('change', updatePreview);
 });
 
+const faqTargetType = document.querySelector('[name="target_type"]');
+const faqTargetRecord = document.querySelector('[name="target_id"]');
+const filterFaqTargets = () => {
+    if (!faqTargetType || !faqTargetRecord) return;
+    const target = faqTargetType.value;
+    [...faqTargetRecord.options].forEach((option) => {
+        const visible = option.dataset.faqTarget === target;
+        option.hidden = !visible;
+        option.disabled = !visible;
+    });
+    const first = [...faqTargetRecord.options].find((option) => !option.disabled);
+    if (first && faqTargetRecord.selectedOptions[0]?.disabled) faqTargetRecord.value = first.value;
+};
+faqTargetType?.addEventListener('change', filterFaqTargets);
+filterFaqTargets();
+
 document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
     const method = form.querySelector('input[name="_method"]')?.value?.toLowerCase();
     const button = form.querySelector('button[type="submit"]')?.textContent?.trim().toLowerCase() || '';

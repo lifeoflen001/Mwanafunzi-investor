@@ -16,6 +16,7 @@ use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AdminNavigationController;
 use App\Http\Controllers\AdminAuditController;
 use App\Http\Controllers\AdminSearchController;
+use App\Http\Controllers\AdminFaqController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -128,6 +129,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/topics', [AdminController::class, 'topicStore'])->name('topics.store');
         Route::get('/topics/{topic}/edit', [AdminController::class, 'topicEdit'])->name('topics.edit');
         Route::put('/topics/{topic}', [AdminController::class, 'topicUpdate'])->name('topics.update');
+        Route::get('/faqs', [AdminFaqController::class, 'index'])->name('faqs');
+        Route::post('/faqs', [AdminFaqController::class, 'store'])->name('faqs.store');
+        Route::put('/faqs/{source}/{id}', [AdminFaqController::class, 'update'])->whereNumber('id')->name('faqs.update');
+        Route::delete('/faqs/{source}/{id}', [AdminFaqController::class, 'destroy'])->whereNumber('id')->name('faqs.manage.destroy');
         Route::get('/media', [MediaController::class, 'index'])->name('media');
         Route::post('/media', [MediaController::class, 'store'])->name('media.store');
         Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
