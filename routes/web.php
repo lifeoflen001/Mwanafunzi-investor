@@ -14,6 +14,7 @@ use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\AdminCommerceController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AdminNavigationController;
+use App\Http\Controllers\AdminAuditController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -29,6 +30,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/journal/{article:slug}', 'article')->name('journal.show');
     Route::get('/about', 'page')->defaults('page', 'about')->name('about');
     Route::get('/student-of-money', 'page')->defaults('page', 'student-of-money')->name('student-of-money');
+    Route::get('/pages/{page:slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
@@ -127,9 +129,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/topics/{topic}', [AdminController::class, 'topicUpdate'])->name('topics.update');
         Route::get('/media', [MediaController::class, 'index'])->name('media');
         Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+        Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
         Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');
@@ -147,6 +151,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/tags/{tag}', [AdminTaxonomyController::class, 'tagDestroy'])->name('tags.destroy');
         Route::get('/social-links', [AdminTaxonomyController::class, 'socialLinks'])->name('social-links');
         Route::post('/social-links', [AdminTaxonomyController::class, 'socialLinkStore'])->name('social-links.store');
+        Route::put('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkUpdate'])->name('social-links.update');
         Route::delete('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkDestroy'])->name('social-links.destroy');
         Route::get('/commerce', [AdminCommerceController::class, 'dashboard'])->name('commerce.dashboard');
         Route::get('/commerce/orders', [AdminCommerceController::class, 'orders'])->name('commerce.orders');

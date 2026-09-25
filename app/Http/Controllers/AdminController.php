@@ -14,6 +14,9 @@ use App\Models\ProductFeature;
 use App\Models\ProductVersion;
 use App\Models\ProductImage;
 use App\Models\Media;
+use App\Models\Page;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\CourseFaq;
@@ -28,7 +31,7 @@ class AdminController extends Controller
     public function dashboard()
     {
         return view('admin.dashboard', [
-            'counts' => ['published courses' => Course::where('status', 'published')->count(), 'draft courses' => Course::where('status', 'draft')->count(), 'products' => Product::count(), 'articles' => Article::count(), 'unread messages' => ContactMessage::whereNull('read_at')->count()],
+            'counts' => ['published pages' => Page::published()->count(), 'published courses' => Course::where('status', 'published')->count(), 'products' => Product::count(), 'articles' => Article::count(), 'media assets' => Media::count(), 'students' => User::where('is_admin', false)->count(), 'orders' => Order::count(), 'unread messages' => ContactMessage::whereNull('read_at')->count()],
             'recentMessages' => ContactMessage::latest()->limit(6)->get(),
             'recentContent' => collect([
                 ...Article::latest()->limit(3)->get()->map(fn ($item) => ['type' => 'Article', 'title' => $item->title, 'date' => $item->created_at]),

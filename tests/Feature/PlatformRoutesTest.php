@@ -207,11 +207,24 @@ class PlatformRoutesTest extends TestCase
         $learning = $home->sections()->where('key', 'learning')->firstOrFail();
         $this->actingAs($admin)->put(route('admin.pages.update', $home), [
             'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_title' => 'Decisions become', 'hero_highlight' => 'a practice.', 'hero_summary' => 'A CMS-managed homepage hero.',
+            'hero_primary_label' => 'Open the curriculum', 'hero_primary_url' => '#courses', 'hero_secondary_label' => 'Read the journal', 'hero_secondary_url' => '#journal',
+            'hero_note' => 'Study • Plan • Review', 'hero_aside' => "For careful students.\nNot predictions.", 'hero_aside_index' => '02 / 04',
             'hero_overlay' => 'strong', 'hero_alignment' => 'left', 'sections' => [$learning->id => [
                 'heading' => $learning->heading, 'body' => $learning->body, 'sort_order' => 20,
             ]],
         ])->assertRedirect();
-        $this->get('/')->assertOk()->assertDontSee($learning->heading);
+        $this->get('/')->assertOk()->assertSee('Decisions become')->assertSee('a practice.')->assertSee('Open the curriculum')->assertSee('Study • Plan • Review')->assertDontSee($learning->heading);
+
+        $framework = $home->sections()->where('key', 'framework')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $home), [
+            'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'strong', 'hero_alignment' => 'left', 'sections' => [$framework->id => [
+                'heading' => $framework->heading, 'body' => $framework->body, 'sort_order' => 30, 'is_enabled' => 1,
+                'steps' => "Study | Read the market with patience.",
+            ]],
+        ])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('Study');
 
         $navigation = NavigationItem::where('location', 'header')->where('label', 'About')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.navigation'))->assertOk()->assertSee('Navigation');
@@ -224,5 +237,32 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->put(route('admin.settings.update'), $settings)->assertRedirect();
         $this->assertDatabaseHas('site_settings', ['key' => 'design_copper', 'value' => '#aa5533']);
         $this->get('/')->assertOk()->assertSee('--copper:#aa5533');
+
+        $this->actingAs($admin)->post(route('admin.social-links.store'), ['label' => 'LinkedIn', 'url' => 'https://www.linkedin.com/company/mwanafunzi', 'sort_order' => 1, 'is_visible' => 1])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('LinkedIn');
+        $this->actingAs($admin)->get(route('admin.audit'))->assertOk()->assertSee('Updated site settings');
+    }
+
+    public function test_media_metadata_and_page_sections_are_editable_from_admin(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $media = Media::create(['disk' => 'public', 'path' => 'media/test.jpg', 'filename' => 'test.jpg', 'mime_type' => 'image/jpeg', 'size' => 100, 'alt_text' => 'Old alt', 'title' => 'Old title']);
+
+        $this->actingAs($admin)->get(route('admin.media'))->assertOk()->assertSee('test.jpg');
+        $this->actingAs($admin)->put(route('admin.media.update', $media), ['title' => 'Updated title', 'alt_text' => 'Updated alt text'])->assertRedirect();
+        $this->assertDatabaseHas('media', ['id' => $media->id, 'title' => 'Updated title', 'alt_text' => 'Updated alt text']);
+
+        $page = Page::where('key', 'about')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'new_section_key' => 'editorial-note', 'new_section_type' => 'rich_text',
+            'new_section_heading' => 'A new controlled section', 'new_section_body' => 'This section was added through the admin interface.', 'new_section_sort_order' => 30, 'new_section_enabled' => 1,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('page_sections', ['page_id' => $page->id, 'key' => 'editorial-note']);
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'draft', 'is_visible' => 0,
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+        ])->assertRedirect();
+        $this->get('/about')->assertNotFound();
     }
 }

@@ -30,6 +30,16 @@ class MediaController extends Controller
         return back()->with('success', 'Media uploaded.');
     }
 
+    public function update(Request $request, Media $media)
+    {
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:190'],
+            'alt_text' => ['required', 'string', 'max:190'],
+        ]);
+        $media->update($data);
+        return back()->with('success', 'Media metadata updated.');
+    }
+
     public function destroy(Media $media, MediaService $mediaService)
     {
         $inUse = ProductImage::where('path', $media->path)->exists()
@@ -37,6 +47,8 @@ class MediaController extends Controller
             || Product::where('thumbnail', $media->path)->orWhere('og_image', $media->path)->exists()
             || Article::where('featured_image', $media->path)->orWhere('og_image', $media->path)->exists()
             || LearningTopic::where('image', $media->path)->exists()
+            || \App\Models\Page::where('hero_image', $media->path)->exists()
+            || \App\Models\PageSection::where('image', $media->path)->exists()
             || SiteSetting::where('value', $media->path)->exists();
         if ($inUse) {
             return back()->withErrors(['media' => 'This asset is still assigned to published or draft content. Replace the reference first.']);

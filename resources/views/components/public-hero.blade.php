@@ -29,7 +29,11 @@
     $cmsPage = $pageKey ? \App\Models\Page::published()->where('key', $pageKey)->first() : null;
     $eyebrow = $cmsPage?->hero_eyebrow ?: $eyebrow;
     $title = $cmsPage?->hero_title ?: $title;
-    if ($cmsPage?->hero_title) $titleHtml = null;
+    if ($cmsPage?->hero_title && $cmsPage?->hero_highlight) {
+        $titleHtml = e($cmsPage->hero_title).'<br><em>'.e($cmsPage->hero_highlight).'</em>';
+    } elseif ($cmsPage?->hero_title) {
+        $titleHtml = null;
+    }
     $summary = $cmsPage?->hero_summary ?: $summary;
     $overlay = $cmsPage?->hero_overlay ?: $overlay;
     $alignment = $cmsPage?->hero_alignment ?: $alignment;

@@ -133,6 +133,12 @@
 .header-actions { gap:16px; }
 .section { padding:clamp(82px,8.5vw,132px) 0; }
 .site-footer { padding-top:60px; border-top:1px solid var(--line); }
+.footer-social { display:flex; flex-direction:column; gap:8px; margin-top:22px; }
+.footer-social span { margin-bottom:2px; }
+.brand-image { display:block; max-width:170px; max-height:42px; width:auto; height:auto; object-fit:contain; }
+.cms-section-image { display:block; width:min(100%,720px); max-height:420px; margin:0 0 28px; object-fit:cover; }
+.nav-children { display:flex; gap:18px; align-items:center; padding-left:14px; }
+@media (max-width:760px) { .nav-children { display:grid; gap:0; padding-left:16px; } }
 .hero-system-composition { background:#252a27; }
 .hero-system-grid { position:absolute; inset:0; opacity:.26; background:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px); background-size:68px 68px; }
 .hero-journal-card,.hero-chart-card,.hero-calculator-card { position:absolute; z-index:1; border:1px solid rgba(255,255,255,.24); background:rgba(31,36,33,.94); box-shadow:14px 16px 0 rgba(0,0,0,.14); color:#eee; }
@@ -156,7 +162,7 @@
 .contact-note { margin-top:52px; padding-top:25px; border-top:1px solid var(--line); }.contact-note .eyebrow { margin-bottom:16px; }
 .contact-topic-list { display:grid; gap:10px; margin:0; padding:0; list-style:none; color:var(--muted); font-size:14px; }.contact-topic-list li { position:relative; padding-left:18px; }.contact-topic-list li::before { content:'↗'; position:absolute; left:0; color:var(--copper); }
 .contact-form { padding:28px; border:1px solid var(--line); background:var(--white); }.contact-form .form-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }.contact-form label { gap:7px; }.contact-form input,.contact-form select,.contact-form textarea { min-height:44px; padding:11px 12px; border-color:#c9cbc5; background:#fff; }.contact-form textarea { min-height:132px; resize:vertical; }.contact-form input:hover,.contact-form select:hover,.contact-form textarea:hover { border-color:#a9ada6; }.contact-form input:focus,.contact-form select:focus,.contact-form textarea:focus { border-color:var(--copper); outline:2px solid rgba(197,108,56,.16); }.contact-form select { appearance:auto; }.contact-form .button { justify-self:start; }
-.site-footer .footer-nav { grid-template-columns:repeat(4,minmax(0,1fr)); }.site-footer .footer-nav>div { min-width:0; }.site-footer .footer-contact a { overflow-wrap:anywhere; }.site-footer .footer-bottom { margin-top:3px; }
+.site-footer .footer-nav { grid-template-columns:repeat(4,minmax(0,1fr)); }.site-footer .footer-nav>div { min-width:0; }.site-footer .footer-nav .footer-sub-link { padding-left:10px; font-size:12px; }.site-footer .footer-contact a { overflow-wrap:anywhere; }.site-footer .footer-bottom { margin-top:3px; }
 .account-table { overflow-x:auto; }.account-table-head,.account-table-row { min-width:600px; }.admin-table { overflow-x:auto; }.admin-table-head,.admin-table-row { min-width:600px; }
 @media (max-width:1050px) { .hero-journal-card { right:24%; }.hero-chart-card { right:3%; }.hero-calculator-card { right:27%; }.site-footer .footer-nav { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:760px) { .header-inner { min-height:72px; }.hero-system-composition { opacity:.82; }.hero-journal-card { top:21%; right:8%; width:220px; min-height:220px; padding:17px; }.hero-chart-card { right:-9%; bottom:16%; width:245px; min-height:170px; padding:15px; }.hero-calculator-card { right:42%; bottom:8%; width:126px; padding:13px; }.hero-card-rule { padding-top:11px; }.hero-card-mark { margin-top:20px; }.hero-chart-card svg { height:82px; }.hero-content { max-width:100%; }.service-card { min-height:270px; }.contact-details { padding-right:0; }.contact-note { margin-top:36px; }.contact-form { padding:20px; }.contact-form .form-row { grid-template-columns:1fr; gap:0; }.site-footer .footer-nav { grid-template-columns:1fr 1fr; }.site-footer .footer-contact { grid-column:1/-1; } }

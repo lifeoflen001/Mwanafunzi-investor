@@ -37,6 +37,7 @@ class PublicSiteController extends Controller
 
     public function home()
     {
+        $this->cmsPage('home');
         return view('welcome', [
             'learningTopics' => LearningTopic::query()->where('is_published', true)->orderBy('sort_order')->get(),
             'courses' => Course::published()->orderBy('sort_order')->get(),
@@ -48,13 +49,13 @@ class PublicSiteController extends Controller
     public function learn()
     {
         $topics = LearningTopic::with('courses')->where('is_published', true)->orderBy('sort_order')->get();
-        return view('public.learn', compact('topics'));
+        return view('public.learn', ['topics' => $topics, 'page' => $this->cmsPage('learn')]);
     }
 
     public function courses()
     {
         $courses = Course::published()->withCount('modules')->orderBy('sort_order')->paginate(12);
-        return view('public.courses.index', compact('courses'));
+        return view('public.courses.index', ['courses' => $courses, 'page' => $this->cmsPage('courses')]);
     }
 
     public function course(Course $course)
@@ -89,10 +90,17 @@ class PublicSiteController extends Controller
         abort(404);
     }
 
+    public function pageBySlug(Page $page)
+    {
+        abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
+        $page->load('sections');
+        return view('public.pages.cms', compact('page'));
+    }
+
     public function tools()
     {
         $products = Product::available()->with('features')->orderBy('sort_order')->paginate(12);
-        return view('public.tools.index', compact('products'));
+        return view('public.tools.index', ['products' => $products, 'page' => $this->cmsPage('tools')]);
     }
 
     public function tool(Product $product)
@@ -115,7 +123,7 @@ class PublicSiteController extends Controller
             $articles->where(fn ($query) => $query->where('title', 'like', "%{$search}%")->orWhere('excerpt', 'like', "%{$search}%"));
         }
         $articles = $articles->latest('published_at')->paginate(9)->withQueryString();
-        return view('public.journal.index', compact('articles', 'categories'));
+        return view('public.journal.index', ['articles' => $articles, 'categories' => $categories, 'page' => $this->cmsPage('journal')]);
     }
 
     public function article(Article $article)
@@ -131,7 +139,7 @@ class PublicSiteController extends Controller
         $businessUnits = BusinessUnit::query()->active()->orderBy('sort_order')->get();
         $selectedBusinessUnit = $businessUnits->firstWhere('slug', request('module'));
 
-        return view('public.contact', compact('businessUnits', 'selectedBusinessUnit'));
+        return view('public.contact', ['businessUnits' => $businessUnits, 'selectedBusinessUnit' => $selectedBusinessUnit, 'page' => $this->cmsPage('contact')]);
     }
 
     public function submitContact(Request $request)
@@ -153,7 +161,7 @@ class PublicSiteController extends Controller
     public function page(string $page)
     {
         abort_unless(in_array($page, ['about', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'], true), 404);
-        $cmsPage = Page::published()->with('sections')->where('key', $page)->first();
+        $cmsPage = $this->cmsPage($page);
         return view("public.pages.{$page}", ['page' => $cmsPage]);
     }
 
@@ -167,7 +175,16 @@ class PublicSiteController extends Controller
         $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
         $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
         $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('journal.show', $article)));
+        $urls = $urls->merge(Page::published()->whereNotNull('slug')->whereNotIn('key', ['learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->get()->map(fn ($page) => route('pages.show', $page)));
         $xml = view('seo.sitemap', ['urls' => $urls])->render();
         return response($xml)->header('Content-Type', 'application/xml');
+    }
+
+    private function cmsPage(string $key): ?Page
+    {
+        $page = Page::where('key', $key)->first();
+        if (! $page) return null;
+        abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
+        return $page->load('sections');
     }
 }

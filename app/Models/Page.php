@@ -10,7 +10,7 @@ class Page extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['key', 'slug', 'name', 'page_type', 'status', 'is_visible', 'hero_eyebrow', 'hero_title', 'hero_summary', 'hero_image', 'hero_overlay', 'hero_alignment', 'seo_title', 'seo_description', 'published_at'];
+    protected $fillable = ['key', 'slug', 'name', 'page_type', 'status', 'is_visible', 'hero_eyebrow', 'hero_title', 'hero_highlight', 'hero_summary', 'hero_image', 'hero_primary_label', 'hero_primary_url', 'hero_secondary_label', 'hero_secondary_url', 'hero_note', 'hero_aside', 'hero_aside_index', 'hero_overlay', 'hero_alignment', 'seo_title', 'seo_description', 'published_at'];
 
     protected $casts = ['is_visible' => 'boolean', 'published_at' => 'datetime'];
 
