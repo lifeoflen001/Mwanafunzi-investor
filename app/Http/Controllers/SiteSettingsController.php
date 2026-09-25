@@ -11,7 +11,7 @@ use App\Support\AdminAudit;
 
 class SiteSettingsController extends Controller
 {
-    public function edit() { return view('admin.settings.edit', ['settings' => SiteSetting::orderBy('key')->get()->keyBy('key'), 'media' => Media::orderBy('filename')->get(), 'designTokenDefinitions' => DesignTokens::definitions(), 'designTokenValues' => DesignTokens::values()]); }
+    public function edit() { return view('admin.settings.edit', ['settings' => SiteSetting::orderBy('key')->get()->keyBy('key'), 'media' => Media::latest()->limit(60)->get(), 'designTokenDefinitions' => DesignTokens::definitions(), 'designTokenValues' => DesignTokens::values()]); }
 
     public function update(Request $request)
     {

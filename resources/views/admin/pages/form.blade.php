@@ -175,10 +175,7 @@
                             </label>
                         </div>
 
-                        <label>Body
-                            <textarea name="sections[{{ $section->id }}][body]" rows="4">{{ old('sections.'.$section->id.'.body', $section->body) }}</textarea>
-                            <small>Separate paragraphs with a blank line. Basic formatting is sanitized before display.</small>
-                        </label>
+                        @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][body]', 'label' => 'Body', 'value' => old('sections.'.$section->id.'.body', $section->body), 'help' => 'Use headings, emphasis, lists, links and quotes. Unsafe HTML is sanitized before display.'])
 
                         @include('admin.components.media-field', [
                             'name' => 'sections['.$section->id.'][image]',
@@ -333,9 +330,7 @@
                         <input type="number" min="0" name="new_section_sort_order" value="{{ old('new_section_sort_order', 0) }}">
                     </label>
                 </div>
-                <label>Body
-                    <textarea name="new_section_body" rows="3">{{ old('new_section_body') }}</textarea>
-                </label>
+                @include('admin.components.rich-text-field', ['name' => 'new_section_body', 'label' => 'Body', 'value' => old('new_section_body')])
                 @include('admin.components.media-field', ['name' => 'new_section_image', 'label' => 'Section image', 'value' => old('new_section_image'), 'media' => $media])
                 <div class="form-row">
                     <label>CTA label

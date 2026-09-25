@@ -36,6 +36,24 @@ document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => ele
 adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeAdminSidebar));
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminSidebar(); });
 
+const adminProfile = document.querySelector('[data-admin-profile]');
+const adminProfileToggle = document.querySelector('[data-admin-profile-toggle]');
+const adminProfileMenu = document.querySelector('[data-admin-profile-menu]');
+const closeAdminProfile = () => {
+    if (!adminProfileMenu || !adminProfileToggle) return;
+    adminProfileMenu.hidden = true;
+    adminProfileToggle.setAttribute('aria-expanded', 'false');
+};
+adminProfileToggle?.addEventListener('click', () => {
+    const isOpen = adminProfileMenu?.hidden === false;
+    if (!adminProfileMenu) return;
+    adminProfileMenu.hidden = isOpen;
+    adminProfileToggle.setAttribute('aria-expanded', String(!isOpen));
+});
+adminProfile?.addEventListener('click', (event) => event.stopPropagation());
+document.addEventListener('click', closeAdminProfile);
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminProfile(); });
+
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -57,7 +75,9 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
     const search = picker.querySelector('.media-picker-search');
     const select = picker.querySelector('[data-media-select]');
     const preview = picker.querySelector('[data-media-preview]');
-    const options = [...select.options];
+    const searchUrl = picker.dataset.mediaSearchUrl;
+    let searchTimer;
+    let requestController;
     const updatePreview = () => {
         const option = select.selectedOptions[0];
         preview.replaceChildren();
@@ -68,11 +88,70 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
         preview.append(image);
         preview.hidden = false;
     };
+    const renderResults = (items) => {
+        const selected = select.value;
+        const selectedUrl = select.selectedOptions[0]?.dataset.url;
+        select.replaceChildren(new Option('No image selected', ''));
+        items.forEach((item) => {
+            const option = new Option(item.label, item.path, false, item.path === selected);
+            option.dataset.url = item.url;
+            select.append(option);
+        });
+        if (selected && !items.some((item) => item.path === selected)) {
+            const option = new Option(`${selected.split('/').pop()} · current selection`, selected, true, true);
+            option.dataset.url = selectedUrl || `${window.location.origin}/storage/${selected.replace(/^\/+/, '')}`;
+            select.append(option);
+        }
+        updatePreview();
+    };
+    const searchMedia = async () => {
+        if (!searchUrl) return;
+        requestController?.abort();
+        requestController = new AbortController();
+        const url = new URL(searchUrl, window.location.origin);
+        if (search.value.trim()) url.searchParams.set('q', search.value.trim());
+        try {
+            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal });
+            if (!response.ok) return;
+            renderResults(await response.json());
+        } catch (error) {
+            if (error.name !== 'AbortError') console.warn('Media search failed', error);
+        }
+    };
     search?.addEventListener('input', () => {
-        const term = search.value.toLowerCase();
-        options.forEach((option) => { option.hidden = option.value !== '' && !option.text.toLowerCase().includes(term); });
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(searchMedia, 250);
+    });
+    search?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        window.clearTimeout(searchTimer);
+        searchMedia();
     });
     select?.addEventListener('change', updatePreview);
+});
+
+document.querySelectorAll('[data-rich-editor-wrapper]').forEach((wrapper) => {
+    const editor = wrapper.querySelector('[data-rich-editor]');
+    const source = wrapper.querySelector('[data-rich-source]');
+    if (!editor || !source) return;
+    const sync = () => { source.value = editor.innerHTML; };
+    editor.addEventListener('input', sync);
+    wrapper.querySelectorAll('[data-rich-command]').forEach((button) => button.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+        editor.focus();
+        const command = button.dataset.richCommand;
+        if (command === 'createLink') {
+            const url = window.prompt('Link URL');
+            if (url) document.execCommand('createLink', false, url);
+        } else if (command === 'formatBlock') {
+            document.execCommand(command, false, `<${button.dataset.richValue}>`);
+        } else {
+            document.execCommand(command, false);
+        }
+        sync();
+    }));
+    editor.closest('form')?.addEventListener('submit', sync);
 });
 
 const faqTargetType = document.querySelector('[name="target_type"]');

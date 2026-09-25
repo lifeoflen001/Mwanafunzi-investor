@@ -19,6 +19,7 @@ use App\Http\Controllers\AdminSearchController;
 use App\Http\Controllers\AdminFaqController;
 use App\Http\Controllers\AdminRedirectController;
 use App\Http\Controllers\PublicRedirectController;
+use App\Http\Controllers\AdminBusinessUnitController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -26,6 +27,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/development', 'module')->defaults('slug', 'development')->name('development');
     Route::get('/studio', 'module')->defaults('slug', 'studio')->name('studio');
     Route::get('/learn', 'learn')->name('learn');
+    Route::get('/learn/{topic:slug}', 'topic')->name('learn.show');
     Route::get('/courses', 'courses')->name('courses');
     Route::get('/courses/{course:slug}', 'course')->name('courses.show');
     Route::get('/tools', 'tools')->name('tools');
@@ -96,9 +98,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/courses/{course}', [AdminController::class, 'courseDestroy'])->name('courses.destroy');
         Route::post('/courses/{course}/restore', [AdminController::class, 'courseRestore'])->name('courses.restore');
         Route::post('/courses/{course}/modules', [AdminController::class, 'moduleStore'])->name('courses.modules.store');
+        Route::put('/modules/{module}', [AdminController::class, 'moduleUpdate'])->name('modules.update');
         Route::delete('/modules/{module}', [AdminController::class, 'moduleDestroy'])->name('modules.destroy');
         Route::post('/modules/{module}/restore', [AdminController::class, 'moduleRestore'])->name('modules.restore');
         Route::post('/modules/{module}/lessons', [AdminController::class, 'lessonStore'])->name('modules.lessons.store');
+        Route::put('/lessons/{lesson}', [AdminController::class, 'lessonUpdate'])->name('lessons.update');
         Route::delete('/lessons/{lesson}', [AdminController::class, 'lessonDestroy'])->name('lessons.destroy');
         Route::post('/lessons/{lesson}/restore', [AdminController::class, 'lessonRestore'])->name('lessons.restore');
         Route::post('/courses/{course}/faqs', [AdminController::class, 'courseFaqStore'])->name('courses.faqs.store');
@@ -137,12 +141,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/faqs', [AdminFaqController::class, 'store'])->name('faqs.store');
         Route::put('/faqs/{source}/{id}', [AdminFaqController::class, 'update'])->whereNumber('id')->name('faqs.update');
         Route::delete('/faqs/{source}/{id}', [AdminFaqController::class, 'destroy'])->whereNumber('id')->name('faqs.manage.destroy');
+        Route::get('/media/search', [MediaController::class, 'search'])->name('media.search');
         Route::get('/media', [MediaController::class, 'index'])->name('media');
         Route::post('/media', [MediaController::class, 'store'])->name('media.store');
         Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::get('/business-units', [AdminBusinessUnitController::class, 'index'])->name('business-units');
+        Route::put('/business-units/{businessUnit}', [AdminBusinessUnitController::class, 'update'])->name('business-units.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
         Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');

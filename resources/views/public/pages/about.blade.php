@@ -1,12 +1,17 @@
 @extends('layouts.public')
 @section('title', $page?->seo_title ?: 'About — Mwanafunzi Investor')
-@section('description', $page?->seo_description ?: 'Why Mwanafunzi Investor exists and how a Student of Money approaches markets, systems and risk.')
+@section('description', $page?->seo_description ?: ($page?->hero_summary ?: 'Why Mwanafunzi Investor exists and how a Student of Money approaches markets, systems and risk.'))
 @php
     $cmsPhilosophy = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'philosophy');
     $cmsApproach = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'approach');
+    $heroTitleHtml = $page?->hero_highlight ? e($page->hero_title ?: 'About Mwanafunzi Investor').'<br><em>'.e($page->hero_highlight).'</em>' : null;
 @endphp
 @section('content')
-<x-public-hero class="public-page-hero" eyebrow="About Mwanafunzi Investor" title="Become trustworthy with the decisions in front of you." summary="Mwanafunzi means student. The name is a reminder that the work is continuous: learn, practise, review and improve." setting="hero_about_image" :fallback-image="config('public.hero_defaults.about')" />
+<x-public-hero class="public-page-hero" :eyebrow="$page?->hero_eyebrow ?: 'About Mwanafunzi Investor'" :title="$page?->hero_title ?: 'Become trustworthy with the decisions in front of you.'" :title-html="$heroTitleHtml" :summary="$page?->hero_summary ?: 'Mwanafunzi means student. The name is a reminder that the work is continuous: learn, practise, review and improve.'" :image="$page?->hero_image" :overlay="$page?->hero_overlay" :alignment="$page?->hero_alignment" setting="hero_about_image" :fallback-image="config('public.hero_defaults.about')">
+    @if($page?->hero_primary_label && $page?->hero_primary_url)
+        <div class="detail-actions"><a class="button button-accent" href="{{ $page->hero_primary_url }}">{{ $page->hero_primary_label }} <span aria-hidden="true">↗</span></a>@if($page->hero_secondary_label && $page->hero_secondary_url)<a class="text-link text-link-light" href="{{ $page->hero_secondary_url }}">{{ $page->hero_secondary_label }} <span aria-hidden="true">↗</span></a>@endif</div>
+    @endif
+</x-public-hero>
 @if($cmsPhilosophy)
 <section class="platform-section"><div class="container editorial-copy"><p class="eyebrow">{{ $cmsPhilosophy->payload['eyebrow'] ?? 'Why this exists' }}</p>@if($cmsPhilosophy->heading)<h2>{{ $cmsPhilosophy->heading }}</h2>@endif @if($cmsPhilosophy->body)<div class="rich-copy">{!! \App\Support\RichText::render($cmsPhilosophy->body) !!}</div>@endif @if(!empty($cmsPhilosophy->payload['pull']))<div class="editorial-pull">{{ $cmsPhilosophy->payload['pull'] }}</div>@endif</div></section>
 @else

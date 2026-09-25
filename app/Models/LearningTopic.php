@@ -10,7 +10,7 @@ class LearningTopic extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'icon', 'short_description', 'full_description', 'image', 'learning_outcomes', 'skill_level', 'study_time', 'expected_availability', 'sort_order', 'is_published', 'status'];
+    protected $fillable = ['title', 'slug', 'icon', 'short_description', 'full_description', 'image', 'hero_eyebrow', 'hero_title', 'hero_summary', 'hero_image', 'hero_overlay', 'hero_alignment', 'seo_title', 'seo_description', 'og_image', 'learning_outcomes', 'skill_level', 'study_time', 'expected_availability', 'sort_order', 'is_published', 'status'];
 
     protected function casts(): array
     {
@@ -20,6 +20,16 @@ class LearningTopic extends Model
     public function courses()
     {
         return $this->belongsToMany(Course::class);
+    }
+
+    public function articles()
+    {
+        return $this->belongsToMany(Article::class, 'article_learning_topic');
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'learning_topic_product');
     }
 
     public function faqs()

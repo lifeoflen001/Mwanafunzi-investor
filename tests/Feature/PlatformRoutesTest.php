@@ -12,6 +12,7 @@ use App\Models\ContactMessage;
 use App\Models\SiteSetting;
 use App\Models\Page;
 use App\Models\NavigationItem;
+use App\Models\LearningTopic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -28,7 +29,7 @@ class PlatformRoutesTest extends TestCase
 
     public function test_public_platform_routes_render(): void
     {
-        foreach (['/', '/development', '/studio', '/learn', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
+        foreach (['/', '/development', '/studio', '/learn', '/learn/forex-core-basics', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
             $this->get($route)->assertSuccessful();
         }
     }
@@ -56,6 +57,41 @@ class PlatformRoutesTest extends TestCase
     {
         $this->get('/courses/forex-foundations')->assertSuccessful()->assertSee('Forex Foundations')->assertSee('application/ld+json')->assertSee('canonical');
         $this->get('/tools/trading-journal-sheet')->assertSuccessful()->assertSee('Trading Journal Sheet')->assertSee('application/ld+json');
+    }
+
+    public function test_admin_managed_open_graph_media_reaches_detail_metadata(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
+        Storage::disk('public')->put('media/course-social.jpg', 'image-bytes');
+        $media = Media::create(['disk' => 'public', 'path' => 'media/course-social.jpg', 'filename' => 'course-social.jpg', 'mime_type' => 'image/jpeg', 'size' => 11, 'alt_text' => 'Course social image']);
+        $course = Course::firstOrFail();
+
+        $this->actingAs($admin)->put(route('admin.courses.update', $course), [
+            'title' => $course->title, 'slug' => $course->slug, 'status' => $course->status, 'short_description' => $course->short_description,
+            'full_description' => $course->full_description, 'og_image' => $media->path, 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+        ])->assertRedirect();
+
+        $this->get(route('courses.show', $course))->assertOk()->assertSee(asset('storage/'.$media->path));
+    }
+
+    public function test_admin_learning_topic_hero_and_seo_propagate_to_public_page(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
+        Storage::disk('public')->put('media/topic-hero.jpg', 'image-bytes');
+        $media = Media::create(['disk' => 'public', 'path' => 'media/topic-hero.jpg', 'filename' => 'topic-hero.jpg', 'mime_type' => 'image/jpeg', 'size' => 11, 'alt_text' => 'Topic hero']);
+        $topic = LearningTopic::where('slug', 'forex-core-basics')->firstOrFail();
+
+        $this->actingAs($admin)->put(route('admin.topics.update', $topic), [
+            'title' => $topic->title, 'slug' => $topic->slug, 'short_description' => $topic->short_description,
+            'full_description' => $topic->full_description, 'hero_eyebrow' => 'A managed learning path', 'hero_title' => 'Study the market deliberately',
+            'hero_summary' => 'A hero summary controlled by the CMS.', 'hero_image' => $media->path, 'hero_overlay' => 'strong', 'hero_alignment' => 'center',
+            'seo_title' => 'Managed learning SEO title', 'seo_description' => 'Managed learning SEO description.', 'og_image' => $media->path,
+            'skill_level' => $topic->skill_level, 'study_time' => $topic->study_time, 'sort_order' => $topic->sort_order, 'is_published' => 1,
+        ])->assertRedirect();
+
+        $this->get(route('learn.show', $topic))->assertOk()->assertSee('Study the market deliberately')->assertSee('Managed learning SEO title')->assertSee(asset('storage/'.$media->path));
     }
 
     public function test_published_page_slug_changes_create_safe_redirects(): void
@@ -110,7 +146,7 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.edit', $product))->assertSuccessful()->assertSee('Features and versions');
         $this->actingAs($admin)->get(route('admin.articles.create'))->assertSuccessful()->assertSee('Category');
         $this->actingAs($admin)->get(route('admin.topics.create'))->assertSuccessful()->assertSee('New learning topic');
-        $this->actingAs($admin)->post(route('admin.topics.store'), ['title' => 'A new learning path', 'short_description' => 'A clear path for students.', 'full_description' => '<p>Safe topic content.</p><script>alert(1)</script>', 'sort_order' => 10])->assertRedirect();
+        $this->actingAs($admin)->post(route('admin.topics.store'), ['title' => 'A new learning path', 'short_description' => 'A clear path for students.', 'full_description' => '<p>Safe topic content.</p><script>alert(1)</script>', 'learning_outcomes' => "Write rules\nReview decisions", 'course_ids' => [Course::firstOrFail()->id], 'product_ids' => [Product::firstOrFail()->id], 'sort_order' => 10])->assertRedirect();
         $this->assertDatabaseHas('learning_topics', ['slug' => 'a-new-learning-path', 'status' => 'draft']);
 
         $this->actingAs($admin)->post(route('admin.courses.modules.store', $course), ['title' => 'A careful first module', 'description' => 'Module description', 'sort_order' => 1])->assertRedirect();
@@ -119,6 +155,10 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->post(route('admin.modules.lessons.store', $module), ['title' => 'Lesson one', 'content' => 'Lesson content', 'sort_order' => 1, 'is_published' => 1])->assertRedirect();
         $this->assertDatabaseHas('course_lessons', ['course_module_id' => $module->id, 'slug' => 'lesson-one']);
         $lesson = $module->lessons()->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.modules.update', $module), ['title' => 'A renamed first module', 'description' => 'Updated module description', 'sort_order' => 2])->assertRedirect();
+        $this->actingAs($admin)->put(route('admin.lessons.update', $lesson), ['title' => 'A revised lesson', 'content' => '<p>Safe <strong>lesson</strong>.</p><script>alert(1)</script>', 'sort_order' => 2, 'is_published' => 1])->assertRedirect();
+        $this->assertDatabaseHas('course_modules', ['id' => $module->id, 'title' => 'A renamed first module', 'sort_order' => 2]);
+        $this->assertDatabaseHas('course_lessons', ['id' => $lesson->id, 'title' => 'A revised lesson', 'content' => '<p>Safe <strong>lesson</strong>.</p>']);
         $this->actingAs($admin)->delete(route('admin.lessons.destroy', $lesson))->assertRedirect();
         $this->assertSoftDeleted('course_lessons', ['id' => $lesson->id]);
         $this->actingAs($admin)->post(route('admin.lessons.restore', $lesson->id))->assertRedirect();
@@ -173,6 +213,7 @@ class PlatformRoutesTest extends TestCase
         Storage::fake('public');
         $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('editorial.jpg', 120, 'image/jpeg'), 'alt_text' => 'Editorial desk', 'title' => 'Editorial desk'])->assertRedirect();
         $this->assertDatabaseHas('media', ['filename' => 'editorial.jpg', 'alt_text' => 'Editorial desk']);
+        $this->actingAs($admin)->get(route('admin.media.search', ['q' => 'editorial']))->assertOk()->assertJsonPath('0.label', 'editorial.jpg');
         $this->actingAs($admin)->get(route('admin.media', ['q' => 'editorial', 'type' => 'image']))->assertOk()->assertSee('Editorial desk');
 
         $this->actingAs($admin)->put(route('admin.settings.update'), ['brand_name' => 'Mwanafunzi Test', 'contact_email' => 'desk@example.com', 'contact_phone' => '+255700000000', 'contact_whatsapp' => '+255711111111', 'contact_location' => 'Dar es Salaam', 'logo' => '', 'dark_logo' => '', 'light_logo' => '', 'icon_logo' => '', 'favicon' => '', 'apple_touch_icon' => '', 'default_social_image' => '', 'footer_copy' => 'Study. Test. Review.', 'footer_copyright' => 'Copyright managed from settings', 'footer_bottom_statement' => 'PROCESS OVER HYPE.', 'default_seo_title' => 'Test title', 'default_seo_description' => 'Test description', 'risk_disclaimer' => 'Test disclaimer.'])->assertRedirect();
@@ -205,6 +246,33 @@ class PlatformRoutesTest extends TestCase
             'email' => 'studio@example.com',
             'business_unit_id' => $studio->id,
         ]);
+    }
+
+    public function test_admin_can_manage_business_module_metadata_without_changing_routes(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.business-units'))->assertOk()->assertSee('Business modules')->assertSee('Creative Studio');
+        $this->actingAs($admin)->put(route('admin.business-units.update', $studio), [
+            'name' => 'Mwanafunzi Studio',
+            'tagline' => 'Stories with a point of view.',
+            'description' => 'Updated studio description from the operating desk.',
+            'accent_color' => '#aa5533',
+            'sort_order' => 4,
+            'is_active' => 1,
+            'slug' => 'changed-by-client',
+            'route_name' => 'admin.dashboard',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('business_units', [
+            'id' => $studio->id,
+            'slug' => 'studio',
+            'route_name' => 'studio',
+            'name' => 'Mwanafunzi Studio',
+            'accent_color' => '#aa5533',
+        ]);
+        $this->get('/contact')->assertOk()->assertSee('Mwanafunzi Studio');
     }
 
     public function test_student_and_admin_portals_render_the_dashboard_shells(): void

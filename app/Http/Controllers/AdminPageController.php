@@ -37,7 +37,7 @@ class AdminPageController extends Controller
 
     public function create()
     {
-        return view('admin.pages.form', ['page' => new Page(['status' => 'draft', 'is_visible' => true, 'page_type' => request('page_type', 'standard'), 'hero_overlay' => 'medium', 'hero_alignment' => 'left']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.pages.store')]);
+        return view('admin.pages.form', ['page' => new Page(['status' => 'draft', 'is_visible' => true, 'page_type' => request('page_type', 'standard'), 'hero_overlay' => 'medium', 'hero_alignment' => 'left']), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.pages.store')]);
     }
 
     public function store(Request $request)
@@ -53,7 +53,7 @@ class AdminPageController extends Controller
 
     public function edit(Page $page)
     {
-        return view('admin.pages.form', ['page' => $page->load('sections'), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.pages.update', $page)]);
+        return view('admin.pages.form', ['page' => $page->load('sections'), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.pages.update', $page)]);
     }
 
     public function update(Request $request, Page $page)

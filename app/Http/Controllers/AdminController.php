@@ -43,9 +43,9 @@ class AdminController extends Controller
     }
 
     public function courses() { return view('admin.courses.index', ['courses' => Course::withTrashed()->latest()->paginate(20)]); }
-    public function courseCreate() { return view('admin.courses.form', ['course' => new Course(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.store')]); }
+    public function courseCreate() { return view('admin.courses.form', ['course' => new Course(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.courses.store')]); }
     public function courseStore(Request $request) { return $this->saveCourse($request, new Course()); }
-    public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules' => fn ($query) => $query->withTrashed(), 'modules.lessons' => fn ($query) => $query->withTrashed(), 'faqs']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.update', $course)]); }
+    public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules' => fn ($query) => $query->withTrashed(), 'modules.lessons' => fn ($query) => $query->withTrashed(), 'faqs']), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.courses.update', $course)]); }
     public function courseUpdate(Request $request, Course $course) { return $this->saveCourse($request, $course); }
     public function courseDestroy(Course $course) { $course->delete(); AdminAudit::record('course.archived', 'Archived course '.$course->title, $course); return back()->with('success', 'Course archived.'); }
     public function courseRestore(int $course) { $record = Course::withTrashed()->findOrFail($course); $record->restore(); AdminAudit::record('course.restored', 'Restored course '.$record->title, $record); return back()->with('success', 'Course restored.'); }
@@ -55,6 +55,13 @@ class AdminController extends Controller
         $module = $course->modules()->create($data);
         AdminAudit::record('course.module.created', 'Added module '.$module->title, $course);
         return back()->with('success', 'Course module added.');
+    }
+    public function moduleUpdate(Request $request, CourseModule $module)
+    {
+        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'description' => ['nullable', 'string', 'max:2000'], 'sort_order' => ['required', 'integer', 'min:0']]);
+        $module->update($data);
+        AdminAudit::record('course.module.updated', 'Updated module '.$module->title, $module);
+        return back()->with('success', 'Course module updated.');
     }
     public function moduleDestroy(CourseModule $module) { $module->delete(); AdminAudit::record('course.module.deleted', 'Removed course module '.$module->title, $module); return back()->with('success', 'Course module removed.'); }
     public function moduleRestore(int $module) { $record = CourseModule::withTrashed()->findOrFail($module); $record->restore(); AdminAudit::record('course.module.restored', 'Restored course module '.$record->title, $record); return back()->with('success', 'Course module restored.'); }
@@ -68,6 +75,16 @@ class AdminController extends Controller
         AdminAudit::record('course.lesson.created', 'Added lesson '.$lesson->title, $module);
         return back()->with('success', 'Course lesson added.');
     }
+    public function lessonUpdate(Request $request, CourseLesson $lesson)
+    {
+        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'content' => ['nullable', 'string'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
+        $data['slug'] = Str::slug($data['title']);
+        $data['is_published'] = $request->boolean('is_published');
+        $data['content'] = RichText::sanitize($data['content'] ?? null);
+        $lesson->update($data);
+        AdminAudit::record('course.lesson.updated', 'Updated lesson '.$lesson->title, $lesson);
+        return back()->with('success', 'Course lesson updated.');
+    }
     public function lessonDestroy(CourseLesson $lesson) { $lesson->delete(); AdminAudit::record('course.lesson.deleted', 'Removed course lesson '.$lesson->title, $lesson); return back()->with('success', 'Course lesson removed.'); }
     public function lessonRestore(int $lesson) { $record = CourseLesson::withTrashed()->findOrFail($lesson); $record->restore(); AdminAudit::record('course.lesson.restored', 'Restored course lesson '.$record->title, $record); return back()->with('success', 'Course lesson restored.'); }
     public function courseFaqStore(Request $request, Course $course)
@@ -80,9 +97,9 @@ class AdminController extends Controller
     public function courseFaqDestroy(CourseFaq $faq) { $faq->delete(); AdminAudit::record('course.faq.deleted', 'Removed course FAQ', $faq); return back()->with('success', 'Course FAQ removed.'); }
 
     public function products() { return view('admin.products.index', ['products' => Product::withTrashed()->latest()->paginate(20)]); }
-    public function productCreate() { return view('admin.products.form', ['product' => new Product(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.products.store')]); }
+    public function productCreate() { return view('admin.products.form', ['product' => new Product(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.products.store')]); }
     public function productStore(Request $request) { return $this->saveProduct($request, new Product()); }
-    public function productEdit(Product $product) { return view('admin.products.form', ['product' => $product->load(['features', 'versions', 'faqs', 'images', 'assets']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.products.update', $product)]); }
+    public function productEdit(Product $product) { return view('admin.products.form', ['product' => $product->load(['features', 'versions', 'faqs', 'images', 'assets']), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.products.update', $product)]); }
     public function productUpdate(Request $request, Product $product) { return $this->saveProduct($request, $product); }
     public function productDestroy(Product $product) { $product->delete(); AdminAudit::record('product.archived', 'Archived product '.$product->name, $product); return back()->with('success', 'Product archived.'); }
     public function productRestore(int $product) { $record = Product::withTrashed()->findOrFail($product); $record->restore(); AdminAudit::record('product.restored', 'Restored product '.$record->name, $record); return back()->with('success', 'Product restored.'); }
@@ -136,9 +153,9 @@ class AdminController extends Controller
     }
 
     public function articles() { return view('admin.articles.index', ['articles' => Article::withTrashed()->with('category')->latest()->paginate(20)]); }
-    public function articleCreate() { return view('admin.articles.form', ['article' => new Article(), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.articles.store')]); }
+    public function articleCreate() { return view('admin.articles.form', ['article' => new Article(), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.store')]); }
     public function articleStore(Request $request) { return $this->saveArticle($request, new Article()); }
-    public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load('tags'), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.articles.update', $article)]); }
+    public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load('tags'), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.update', $article)]); }
     public function articleUpdate(Request $request, Article $article) { return $this->saveArticle($request, $article); }
     public function articleDestroy(Article $article) { $article->delete(); AdminAudit::record('article.archived', 'Archived article '.$article->title, $article); return back()->with('success', 'Article archived.'); }
     public function articleRestore(int $article) { $record = Article::withTrashed()->findOrFail($article); $record->restore(); AdminAudit::record('article.restored', 'Restored article '.$record->title, $record); return back()->with('success', 'Article restored.'); }
@@ -156,27 +173,43 @@ class AdminController extends Controller
         return back()->with('success', 'Message marked as read.');
     }
     public function topics() { return view('admin.topics.index', ['topics' => LearningTopic::orderBy('sort_order')->paginate(20)]); }
-    public function topicCreate() { return view('admin.topics.form', ['topic' => new LearningTopic(['sort_order' => 0]), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.topics.store'), 'isCreate' => true]); }
+    public function topicCreate() { return view('admin.topics.form', ['topic' => new LearningTopic(['sort_order' => 0]), 'courses' => Course::orderBy('sort_order')->orderBy('title')->get(), 'articles' => Article::orderByDesc('created_at')->get(), 'products' => Product::orderBy('sort_order')->orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.topics.store'), 'isCreate' => true]); }
     public function topicStore(Request $request)
     {
-        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title'))]);
-        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('learning_topics', 'slug')], 'image' => ['nullable', 'string', 'max:255'], 'short_description' => ['required', 'string'], 'full_description' => ['nullable', 'string'], 'skill_level' => ['nullable', 'string', 'max:80'], 'study_time' => ['nullable', 'string', 'max:80'], 'expected_availability' => ['nullable', 'string', 'max:120'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
+        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'hero_overlay' => $request->input('hero_overlay', 'medium'), 'hero_alignment' => $request->input('hero_alignment', 'left')]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('learning_topics', 'slug')], 'image' => ['nullable', 'string', 'max:255'], 'hero_eyebrow' => ['nullable', 'string', 'max:190'], 'hero_title' => ['nullable', 'string', 'max:190'], 'hero_summary' => ['nullable', 'string', 'max:1000'], 'hero_image' => ['nullable', 'string', 'max:255'], 'hero_overlay' => ['required', 'in:light,medium,strong'], 'hero_alignment' => ['required', 'in:left,center,right'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'short_description' => ['required', 'string'], 'full_description' => ['nullable', 'string'], 'learning_outcomes' => ['nullable', 'string', 'max:10000'], 'course_ids' => ['nullable', 'array'], 'course_ids.*' => ['integer', 'exists:courses,id'], 'article_ids' => ['nullable', 'array'], 'article_ids.*' => ['integer', 'exists:articles,id'], 'product_ids' => ['nullable', 'array'], 'product_ids.*' => ['integer', 'exists:products,id'], 'skill_level' => ['nullable', 'string', 'max:80'], 'study_time' => ['nullable', 'string', 'max:80'], 'expected_availability' => ['nullable', 'string', 'max:120'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
         $data['is_published'] = $request->boolean('is_published');
         $data['status'] = $data['is_published'] ? 'published' : 'draft';
         $data['full_description'] = RichText::sanitize($data['full_description'] ?? null);
+        $data['learning_outcomes'] = collect(preg_split('/\r\n|\r|\n/', (string) ($data['learning_outcomes'] ?? '')))->map(fn ($item) => trim($item))->filter()->values()->all();
+        $courseIds = $data['course_ids'] ?? [];
+        $articleIds = $data['article_ids'] ?? [];
+        $productIds = $data['product_ids'] ?? [];
+        unset($data['course_ids'], $data['article_ids'], $data['product_ids']);
         $topic = LearningTopic::create($data);
+        $topic->courses()->sync($courseIds);
+        $topic->articles()->sync($articleIds);
+        $topic->products()->sync($productIds);
         AdminAudit::record('topic.created', 'Created learning topic '.$topic->title, $topic);
         return to_route('admin.topics')->with('success', 'Learning topic created.');
     }
-    public function topicEdit(LearningTopic $topic) { return view('admin.topics.form', ['topic' => $topic, 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.topics.update', $topic), 'isCreate' => false]); }
+    public function topicEdit(LearningTopic $topic) { return view('admin.topics.form', ['topic' => $topic->load(['courses', 'articles', 'products']), 'courses' => Course::orderBy('sort_order')->orderBy('title')->get(), 'articles' => Article::orderByDesc('created_at')->get(), 'products' => Product::orderBy('sort_order')->orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.topics.update', $topic), 'isCreate' => false]); }
     public function topicUpdate(Request $request, LearningTopic $topic)
     {
-        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title'))]);
-        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('learning_topics', 'slug')->ignore($topic->id)], 'image' => ['nullable', 'string', 'max:255'], 'short_description' => ['required', 'string'], 'full_description' => ['nullable', 'string'], 'skill_level' => ['nullable', 'string', 'max:80'], 'study_time' => ['nullable', 'string', 'max:80'], 'expected_availability' => ['nullable', 'string', 'max:120'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
+        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'hero_overlay' => $request->input('hero_overlay', $topic->hero_overlay ?: 'medium'), 'hero_alignment' => $request->input('hero_alignment', $topic->hero_alignment ?: 'left')]);
+        $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('learning_topics', 'slug')->ignore($topic->id)], 'image' => ['nullable', 'string', 'max:255'], 'hero_eyebrow' => ['nullable', 'string', 'max:190'], 'hero_title' => ['nullable', 'string', 'max:190'], 'hero_summary' => ['nullable', 'string', 'max:1000'], 'hero_image' => ['nullable', 'string', 'max:255'], 'hero_overlay' => ['required', 'in:light,medium,strong'], 'hero_alignment' => ['required', 'in:left,center,right'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'short_description' => ['required', 'string'], 'full_description' => ['nullable', 'string'], 'learning_outcomes' => ['nullable', 'string', 'max:10000'], 'course_ids' => ['nullable', 'array'], 'course_ids.*' => ['integer', 'exists:courses,id'], 'article_ids' => ['nullable', 'array'], 'article_ids.*' => ['integer', 'exists:articles,id'], 'product_ids' => ['nullable', 'array'], 'product_ids.*' => ['integer', 'exists:products,id'], 'skill_level' => ['nullable', 'string', 'max:80'], 'study_time' => ['nullable', 'string', 'max:80'], 'expected_availability' => ['nullable', 'string', 'max:120'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
         $data['is_published'] = $request->boolean('is_published');
         $data['status'] = $data['is_published'] ? 'published' : 'draft';
         $data['full_description'] = RichText::sanitize($data['full_description'] ?? null);
+        $data['learning_outcomes'] = collect(preg_split('/\r\n|\r|\n/', (string) ($data['learning_outcomes'] ?? '')))->map(fn ($item) => trim($item))->filter()->values()->all();
+        $courseIds = $data['course_ids'] ?? [];
+        $articleIds = $data['article_ids'] ?? [];
+        $productIds = $data['product_ids'] ?? [];
+        unset($data['course_ids'], $data['article_ids'], $data['product_ids']);
         $topic->update($data);
+        $topic->courses()->sync($courseIds);
+        $topic->articles()->sync($articleIds);
+        $topic->products()->sync($productIds);
         AdminAudit::record('topic.updated', 'Updated learning topic '.$topic->title, $topic);
         return to_route('admin.topics')->with('success', 'Learning topic updated.');
     }

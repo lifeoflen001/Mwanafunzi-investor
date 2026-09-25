@@ -13,7 +13,7 @@
             return [
                 'id' => \Illuminate\Support\Str::slug($section->key),
                 'title' => $section->heading ?: \Illuminate\Support\Str::headline($section->key),
-                'paragraphs' => preg_split('/\n\s*\n/', trim((string) $section->body), -1, PREG_SPLIT_NO_EMPTY),
+                'body' => $section->body,
                 'list' => $payload['list'] ?? [],
                 'callout' => $payload['callout'] ?? null,
             ];
@@ -45,7 +45,7 @@
             @foreach($sections as $section)
                 <section class="legal-section" id="{{ $section['id'] }}">
                     <h2>{{ $section['title'] }}</h2>
-                    @foreach($section['paragraphs'] ?? [] as $paragraph)<p>{{ $paragraph }}</p>@endforeach
+                    @if($section['body'])<div class="rich-copy">{!! \App\Support\RichText::render($section['body']) !!}</div>@endif
                     @if(!empty($section['list']))<ul>@foreach($section['list'] as $item)<li>{{ $item }}</li>@endforeach</ul>@endif
                     @if(!empty($section['callout']))<p class="legal-callout">{{ $section['callout'] }}</p>@endif
                 </section>

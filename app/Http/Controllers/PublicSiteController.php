@@ -54,6 +54,13 @@ class PublicSiteController extends Controller
         return view('public.learn', ['topics' => $topics, 'page' => $this->cmsPage('learn')]);
     }
 
+    public function topic(LearningTopic $topic)
+    {
+        abort_unless($topic->is_published && $topic->status === 'published', 404);
+        $topic->load(['courses' => fn ($query) => $query->published()->orderBy('sort_order'), 'articles' => fn ($query) => $query->published()->latest('published_at')->limit(3), 'products' => fn ($query) => $query->available()->orderBy('sort_order')->limit(3), 'faqs']);
+        return view('public.learn-show', compact('topic'));
+    }
+
     public function courses()
     {
         $courses = Course::published()->withCount('modules')->orderBy('sort_order')->paginate(12);
@@ -180,6 +187,7 @@ class PublicSiteController extends Controller
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
         $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));
+        $urls = $urls->merge(LearningTopic::where('is_published', true)->where('status', 'published')->get()->map(fn ($topic) => route('learn.show', $topic)));
         $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
         $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
         $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('journal.show', $article)));

@@ -11,6 +11,7 @@ class RichText
     public static function sanitize(?string $value): ?string
     {
         if ($value === null || $value === '') return $value;
+        $value = preg_replace('/<(script|style)\b[^>]*>.*?<\/\1>/is', '', $value) ?? $value;
         $value = strip_tags($value, self::ALLOWED_TAGS);
         $value = preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $value) ?? $value;
         $value = preg_replace_callback('/<a\b[^>]*>/i', static function ($match) {

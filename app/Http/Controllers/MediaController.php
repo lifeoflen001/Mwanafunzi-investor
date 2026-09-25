@@ -16,6 +16,35 @@ use App\Support\AdminAudit;
 
 class MediaController extends Controller
 {
+    public function search(Request $request)
+    {
+        $data = $request->validate([
+            'q' => ['nullable', 'string', 'max:120'],
+            'type' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        $query = Media::query()
+            ->when($data['q'] ?? null, function ($query, string $term) {
+                $query->where(function ($nested) use ($term) {
+                    $nested->where('filename', 'like', '%'.$term.'%')
+                        ->orWhere('title', 'like', '%'.$term.'%')
+                        ->orWhere('caption', 'like', '%'.$term.'%')
+                        ->orWhere('alt_text', 'like', '%'.$term.'%');
+                });
+            })
+            ->when($data['type'] ?? null, fn ($query, string $type) => $query->where('mime_type', 'like', $type.'%'))
+            ->latest()
+            ->limit(40)
+            ->get();
+
+        return response()->json($query->map(fn (Media $media) => [
+            'path' => $media->path,
+            'url' => $media->url,
+            'label' => $media->filename.($media->width ? ' · '.$media->width.'×'.$media->height : ''),
+            'alt_text' => $media->alt_text,
+        ])->values());
+    }
+
     public function index(Request $request)
     {
         $query = Media::query();
