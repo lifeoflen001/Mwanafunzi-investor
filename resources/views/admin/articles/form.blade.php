@@ -2,7 +2,7 @@
 @section('title', $article->exists ? 'Edit article' : 'New article')
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">CMS / Journal</p><h1>{{ $article->exists ? 'Edit article' : 'New article' }}</h1></div><a class="back-link" href="{{ route('admin.articles') }}">← Back to articles</a></div>
-<form class="admin-form" method="post" action="{{ $action }}">@csrf @if($article->exists) @method('put') @endif
+<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($article->exists) @method('put') @endif
     <label>Title<input name="title" value="{{ old('title', $article->title) }}" required></label><label>Slug<input name="slug" value="{{ old('slug', $article->slug) }}"></label>
     <div class="form-row"><label>Category<select name="article_category_id"><option value="">Uncategorised</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('article_category_id', $article->article_category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label><label>Author<input name="author" value="{{ old('author', $article->author) }}"></label></div>
     @include('admin.components.media-field', ['name' => 'featured_image', 'label' => 'Featured image', 'value' => $article->featured_image, 'media' => $media])

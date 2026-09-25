@@ -2,10 +2,10 @@
     $updated = $updated ?? null;
     $sections = $sections ?? [];
     $related = $related ?? [];
-    $supportHeading = $supportHeading ?? 'Questions about this policy?';
-    $supportCopy = $supportCopy ?? 'Contact the Mwanafunzi Investor desk and tell us which part needs clarification.';
-    $eyebrow = $page?->hero_eyebrow ?: ($eyebrow ?? 'Policies and legal information');
-    $heading = $page?->hero_title ?: $heading;
+    $supportHeading = $page?->support_heading;
+    $supportCopy = $page?->support_copy;
+    $eyebrow = $page?->hero_eyebrow;
+    $heading = $page?->hero_title;
     $cmsSections = $page?->sections?->where('is_enabled', true)->sortBy('sort_order') ?? collect();
     if ($cmsSections->isNotEmpty()) {
         $sections = $cmsSections->map(function ($section) {
@@ -19,13 +19,11 @@
             ];
         })->values()->all();
     }
-    $intro = $page?->hero_summary ?: $intro;
-    $supportHeading = $page?->support_heading ?: $supportHeading;
-    $supportCopy = $page?->support_copy ?: $supportCopy;
+    $intro = $page?->hero_summary;
     $updated = $page?->effective_date?->format('F j, Y') ?: ($updated ?? $page?->updated_at?->format('F j, Y'));
 @endphp
 
-<x-public-hero class="legal-hero" compact :eyebrow="$eyebrow ?? 'Policies and legal information'" :title="$heading" :summary="$intro" setting="hero_legal_image" :fallback-image="config('public.hero_defaults.legal')" />
+<x-public-hero class="legal-hero" compact :eyebrow="$eyebrow" :title="$heading" :summary="$intro" setting="hero_legal_image" :fallback-image="config('public.hero_defaults.legal')" />
 
 <section class="platform-section legal-page">
     <div class="container legal-layout">
@@ -41,7 +39,7 @@
         </aside>
         <article class="legal-body">
             @if($updated)<p class="legal-updated">Last updated: {{ $updated }}</p>@endif
-            <p class="legal-intro">{{ $intro }}</p>
+            @if($intro)<p class="legal-intro">{{ $intro }}</p>@endif
             @foreach($sections as $section)
                 <section class="legal-section" id="{{ $section['id'] }}">
                     <h2>{{ $section['title'] }}</h2>
@@ -52,8 +50,8 @@
             @endforeach
             <section class="legal-support" id="support">
                 <p class="eyebrow">Policy support</p>
-                <h2>{{ $supportHeading }}</h2>
-                <p>{{ $supportCopy }}</p>
+                @if($supportHeading)<h2>{{ $supportHeading }}</h2>@endif
+                @if($supportCopy)<p>{{ $supportCopy }}</p>@endif
                 <a class="button button-accent" href="{{ route('contact') }}">Contact us <span aria-hidden="true">↗</span></a>
             </section>
             @if($page?->faqs?->isNotEmpty())

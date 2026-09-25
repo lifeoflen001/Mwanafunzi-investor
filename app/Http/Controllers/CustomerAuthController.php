@@ -18,7 +18,7 @@ class CustomerAuthController extends Controller
     public function storeLogin(Request $request)
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) return back()->withErrors(['email' => 'Those credentials were not recognised.'])->onlyInput('email');
+        if (! Auth::attempt([...$credentials, 'is_admin' => false, 'status' => 'active'], $request->boolean('remember'))) return back()->withErrors(['email' => 'Those credentials were not recognised.'])->onlyInput('email');
         $request->session()->regenerate();
         return to_route('account.dashboard');
     }

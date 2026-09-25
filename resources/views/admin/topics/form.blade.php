@@ -3,7 +3,7 @@
 @section('portal-heading', 'Learning topics')
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">CMS / Learn</p><h1>{{ $isCreate ? 'New learning topic' : 'Edit learning topic' }}</h1><p>Publish structured learning paths with controlled content, media, outcomes and course relationships.</p></div><a class="back-link" href="{{ route('admin.topics') }}">← Back to topics</a></div>
-<form class="admin-form" method="post" action="{{ $action }}">
+<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>
     @csrf @if(!$isCreate) @method('put') @endif
     <label>Title<input name="title" value="{{ old('title', $topic->title) }}" required></label>
     <label>Slug<input name="slug" value="{{ old('slug', $topic->slug) }}" placeholder="Generated from title if blank"></label>

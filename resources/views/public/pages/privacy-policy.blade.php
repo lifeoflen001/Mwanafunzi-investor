@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', $page?->seo_title ?: 'Privacy Policy — Mwanafunzi Investor')
-@section('description', $page?->seo_description ?: 'How Mwanafunzi Investor handles account, contact, order and session information.')
+@section('title', $page?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title'))
+@section('description', $page?->seo_description ?: $page?->hero_summary)
 @section('content')
-    @include('public.pages.legal-content', ['heading' => 'Privacy policy', 'eyebrow' => 'Policies / Privacy', 'intro' => 'Review how the platform handles information.', 'related' => ['terms' => 'Terms of use', 'risk-disclosure' => 'Risk disclosure', 'refund-policy' => 'Refund policy']])
+    @include('public.pages.legal-content', ['related' => ['terms' => 'Terms of use', 'risk-disclosure' => 'Risk disclosure', 'refund-policy' => 'Refund policy']])
 @endsection

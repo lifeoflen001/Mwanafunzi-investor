@@ -39,8 +39,9 @@ class PublicSiteController extends Controller
 
     public function home()
     {
-        $this->cmsPage('home');
+        $homePage = $this->cmsPage('home');
         return view('welcome', [
+            'homePage' => $homePage,
             'learningTopics' => LearningTopic::query()->where('is_published', true)->orderBy('sort_order')->get(),
             'courses' => Course::published()->orderBy('sort_order')->get(),
             'products' => Product::available()->orderBy('sort_order')->get(),

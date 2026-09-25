@@ -41,11 +41,13 @@ class AdminCustomerController extends Controller
             'enrollments.course',
             'entitlements.product',
             'entitlements.course',
+            'entitlements.downloads',
             'waitlists.course',
         ]);
         $customer->loadCount(['orders', 'enrollments', 'entitlements', 'waitlists']);
+        $downloadCount = $customer->entitlements->sum(fn ($entitlement) => $entitlement->downloads->count());
 
-        return view('admin.customers.show', compact('customer'));
+        return view('admin.customers.show', compact('customer', 'downloadCount'));
     }
 
     public function updateStatus(Request $request, User $customer)

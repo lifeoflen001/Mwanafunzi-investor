@@ -181,6 +181,14 @@ document.querySelectorAll('[data-rich-editor-wrapper]').forEach((wrapper) => {
         if (command === 'createLink') {
             const url = window.prompt('Link URL');
             if (url) document.execCommand('createLink', false, url);
+        } else if (command === 'insertTable') {
+            document.execCommand('insertHTML', false, '<table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Value</td><td>Value</td></tr></tbody></table><p><br></p>');
+        } else if (command === 'insertImage') {
+            const url = window.prompt('Image URL from the Media Library or a trusted https:// source');
+            if (!url || !/^(https?:\/\/|\/|#)/i.test(url)) return;
+            const alt = window.prompt('Image alt text') || '';
+            const escapeAttribute = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            document.execCommand('insertHTML', false, `<img src="${escapeAttribute(url)}" alt="${escapeAttribute(alt)}">`);
         } else if (command === 'formatBlock') {
             document.execCommand(command, false, `<${button.dataset.richValue}>`);
         } else {
@@ -189,6 +197,18 @@ document.querySelectorAll('[data-rich-editor-wrapper]').forEach((wrapper) => {
         sync();
     }));
     editor.closest('form')?.addEventListener('submit', sync);
+});
+
+document.querySelectorAll('form[data-unsaved-warning]').forEach((form) => {
+    let dirty = false;
+    form.addEventListener('input', () => { dirty = true; });
+    form.addEventListener('change', () => { dirty = true; });
+    form.addEventListener('submit', () => { dirty = false; });
+    window.addEventListener('beforeunload', (event) => {
+        if (!dirty) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
 });
 
 const faqTargetType = document.querySelector('[name="target_type"]');

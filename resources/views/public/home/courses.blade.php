@@ -1,4 +1,18 @@
 @php
-    $payload = $section?->payload ?? [];
+    $payload = $section->payload ?: [];
 @endphp
-<section class="section courses-section" id="courses"><div class="container"><div class="section-heading split-heading reveal"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ $payload['eyebrow'] ?? 'Learn in the right order' }}</p><h2>{{ $section?->heading ?? 'Courses for the long game.' }}</h2></div><p class="body-copy">{{ $section?->body ?? 'Practical education for people who are ready to build a process — without profitability guarantees or shortcuts.' }}</p></div><div class="course-list">@forelse($courses as $course)<a class="course-row reveal" href="{{ route('courses.show', $course) }}"><span class="course-number">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div class="course-name"><h3>{{ $course->title }}</h3><p>{{ $course->short_description }}</p></div><div class="course-detail"><span>{{ $course->level }}</span><span>{{ str_replace('_', ' ', $course->status) }}</span></div><span class="course-arrow" aria-hidden="true">↗</span></a>@empty<div class="journal-empty"><div class="empty-index">{{ $payload['empty_index'] ?? 'COURSES' }}</div><div><h3>{{ $payload['empty_heading'] ?? 'The first course is being prepared.' }}</h3><p>{{ $payload['empty_body'] ?? 'Join the conversation to hear when enrolment opens.' }}</p></div>@if(!empty($payload['empty_cta_label']) && !empty($payload['empty_cta_url']))<a class="text-link" href="{{ $payload['empty_cta_url'] }}">{{ $payload['empty_cta_label'] }} <span aria-hidden="true">↗</span></a>@endif</div>@endforelse</div></div></section>
+<section class="section courses-section" id="courses">
+    <div class="container">
+        <div class="section-heading split-heading reveal">
+            <div><p class="eyebrow"><span class="eyebrow-line"></span> {{ $payload['eyebrow'] ?? '' }}</p><h2>{{ $section->heading }}</h2></div>
+            <p class="body-copy">{{ $section->body }}</p>
+        </div>
+        <div class="course-list">
+            @forelse($courses as $course)
+                <a class="course-row reveal" href="{{ route('courses.show', $course) }}"><span class="course-number">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div class="course-name"><h3>{{ $course->title }}</h3><p>{{ $course->short_description }}</p></div><div class="course-detail"><span>{{ $course->level }}</span><span>{{ str_replace('_', ' ', $course->status) }}</span></div><span class="course-arrow" aria-hidden="true">↗</span></a>
+            @empty
+                <div class="journal-empty"><div class="empty-index">{{ $payload['empty_index'] ?? '' }}</div><div><h3>{{ $payload['empty_heading'] ?? '' }}</h3><p>{{ $payload['empty_body'] ?? '' }}</p></div>@if(!empty($payload['empty_cta_label']) && !empty($payload['empty_cta_url']))<a class="text-link" href="{{ $payload['empty_cta_url'] }}">{{ $payload['empty_cta_label'] }} <span aria-hidden="true">↗</span></a>@endif</div>
+            @endforelse
+        </div>
+    </div>
+</section>

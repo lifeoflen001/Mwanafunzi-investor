@@ -21,16 +21,15 @@
     $headerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get();
     $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
     $socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
-    $homePage = \App\Models\Page::published()->with('sections')->where('key', 'home')->first();
     $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
-    $homeHeroPrimaryLabel = $homePage?->hero_primary_label ?: 'Start Learning';
-    $homeHeroPrimaryUrl = $homePage?->hero_primary_url ?: '#courses';
-    $homeHeroSecondaryLabel = $homePage?->hero_secondary_label ?: 'Explore Trading Tools';
-    $homeHeroSecondaryUrl = $homePage?->hero_secondary_url ?: '#tools';
-    $homeHeroNote = $homePage?->hero_note ?: 'Forex Education • Risk Management • Trading Systems • Portfolio Thinking';
-    $homeHeroAside = $homePage?->hero_aside ?: "For the person who wants\nto understand, not predict.";
-    $homeHeroAsideIndex = $homePage?->hero_aside_index ?: '01 / 04';
-    $homeSeoTitle = $homePage?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title', $brandName.' — Become a Student of Money');
+    $homeHeroPrimaryLabel = $homePage?->hero_primary_label;
+    $homeHeroPrimaryUrl = $homePage?->hero_primary_url;
+    $homeHeroSecondaryLabel = $homePage?->hero_secondary_label;
+    $homeHeroSecondaryUrl = $homePage?->hero_secondary_url;
+    $homeHeroNote = $homePage?->hero_note;
+    $homeHeroAside = $homePage?->hero_aside;
+    $homeHeroAsideIndex = $homePage?->hero_aside_index;
+    $homeSeoTitle = $homePage?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title');
     $homeSeoDescription = $homePage?->seo_description ?: $seoDescription;
     $homeCanonical = $homePage?->canonical_url ?: route('home');
     $homeRobots = $homePage?->robots ?: 'index,follow';
@@ -74,17 +73,19 @@
         <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="Mobile navigation">@forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a href="{{ route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="#about">About</a>@endforelse</nav><a class="button button-dark" href="{{ route('contact') }}">Contact the desk <span aria-hidden="true">↗</span></a></div>
     </header>
     <main id="main-content">
-        <x-public-hero id="top" class="hero hero-home-hero" eyebrow="Financial education for the long game" summary="Systematic Trading. Probability. Risk. Discipline. Learn to understand markets, develop mechanical trading rules and protect your capital without the hype." setting="hero_home_image" :fallback-image="config('public.hero_defaults.home')" overlay="strong">
-            <div class="hero-buttons">
-                <a class="button button-accent" href="{{ $homeHeroPrimaryUrl }}">{{ $homeHeroPrimaryLabel }} <span aria-hidden="true">↗</span></a>
-                <a class="text-link text-link-light" href="{{ $homeHeroSecondaryUrl }}">{{ $homeHeroSecondaryLabel }} <span aria-hidden="true">→</span></a>
-            </div>
-            <p class="hero-note">{{ $homeHeroNote }}</p>
+        <x-public-hero id="top" class="hero hero-home-hero" :eyebrow="$homePage?->hero_eyebrow" :title="$homePage?->hero_title" :title-html="$homePage?->hero_title && $homePage?->hero_highlight ? e($homePage->hero_title).'<br><em>'.e($homePage->hero_highlight).'</em>' : null" :summary="$homePage?->hero_summary" setting="hero_home_image" :fallback-image="config('public.hero_defaults.home')" :overlay="$homePage?->hero_overlay ?: 'strong'">
+            @if(($homeHeroPrimaryLabel && $homeHeroPrimaryUrl) || ($homeHeroSecondaryLabel && $homeHeroSecondaryUrl))
+                <div class="hero-buttons">
+                    @if($homeHeroPrimaryLabel && $homeHeroPrimaryUrl)<a class="button button-accent" href="{{ $homeHeroPrimaryUrl }}">{{ $homeHeroPrimaryLabel }} <span aria-hidden="true">↗</span></a>@endif
+                    @if($homeHeroSecondaryLabel && $homeHeroSecondaryUrl)<a class="text-link text-link-light" href="{{ $homeHeroSecondaryUrl }}">{{ $homeHeroSecondaryLabel }} <span aria-hidden="true">→</span></a>@endif
+                </div>
+            @endif
+            @if($homeHeroNote)<p class="hero-note">{{ $homeHeroNote }}</p>@endif
             <x-slot:aside>
                 <div class="hero-aside">
                     <div class="hero-aside-rule"></div>
-                    <p>{!! nl2br(e($homeHeroAside)) !!}</p>
-                    <span>{{ $homeHeroAsideIndex }}</span>
+                    @if($homeHeroAside)<p>{!! nl2br(e($homeHeroAside)) !!}</p>@endif
+                    @if($homeHeroAsideIndex)<span>{{ $homeHeroAsideIndex }}</span>@endif
                 </div>
             </x-slot:aside>
             <a class="scroll-cue" href="#philosophy"><span>Scroll to explore</span><i aria-hidden="true">↓</i></a>

@@ -113,11 +113,15 @@ class PlatformRoutesTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.customers'))->assertOk()->assertSee('Student Customer')->assertSee('student@example.com');
         $this->actingAs($admin)->get(route('admin.search', ['q' => 'student@example.com']))->assertOk()->assertSee('Customer')->assertSee(route('admin.customers.show', $customer));
-        $this->actingAs($admin)->get(route('admin.customers.show', $customer))->assertOk()->assertSee('Account status')->assertSee('Student Customer');
+        $this->actingAs($admin)->get(route('admin.customers.show', $customer))->assertOk()->assertSee('Account status')->assertSee('Account details')->assertSee('Downloads')->assertSee('Student Customer');
         $this->actingAs($admin)->patch(route('admin.customers.status', $customer), ['status' => 'suspended'])->assertRedirect();
 
         $this->assertDatabaseHas('users', ['id' => $customer->id, 'status' => 'suspended']);
         $this->assertDatabaseHas('admin_audit_logs', ['action' => 'customer.status_updated', 'auditable_id' => $customer->id]);
+        $customer->forceFill(['password' => 'password', 'email_verified_at' => now()])->save();
+        Auth::logout();
+        $this->post(route('login.store'), ['email' => $customer->email, 'password' => 'password'])->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_admin_learning_topic_hero_and_seo_propagate_to_public_page(): void
@@ -269,7 +273,10 @@ class PlatformRoutesTest extends TestCase
         $message = ContactMessage::where('email', 'ops@example.com')->firstOrFail();
         $this->actingAs($admin)->patch(route('admin.messages.update', $message), ['status' => 'resolved'])->assertRedirect();
         $this->assertDatabaseHas('contact_messages', ['id' => $message->id, 'status' => 'resolved']);
+        $this->assertDatabaseHas('admin_audit_logs', ['action' => 'message.status_updated', 'auditable_id' => $message->id]);
+        $this->actingAs($admin)->get(route('admin.messages', ['q' => 'ops@example.com', 'status' => 'resolved']))->assertOk()->assertSee('ops@example.com');
         $this->actingAs($admin)->get(route('admin.messages.show', $message))->assertOk()->assertSee($message->message)->assertSee('Contact details');
+        $this->assertNotNull($message->fresh()->read_at);
 
         $this->actingAs($admin)->post(route('admin.courses.store'), ['title' => 'Duplicate course', 'slug' => 'forex-foundations', 'status' => 'draft', 'short_description' => 'Should fail'])->assertSessionHasErrors('slug');
         $this->assertDatabaseMissing('courses', ['title' => 'Duplicate course']);

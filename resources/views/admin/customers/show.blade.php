@@ -17,8 +17,19 @@
         <div><span>Orders</span><strong>{{ $customer->orders_count }}</strong></div>
         <div><span>Course access</span><strong>{{ $customer->enrollments_count }}</strong></div>
         <div><span>Entitlements</span><strong>{{ $customer->entitlements_count }}</strong></div>
-        <div><span>Waitlists</span><strong>{{ $customer->waitlists_count }}</strong></div>
+        <div><span>Downloads</span><strong>{{ $downloadCount }}</strong></div>
     </div>
+
+    <section class="admin-card admin-subresource">
+        <div class="admin-heading"><div><p class="eyebrow">Profile</p><h2>Account details</h2></div></div>
+        <dl class="admin-definition-list">
+            <div><dt>Email</dt><dd><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></dd></div>
+            <div><dt>Phone</dt><dd>{{ $customer->phone ?: 'Not provided' }}</dd></div>
+            <div><dt>Country</dt><dd>{{ $customer->country ?: 'Not provided' }}</dd></div>
+            <div><dt>Email verified</dt><dd>{{ $customer->email_verified_at?->format('M j, Y') ?: 'Not verified' }}</dd></div>
+            <div><dt>Last sign in</dt><dd>{{ $customer->last_login_at?->format('M j, Y H:i') ?: 'Not recorded' }}</dd></div>
+        </dl>
+    </section>
 
     <section class="admin-card admin-subresource">
         <div class="admin-heading">
@@ -69,7 +80,7 @@
         <div class="admin-table">
             <div class="admin-table-head"><span>Resource</span><span>Type</span><span>Status</span></div>
             @forelse($customer->entitlements as $entitlement)
-                <div class="admin-table-row"><span>{{ $entitlement->product?->name ?: $entitlement->course?->title ?: 'Resource removed' }}</span><span>{{ $entitlement->type }}</span><span>{{ $entitlement->status->value ?? $entitlement->status }}</span></div>
+                <div class="admin-table-row"><span>{{ $entitlement->product?->name ?: $entitlement->course?->title ?: 'Resource removed' }}</span><span>{{ $entitlement->type }}</span><span>{{ $entitlement->status->value ?? $entitlement->status }} · {{ $entitlement->downloads->count() }} downloads</span></div>
             @empty
                 <div class="empty-state compact"><p>No entitlements yet.</p></div>
             @endforelse

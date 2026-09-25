@@ -2,7 +2,7 @@
     'name',
     'label' => 'Content',
     'value' => null,
-    'help' => 'Basic formatting is supported and unsafe HTML is removed before publishing.',
+    'help' => 'Controlled formatting, tables and safe images are supported; unsafe HTML and URLs are removed before publishing.',
     'idSuffix' => null,
 ])
 @php
@@ -21,6 +21,8 @@
         <button type="button" data-rich-command="insertOrderedList" title="Numbered list">1. List</button>
         <button type="button" data-rich-command="formatBlock" data-rich-value="blockquote" title="Blockquote">Quote</button>
         <button type="button" data-rich-command="createLink" title="Add link">Link</button>
+        <button type="button" data-rich-command="insertTable" title="Insert a simple table">Table</button>
+        <button type="button" data-rich-command="insertImage" title="Insert a safe image URL">Image</button>
         <button type="button" data-rich-command="removeFormat" title="Clear formatting">Clear</button>
     </div>
     <div id="{{ $editorId }}" class="rich-text-editor" contenteditable="true" role="textbox" aria-multiline="true" data-rich-editor>{!! $safeValue !!}</div>

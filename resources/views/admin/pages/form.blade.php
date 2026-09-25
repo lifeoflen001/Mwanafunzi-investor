@@ -17,7 +17,7 @@
         @endif
     </div>
 
-    <form class="admin-form" method="post" action="{{ $action }}">
+    <form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>
         @csrf
         @if($page->exists) @method('put') @endif
 
@@ -353,6 +353,6 @@
             </fieldset>
         @endif
 
-        <button class="button button-dark" type="submit">Save page <span aria-hidden="true">↗</span></button>
+        <div class="form-actions"><button class="button button-dark" type="submit">Save page <span aria-hidden="true">↗</span></button>@if($page->exists)<a class="button button-light" href="{{ URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'page', 'id' => $page->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div>
     </form>
 @endsection

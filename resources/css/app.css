@@ -30,6 +30,7 @@
 .field-help { color:var(--muted); font-size:12px; }
 .field-help a { color:var(--copper-dark); text-decoration:underline; }
 .form-actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.admin-form > .form-actions { position:sticky; z-index:4; bottom:0; margin-top:6px; padding:16px 0; border-top:1px solid var(--line); background:var(--paper); }
 .admin-page .button-light { background:transparent; border-color:var(--ink); color:var(--ink); }
 .admin-page .button-small { display:inline-flex; }
 .form-section { display:grid; gap:18px; margin:0; padding:22px; border:1px solid var(--line); background:rgba(255,255,255,.28); }
@@ -39,6 +40,9 @@
 .media-filters label { display:grid; gap:8px; color:var(--muted); font:10px var(--mono); text-transform:uppercase; letter-spacing:.08em; }
 .media-filters input,.media-filters select,.message-status-form select { width:100%; padding:11px 12px; border:1px solid var(--line); background:var(--white); font:14px var(--sans); }
 .message-status-form { display:flex; gap:8px; margin-top:10px; }
+.admin-message-table .admin-table-head,.admin-message-table .admin-table-row { grid-template-columns:1.1fr 1.35fr 120px 130px 150px 150px; }
+.admin-message-table .admin-table-row { align-items:start; }
+.admin-message-table .message-status-form { margin-top:0; }
 .message-category { display:block; margin-top:8px; color:var(--muted); font:10px var(--mono); text-transform:uppercase; letter-spacing:.06em; }
 .message-status-form button { border:0; background:none; color:var(--copper-dark); cursor:pointer; font-size:12px; }
 .unread-dot { color:var(--copper); font-size:10px; }
@@ -131,6 +135,10 @@
 .rich-text-editor p { margin:0 0 12px; }
 .rich-text-editor blockquote { margin:14px 0; padding-left:14px; border-left:2px solid var(--copper); color:var(--muted); }
 .rich-text-editor ul,.rich-text-editor ol { padding-left:24px; }
+.rich-text-editor table,.rich-copy table { width:100%; margin:20px 0; border-collapse:collapse; }
+.rich-text-editor th,.rich-text-editor td,.rich-copy th,.rich-copy td { padding:10px 12px; border:1px solid var(--line); text-align:left; }
+.rich-text-editor th,.rich-copy th { background:var(--paper-deep); color:var(--ink); font-weight:600; }
+.rich-text-editor img,.rich-copy img { max-width:100%; height:auto; }
 .checkbox-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px 18px; }
 @media (max-width:760px) { .checkbox-grid { grid-template-columns:1fr; } }
 .admin-business-unit-card { max-width:900px; padding:22px; border:1px solid #e1e5e2; border-radius:var(--admin-radius); background:#fff; }

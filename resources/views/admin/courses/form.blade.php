@@ -2,7 +2,7 @@
 @section('title', $course->exists ? 'Edit course' : 'New course')
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">CMS / Courses</p><h1>{{ $course->exists ? 'Edit course' : 'New course' }}</h1></div><a class="back-link" href="{{ route('admin.courses') }}">← Back to courses</a></div>
-<form class="admin-form" method="post" action="{{ $action }}">@csrf @if($course->exists) @method('put') @endif
+<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($course->exists) @method('put') @endif
     <label>Title<input name="title" value="{{ old('title', $course->title) }}" required></label>
     <label>Slug<input name="slug" value="{{ old('slug', $course->slug) }}" placeholder="Generated from title if blank"></label>
     @include('admin.components.media-field', ['name' => 'featured_image', 'label' => 'Featured image', 'value' => $course->featured_image, 'media' => $media])

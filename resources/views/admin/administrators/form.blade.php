@@ -3,7 +3,7 @@
 @section('portal-heading', 'Administrators')
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">Access control</p><h1>{{ $isCreate ? 'New administrator' : 'Edit administrator' }}</h1><p>Administrator access is protected by server-side authorization and audit logging.</p></div><a class="back-link" href="{{ route('admin.administrators') }}">← Back to administrators</a></div>
-<form class="admin-form" method="post" action="{{ $isCreate ? route('admin.administrators.store') : route('admin.administrators.update', $administrator) }}">
+<form class="admin-form" method="post" action="{{ $isCreate ? route('admin.administrators.store') : route('admin.administrators.update', $administrator) }}" data-unsaved-warning>
     @csrf @if(!$isCreate) @method('put') @endif
     <label>Name<input name="name" value="{{ old('name', $administrator->name) }}" autocomplete="name" required></label>
     <label>Email<input type="email" name="email" value="{{ old('email', $administrator->email) }}" autocomplete="email" required></label>

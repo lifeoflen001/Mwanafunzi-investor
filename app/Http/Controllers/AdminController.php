@@ -161,7 +161,26 @@ class AdminController extends Controller
     public function articleDestroy(Article $article) { $article->delete(); AdminAudit::record('article.archived', 'Archived article '.$article->title, $article); return back()->with('success', 'Article archived.'); }
     public function articleRestore(int $article) { $record = Article::withTrashed()->findOrFail($article); $record->restore(); AdminAudit::record('article.restored', 'Restored article '.$record->title, $record); return back()->with('success', 'Article restored.'); }
 
-    public function messages() { return view('admin.messages.index', ['messages' => ContactMessage::with('businessUnit')->latest()->paginate(30)]); }
+    public function messages(Request $request)
+    {
+        $data = $request->validate([
+            'q' => ['nullable', 'string', 'max:120'],
+            'status' => ['nullable', 'in:new,in_progress,resolved,spam'],
+        ]);
+        $term = trim((string) ($data['q'] ?? ''));
+        $messages = ContactMessage::with('businessUnit')
+            ->when($term !== '', fn ($query) => $query->where(fn ($search) => $search
+                ->where('name', 'like', '%'.$term.'%')
+                ->orWhere('email', 'like', '%'.$term.'%')
+                ->orWhere('phone', 'like', '%'.$term.'%')
+                ->orWhere('message', 'like', '%'.$term.'%')))
+            ->when(! empty($data['status']), fn ($query) => $query->where('status', $data['status']))
+            ->latest()
+            ->paginate(30)
+            ->withQueryString();
+
+        return view('admin.messages.index', compact('messages', 'term'));
+    }
     public function messageShow(ContactMessage $message)
     {
         $message->load('businessUnit');
@@ -172,11 +191,13 @@ class AdminController extends Controller
     {
         $data = $request->validate(['status' => ['required', 'in:new,in_progress,resolved,spam']]);
         $message->update(['status' => $data['status'], 'read_at' => $message->read_at ?: now()]);
+        AdminAudit::record('message.status_updated', 'Updated enquiry status for '.$message->email, $message, ['status' => $data['status']]);
         return back()->with('success', 'Message status updated.');
     }
     public function messageRead(ContactMessage $message)
     {
         $message->update(['read_at' => now()]);
+        AdminAudit::record('message.read', 'Marked enquiry as read for '.$message->email, $message);
         return back()->with('success', 'Message marked as read.');
     }
     public function topics() { return view('admin.topics.index', ['topics' => LearningTopic::orderBy('sort_order')->paginate(20)]); }

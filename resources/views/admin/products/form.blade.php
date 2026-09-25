@@ -2,7 +2,7 @@
 @section('title', $product->exists ? 'Edit product' : 'New product')
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">CMS / Tools</p><h1>{{ $product->exists ? 'Edit product' : 'New product' }}</h1></div><a class="back-link" href="{{ route('admin.products') }}">← Back to products</a></div>
-<form class="admin-form" method="post" action="{{ $action }}">@csrf @if($product->exists) @method('put') @endif
+<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($product->exists) @method('put') @endif
     <label>Name<input name="name" value="{{ old('name', $product->name) }}" required></label><label>Slug<input name="slug" value="{{ old('slug', $product->slug) }}"></label>
     @include('admin.components.media-field', ['name' => 'thumbnail', 'label' => 'Thumbnail', 'value' => $product->thumbnail, 'media' => $media])
     <label>Hero image focal point<select name="hero_focal_point">@foreach(\App\Support\HeroFocalPoint::options() as $focalPoint)<option value="{{ $focalPoint }}" @selected(old('hero_focal_point', $product->hero_focal_point ?: \App\Support\HeroFocalPoint::DEFAULT) === $focalPoint)>{{ str_replace(' ', ' · ', ucfirst($focalPoint)) }}</option>@endforeach</select></label>
