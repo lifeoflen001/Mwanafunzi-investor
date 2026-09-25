@@ -45,7 +45,7 @@ class PublicHero
 
         return [
             'url' => $isPublicAsset ? asset($path) : asset('storage/'.$path),
-            'srcset' => $variants->isEmpty() ? null : $variants->map(fn (array $variant) => asset('storage/'.$variant['path']).' '.$variant['width'].'w')->implode(', '),
+            'srcset' => $variants->isEmpty() ? null : $variants->map(fn (array $variant) => ($isPublicAsset ? asset($variant['path']) : asset('storage/'.$variant['path'])).' '.$variant['width'].'w')->implode(', '),
             'position' => 'center center',
         ];
     }
