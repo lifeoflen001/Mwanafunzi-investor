@@ -1,2 +1,70 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>@yield('title', 'Admin') — Mwanafunzi Investor</title>@vite(['resources/css/app.css', 'resources/js/app.js'])</head><body class="portal-page admin-page admin-portal"><div class="portal-shell"><aside class="portal-sidebar admin-sidebar" aria-label="Admin navigation"><a class="portal-brand" href="{{ route('admin.dashboard') }}" aria-label="Mwanafunzi Investor admin portal"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span><strong>MWANAFUNZI</strong><small>ADMIN DESK</small></span></a><p class="portal-section-label">Manage</p><nav class="portal-nav"><a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon">⌂</span>Dashboard</a><a class="{{ request()->routeIs('admin.courses*', 'admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon">▤</span>Learning</a><a class="{{ request()->routeIs('admin.products*', 'admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon">◈</span>Commerce</a><a class="{{ request()->routeIs('admin.articles*') ? 'is-active' : '' }}" href="{{ route('admin.articles') }}"><span class="portal-nav-icon">▥</span>Journal</a></nav><p class="portal-section-label">Platform</p><nav class="portal-nav"><a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon">✉</span>Enquiries</a><a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon">▧</span>Media library</a><a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon">⚙</span>Settings</a></nav><div class="portal-sidebar-footer"><span class="portal-status portal-status-accent"><i></i> System online</span>@auth<form method="post" action="{{ route('admin.logout') }}">@csrf<button class="portal-signout" type="submit">Sign out</button></form>@else<a href="{{ route('admin.login') }}">Admin sign in</a>@endauth</div></aside><div class="portal-main"><header class="portal-topbar"><div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div><div class="portal-search" aria-label="Portal search"><span>⌕</span><span>Search the desk</span></div><div class="portal-topbar-actions"><span class="portal-topbar-dot" title="Notifications">◌</span><span class="portal-avatar portal-avatar-admin">A</span><span class="portal-user-name">Admin desk</span></div></header><main class="portal-content">@if(session('success'))<div class="form-success">{{ session('success') }}</div>@endif @if($errors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif @yield('content')</main></div></div></body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#202a27">
+    <title>@yield('title', 'Admin') — Mwanafunzi Investor</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('components.design-tokens')
+</head>
+<body class="portal-page admin-page admin-portal">
+    <a class="skip-link" href="#admin-main-content">Skip to content</a>
+    <div class="portal-shell admin-shell" data-admin-shell>
+        <aside class="portal-sidebar admin-sidebar" aria-label="Admin navigation" id="admin-sidebar" data-admin-sidebar>
+            <div class="admin-sidebar-head">
+                <a class="portal-brand" href="{{ route('admin.dashboard') }}" aria-label="Mwanafunzi Investor admin portal">
+                    <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+                    <span><strong>MWANAFUNZI</strong><small>ADMIN DESK</small></span>
+                </a>
+                <button class="admin-sidebar-close" type="button" aria-label="Close admin navigation" data-admin-sidebar-close>×</button>
+            </div>
+            <div class="admin-sidebar-scroll">
+                <p class="portal-section-label">Overview</p>
+                <nav class="portal-nav" aria-label="Overview navigation">
+                    <a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
+                </nav>
+                <p class="portal-section-label">Content</p>
+                <nav class="portal-nav" aria-label="Content navigation">
+                    <a class="{{ request()->routeIs('admin.courses*', 'admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Learning</a>
+                    <a class="{{ request()->routeIs('admin.articles*') ? 'is-active' : '' }}" href="{{ route('admin.articles') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span>Journal</a>
+                    <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
+                </nav>
+                <p class="portal-section-label">Commerce</p>
+                <nav class="portal-nav" aria-label="Commerce navigation">
+                    <a class="{{ request()->routeIs('admin.products*', 'admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Commerce</a>
+                </nav>
+                <p class="portal-section-label">Platform</p>
+                <nav class="portal-nav" aria-label="Platform navigation">
+                    <a class="{{ request()->routeIs('admin.pages*', 'admin.navigation*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span>Pages &amp; navigation</a>
+                    <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
+                    <a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span>Settings</a>
+                </nav>
+            </div>
+            <div class="portal-sidebar-footer">
+                <span class="portal-status portal-status-accent"><i></i> System online</span>
+                @auth
+                    <form method="post" action="{{ route('admin.logout') }}">@csrf<button class="portal-signout" type="submit">Sign out</button></form>
+                @else
+                    <a href="{{ route('admin.login') }}">Admin sign in</a>
+                @endauth
+            </div>
+        </aside>
+        <div class="admin-sidebar-backdrop" data-admin-sidebar-close></div>
+        <div class="portal-main">
+            <header class="portal-topbar admin-topbar">
+                <button class="admin-sidebar-toggle" type="button" aria-label="Open admin navigation" aria-controls="admin-sidebar" aria-expanded="false" data-admin-sidebar-toggle>☰</button>
+                <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
+                <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
+                <div class="portal-search" aria-label="Portal search"><span aria-hidden="true">⌕</span><span>Search the desk</span></div>
+                <div class="portal-topbar-actions"><button class="admin-topbar-action" type="button" title="Notifications" aria-label="Notifications">◌</button><span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span></div>
+            </header>
+            <main class="portal-content" id="admin-main-content">
+                @if(session('success'))<div class="form-success" role="status">{{ session('success') }}</div>@endif
+                @if($errors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+                @yield('content')
+            </main>
+        </div>
+    </div>
+</body>
+</html>

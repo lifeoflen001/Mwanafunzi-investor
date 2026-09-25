@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Terms — Mwanafunzi Investor')
-@section('description', 'Terms for using the Mwanafunzi Investor website, courses, tools and account areas.')
+@section('title', $page?->seo_title ?: 'Terms — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'Terms for using the Mwanafunzi Investor website, courses, tools and account areas.')
 @php
 $sections = [
     ['id' => 'acceptance', 'title' => 'Acceptance of terms', 'paragraphs' => ['This website provides educational information, learning material and tools in development. By using it, you agree to use the platform responsibly and to follow these terms. If you do not agree, please do not use the platform.']],

@@ -14,9 +14,28 @@
     'breadcrumbs' => [],
 ])
 @php
+    $pageKey = match (request()->route()?->getName()) {
+        'home' => 'home',
+        'learn' => 'learn',
+        'courses' => 'courses',
+        'tools' => 'tools',
+        'journal' => 'journal',
+        'about' => 'about',
+        'contact' => 'contact',
+        'student-of-money' => 'student-of-money',
+        'legal' => request()->route('page'),
+        default => null,
+    };
+    $cmsPage = $pageKey ? \App\Models\Page::published()->where('key', $pageKey)->first() : null;
+    $eyebrow = $cmsPage?->hero_eyebrow ?: $eyebrow;
+    $title = $cmsPage?->hero_title ?: $title;
+    if ($cmsPage?->hero_title) $titleHtml = null;
+    $summary = $cmsPage?->hero_summary ?: $summary;
+    $overlay = $cmsPage?->hero_overlay ?: $overlay;
+    $alignment = $cmsPage?->hero_alignment ?: $alignment;
     $configuredImage = $setting ? \App\Models\SiteSetting::getValue($setting) : null;
     $defaultImage = \App\Models\SiteSetting::getValue('default_public_hero');
-    $hero = \App\Support\PublicHero::resolve([$image, $configuredImage, $fallbackImage, $defaultImage, config('public.hero_defaults.default')]);
+    $hero = \App\Support\PublicHero::resolve([$cmsPage?->hero_image, $image, $configuredImage, $fallbackImage, $defaultImage, config('public.hero_defaults.default')]);
 @endphp
 <section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $hero['position'] ?? 'center center' }}; --hero-overlay-strength: {{ $overlay }};">
     @if($hero)

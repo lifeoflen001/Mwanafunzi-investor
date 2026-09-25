@@ -4,6 +4,21 @@
     $related = $related ?? [];
     $supportHeading = $supportHeading ?? 'Questions about this policy?';
     $supportCopy = $supportCopy ?? 'Contact the Mwanafunzi Investor desk and tell us which part needs clarification.';
+    $cmsSections = $page?->sections?->where('is_enabled', true)->sortBy('sort_order') ?? collect();
+    if ($cmsSections->isNotEmpty()) {
+        $sections = $cmsSections->map(function ($section) {
+            $payload = $section->payload ?: [];
+            return [
+                'id' => \Illuminate\Support\Str::slug($section->key),
+                'title' => $section->heading ?: \Illuminate\Support\Str::headline($section->key),
+                'paragraphs' => preg_split('/\n\s*\n/', trim((string) $section->body), -1, PREG_SPLIT_NO_EMPTY),
+                'list' => $payload['list'] ?? [],
+                'callout' => $payload['callout'] ?? null,
+            ];
+        })->values()->all();
+    }
+    $intro = $page?->hero_summary ?: $intro;
+    $updated = $updated ?? $page?->updated_at?->format('F j, Y');
 @endphp
 
 <x-public-hero class="legal-hero" compact :eyebrow="$eyebrow ?? 'Policies and legal information'" :title="$heading" :summary="$intro" setting="hero_legal_image" :fallback-image="config('public.hero_defaults.legal')" />

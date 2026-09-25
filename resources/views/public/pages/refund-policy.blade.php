@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Refund Policy — Mwanafunzi Investor')
-@section('description', 'How Mwanafunzi Investor handles product, course, duplicate-payment and refund questions.')
+@section('title', $page?->seo_title ?: 'Refund Policy — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'How Mwanafunzi Investor handles product, course, duplicate-payment and refund questions.')
 @php
 $sections = [
     ['id' => 'before-purchase', 'title' => 'Before purchase', 'paragraphs' => ['A product or course should publish its availability, description, price and access conditions before checkout or enrolment is enabled. If the relevant offer is marked coming soon or waitlist, a purchase is not being represented as available.']],

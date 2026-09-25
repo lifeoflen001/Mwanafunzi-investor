@@ -12,6 +12,8 @@ use App\Http\Controllers\CommerceController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\AdminCommerceController;
+use App\Http\Controllers\AdminPageController;
+use App\Http\Controllers\AdminNavigationController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -128,6 +130,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
+        Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
+        Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');
+        Route::get('/pages/{page}/edit', [AdminPageController::class, 'edit'])->name('pages.edit');
+        Route::put('/pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
+        Route::get('/navigation', [AdminNavigationController::class, 'index'])->name('navigation');
+        Route::post('/navigation', [AdminNavigationController::class, 'store'])->name('navigation.store');
+        Route::put('/navigation/{navigationItem}', [AdminNavigationController::class, 'update'])->name('navigation.update');
+        Route::delete('/navigation/{navigationItem}', [AdminNavigationController::class, 'destroy'])->name('navigation.destroy');
         Route::get('/categories', [AdminTaxonomyController::class, 'categories'])->name('categories');
         Route::post('/categories', [AdminTaxonomyController::class, 'categoryStore'])->name('categories.store');
         Route::delete('/categories/{category}', [AdminTaxonomyController::class, 'categoryDestroy'])->name('categories.destroy');

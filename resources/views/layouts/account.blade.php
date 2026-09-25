@@ -9,6 +9,7 @@
     <meta name="description" content="Your Mwanafunzi Investor student portal.">
     <title>@yield('title', 'Student portal') — Mwanafunzi Investor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('components.design-tokens')
 </head>
 <body class="portal-page account-portal">
     <div class="portal-shell">

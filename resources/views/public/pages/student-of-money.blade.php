@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Student of Money — Mwanafunzi Investor')
-@section('description', 'The Mwanafunzi Investor philosophy: probability over prediction, process over outcome and responsible stewardship of capital.')
+@section('title', $page?->seo_title ?: 'Student of Money — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'The Mwanafunzi Investor philosophy: probability over prediction, process over outcome and responsible stewardship of capital.')
 @section('content')
 <x-public-hero class="manifesto-hero" eyebrow="The signature philosophy" title-html="Always a <em>student</em> of money." summary="Continuous learning. Probability over prediction. Process over outcome. Stewardship over shortcuts." setting="hero_student_image" :fallback-image="config('public.hero_defaults.student-of-money')" />
 <section class="platform-section"><div class="container editorial-copy"><p class="eyebrow">The Student of Money</p><h2>Good decisions become easier when they have somewhere to live.</h2><p>A Student of Money does not need to be right on every trade. They need controlled losses, repeatable execution and an edge that can express itself across a meaningful sample.</p><p>They stay curious, write down what must be true before acting, protect capital, review honestly and make one thoughtful change at a time.</p></div></section>

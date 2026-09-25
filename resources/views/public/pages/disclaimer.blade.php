@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Disclaimer — Mwanafunzi Investor')
-@section('description', 'The educational scope and limits of Mwanafunzi Investor content, tools and external services.')
+@section('title', $page?->seo_title ?: 'Disclaimer — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'The educational scope and limits of Mwanafunzi Investor content, tools and external services.')
 @php
 $sections = [
     ['id' => 'educational-only', 'title' => 'Educational content only', 'paragraphs' => ['Mwanafunzi Investor publishes educational material about markets, systems, probability, risk and disciplined decision-making. It is intended to support learning, not to replace individual advice.']],

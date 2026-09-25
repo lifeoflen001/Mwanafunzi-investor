@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\Media;
 use App\Models\ContactMessage;
 use App\Models\SiteSetting;
+use App\Models\Page;
+use App\Models\NavigationItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -169,5 +171,58 @@ class PlatformRoutesTest extends TestCase
 
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Content management');
+    }
+
+    public function test_pages_navigation_and_design_tokens_propagate_to_public_frontend(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $page = Page::where('key', 'about')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.pages'))->assertOk()->assertSee('Pages');
+        $this->actingAs($admin)->get(route('admin.pages.edit', $page))->assertOk()->assertSee('Hero image');
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_eyebrow' => 'Updated from the CMS', 'hero_title' => 'A page managed from the desk', 'hero_summary' => 'CMS summary', 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+            'seo_title' => 'CMS about title', 'seo_description' => 'CMS about description',
+        ])->assertRedirect();
+        $philosophy = $page->sections()->where('key', 'philosophy')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'sections' => [$philosophy->id => [
+                'heading' => 'A different kind of education, managed from the CMS.', 'body' => 'Updated page content from the structured editor.', 'sort_order' => 10, 'is_enabled' => 1,
+            ]],
+        ])->assertRedirect();
+        $this->get('/about')->assertOk()->assertSee('A page managed from the desk')->assertSee('A different kind of education, managed from the CMS.')->assertSee('CMS about title');
+
+        $terms = Page::where('key', 'terms')->firstOrFail();
+        $acceptance = $terms->sections()->where('key', 'acceptance')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $terms), [
+            'name' => $terms->name, 'key' => $terms->key, 'slug' => $terms->slug, 'page_type' => $terms->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'sections' => [$acceptance->id => [
+                'heading' => 'Acceptance of the updated terms', 'body' => 'This policy section is now controlled by the structured CMS editor.', 'sort_order' => 10, 'is_enabled' => 1,
+            ]],
+        ])->assertRedirect();
+        $this->get('/terms')->assertOk()->assertSee('Acceptance of the updated terms')->assertSee('This policy section is now controlled by the structured CMS editor.');
+
+        $home = Page::where('key', 'home')->firstOrFail();
+        $learning = $home->sections()->where('key', 'learning')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $home), [
+            'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'strong', 'hero_alignment' => 'left', 'sections' => [$learning->id => [
+                'heading' => $learning->heading, 'body' => $learning->body, 'sort_order' => 20,
+            ]],
+        ])->assertRedirect();
+        $this->get('/')->assertOk()->assertDontSee($learning->heading);
+
+        $navigation = NavigationItem::where('location', 'header')->where('label', 'About')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.navigation'))->assertOk()->assertSee('Navigation');
+        $this->actingAs($admin)->put(route('admin.navigation.update', $navigation), [
+            'location' => 'header', 'menu_group' => 'primary', 'label' => 'Our story', 'route_name' => 'about', 'url' => '', 'target' => '_self', 'cta_style' => 'link', 'sort_order' => $navigation->sort_order, 'is_visible' => 1,
+        ])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('Our story');
+
+        $settings = ['brand_name' => 'Mwanafunzi Investor', 'contact_email' => 'desk@example.com', 'default_seo_title' => 'CMS title', 'default_seo_description' => 'CMS description', 'risk_disclaimer' => 'CMS disclaimer.', 'design_copper' => '#aa5533', 'design_container_max_width' => 1200];
+        $this->actingAs($admin)->put(route('admin.settings.update'), $settings)->assertRedirect();
+        $this->assertDatabaseHas('site_settings', ['key' => 'design_copper', 'value' => '#aa5533']);
+        $this->get('/')->assertOk()->assertSee('--copper:#aa5533');
     }
 }

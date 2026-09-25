@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Risk Disclosure — Mwanafunzi Investor')
-@section('description', 'A clear explanation of trading risk, educational content and responsible use of Mwanafunzi Investor tools.')
+@section('title', $page?->seo_title ?: 'Risk Disclosure — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'A clear explanation of trading risk, educational content and responsible use of Mwanafunzi Investor tools.')
 @php
 $sections = [
     ['id' => 'educational-purpose', 'title' => 'Educational purpose', 'paragraphs' => ['Mwanafunzi Investor provides general education about markets, probability, trading systems, risk planning and disciplined decision-making. Nothing on this site is personalised financial advice or a recommendation to buy or sell an asset.']],

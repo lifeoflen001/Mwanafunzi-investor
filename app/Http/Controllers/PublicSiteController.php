@@ -9,6 +9,7 @@ use App\Models\ContactMessage;
 use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
+use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
@@ -81,6 +82,10 @@ class PublicSiteController extends Controller
             $topic = LearningTopic::withTrashed()->findOrFail($id);
             return view('public.learn-preview', compact('topic'))->with('preview', true);
         }
+        if ($type === 'page') {
+            $page = Page::withTrashed()->with('sections')->findOrFail($id);
+            return view('public.pages.cms', compact('page'))->with('preview', true);
+        }
         abort(404);
     }
 
@@ -148,7 +153,8 @@ class PublicSiteController extends Controller
     public function page(string $page)
     {
         abort_unless(in_array($page, ['about', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'], true), 404);
-        return view("public.pages.{$page}");
+        $cmsPage = Page::published()->with('sections')->where('key', $page)->first();
+        return view("public.pages.{$page}", ['page' => $cmsPage]);
     }
 
     public function sitemap()

@@ -1,6 +1,6 @@
 @extends('layouts.public')
-@section('title', 'Privacy Policy — Mwanafunzi Investor')
-@section('description', 'How Mwanafunzi Investor handles account, contact, order and session information.')
+@section('title', $page?->seo_title ?: 'Privacy Policy — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'How Mwanafunzi Investor handles account, contact, order and session information.')
 @php
 $sections = [
     ['id' => 'information-collected', 'title' => 'Information collected', 'paragraphs' => ['We collect information that is needed to operate the platform, respond to a request or provide a product or course.'], 'list' => ['Account details such as your name and email address when you register.', 'Contact details and the message you choose to send through the contact form.', 'Order, entitlement and payment-reference information connected to a purchase or enrolment.', 'Session and security information needed for sign-in, verification and basic site operation.']],

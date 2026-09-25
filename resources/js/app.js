@@ -19,6 +19,23 @@ mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click
     document.body.classList.remove('menu-open');
 }));
 
+const adminShell = document.querySelector('[data-admin-shell]');
+const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
+const adminSidebar = document.querySelector('[data-admin-sidebar]');
+const closeAdminSidebar = () => {
+    adminShell?.classList.remove('is-sidebar-open');
+    adminSidebarToggle?.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('admin-menu-open');
+};
+adminSidebarToggle?.addEventListener('click', () => {
+    const isOpen = adminShell?.classList.toggle('is-sidebar-open') || false;
+    adminSidebarToggle.setAttribute('aria-expanded', String(isOpen));
+    document.body.classList.toggle('admin-menu-open', isOpen);
+});
+document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', closeAdminSidebar));
+adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeAdminSidebar));
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminSidebar(); });
+
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const revealObserver = new IntersectionObserver((entries, observer) => {
