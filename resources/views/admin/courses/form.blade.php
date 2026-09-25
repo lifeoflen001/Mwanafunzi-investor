@@ -6,6 +6,7 @@
     <label>Title<input name="title" value="{{ old('title', $course->title) }}" required></label>
     <label>Slug<input name="slug" value="{{ old('slug', $course->slug) }}" placeholder="Generated from title if blank"></label>
     @include('admin.components.media-field', ['name' => 'featured_image', 'label' => 'Featured image', 'value' => $course->featured_image, 'media' => $media])
+    <label>Hero image focal point<select name="hero_focal_point">@foreach(\App\Support\HeroFocalPoint::options() as $focalPoint)<option value="{{ $focalPoint }}" @selected(old('hero_focal_point', $course->hero_focal_point ?: \App\Support\HeroFocalPoint::DEFAULT) === $focalPoint)>{{ str_replace(' ', ' · ', ucfirst($focalPoint)) }}</option>@endforeach</select></label>
     <div class="form-row"><label>Level<input name="level" value="{{ old('level', $course->level) }}"></label><label>Duration<input name="duration" value="{{ old('duration', $course->duration) }}"></label></div><label>Expected availability <span>(optional for coming-soon courses; do not invent dates)</span><input name="expected_availability" value="{{ old('expected_availability', $course->expected_availability) }}"></label>
     <div class="form-row"><label>Price<input type="number" step="0.01" min="0" name="price" value="{{ old('price', $course->price) }}"></label><label>Currency<input name="currency" maxlength="3" value="{{ old('currency', $course->currency ?: 'USD') }}"></label></div>
     <label>Instructor<input name="instructor" value="{{ old('instructor', $course->instructor) }}"></label>

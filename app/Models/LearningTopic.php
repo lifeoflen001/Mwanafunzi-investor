@@ -10,7 +10,7 @@ class LearningTopic extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'icon', 'short_description', 'full_description', 'image', 'hero_eyebrow', 'hero_title', 'hero_summary', 'hero_image', 'hero_overlay', 'hero_alignment', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description', 'learning_outcomes', 'skill_level', 'study_time', 'expected_availability', 'sort_order', 'is_published', 'status'];
+    protected $fillable = ['title', 'slug', 'icon', 'short_description', 'full_description', 'image', 'hero_eyebrow', 'hero_title', 'hero_summary', 'hero_image', 'hero_focal_point', 'hero_overlay', 'hero_alignment', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description', 'learning_outcomes', 'skill_level', 'study_time', 'expected_availability', 'sort_order', 'is_published', 'status'];
 
     protected function casts(): array
     {

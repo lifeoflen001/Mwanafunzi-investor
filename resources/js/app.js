@@ -7,34 +7,71 @@ const setHeaderState = () => header?.classList.toggle('scrolled', window.scrollY
 setHeaderState();
 window.addEventListener('scroll', setHeaderState, { passive: true });
 
-menuToggle?.addEventListener('click', () => {
-    const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-    menuToggle.setAttribute('aria-expanded', String(!isOpen));
-    mobileMenu?.classList.toggle('is-open', !isOpen);
-    document.body.classList.toggle('menu-open', !isOpen);
-});
-mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const focusablesWithin = (container) => [...(container?.querySelectorAll(focusableSelector) || [])].filter((element) => element.getClientRects().length > 0);
+let mobileMenuReturnFocus = null;
+const closeMobileMenu = (restoreFocus = true) => {
+    if (!mobileMenu || !menuToggle) return;
     menuToggle?.setAttribute('aria-expanded', 'false');
     mobileMenu.classList.remove('is-open');
+    mobileMenu.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('menu-open');
-}));
+    if (restoreFocus && mobileMenuReturnFocus?.focus) mobileMenuReturnFocus.focus();
+    mobileMenuReturnFocus = null;
+};
+const openMobileMenu = () => {
+    if (!mobileMenu || !menuToggle) return;
+    mobileMenuReturnFocus = document.activeElement;
+    menuToggle.setAttribute('aria-expanded', 'true');
+    mobileMenu.classList.add('is-open');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('menu-open');
+    focusablesWithin(mobileMenu)[0]?.focus();
+};
+if (mobileMenu) mobileMenu.setAttribute('aria-hidden', 'true');
+menuToggle?.addEventListener('click', () => {
+    if (menuToggle.getAttribute('aria-expanded') === 'true') closeMobileMenu();
+    else openMobileMenu();
+});
+mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeMobileMenu(false)));
+document.addEventListener('click', (event) => {
+    if (mobileMenu?.classList.contains('is-open') && !mobileMenu.contains(event.target) && !menuToggle?.contains(event.target)) closeMobileMenu();
+});
 
 const adminShell = document.querySelector('[data-admin-shell]');
 const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
 const adminSidebar = document.querySelector('[data-admin-sidebar]');
-const closeAdminSidebar = () => {
+const closeAdminSidebar = (restoreFocus = true) => {
+    const wasOpen = adminShell?.classList.contains('is-sidebar-open');
     adminShell?.classList.remove('is-sidebar-open');
     adminSidebarToggle?.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('admin-menu-open');
+    if (restoreFocus && wasOpen) adminSidebarToggle?.focus();
 };
 adminSidebarToggle?.addEventListener('click', () => {
     const isOpen = adminShell?.classList.toggle('is-sidebar-open') || false;
     adminSidebarToggle.setAttribute('aria-expanded', String(isOpen));
     document.body.classList.toggle('admin-menu-open', isOpen);
+    if (isOpen) adminSidebar?.querySelector('[data-admin-sidebar-close]')?.focus();
 });
-document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', closeAdminSidebar));
-adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeAdminSidebar));
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminSidebar(); });
+document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', () => closeAdminSidebar()));
+adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeAdminSidebar(false)));
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        if (mobileMenu?.classList.contains('is-open')) closeMobileMenu();
+        closeAdminSidebar();
+        return;
+    }
+    if (event.key !== 'Tab') return;
+    const activeContainer = mobileMenu?.classList.contains('is-open') ? mobileMenu : (adminShell?.classList.contains('is-sidebar-open') ? adminSidebar : null);
+    if (!activeContainer) return;
+    const focusable = focusablesWithin(activeContainer);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
 
 const adminProfile = document.querySelector('[data-admin-profile]');
 const adminProfileToggle = document.querySelector('[data-admin-profile-toggle]');

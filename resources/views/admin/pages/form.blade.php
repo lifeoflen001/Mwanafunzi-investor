@@ -83,6 +83,9 @@
                 <textarea name="hero_summary" rows="3">{{ old('hero_summary', $page->hero_summary) }}</textarea>
             </label>
             @include('admin.components.media-field', ['name' => 'hero_image', 'label' => 'Hero image', 'value' => $page->hero_image, 'media' => $media])
+            <label>Hero image focal point
+                <select name="hero_focal_point">@foreach(\App\Support\HeroFocalPoint::options() as $focalPoint)<option value="{{ $focalPoint }}" @selected(old('hero_focal_point', $page->hero_focal_point ?: \App\Support\HeroFocalPoint::DEFAULT) === $focalPoint)>{{ str_replace(' ', ' · ', ucfirst($focalPoint)) }}</option>@endforeach</select>
+            </label>
             <div class="form-row">
                 <label>Primary CTA label
                     <input name="hero_primary_label" value="{{ old('hero_primary_label', $page->hero_primary_label) }}">

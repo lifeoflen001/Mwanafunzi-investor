@@ -14,7 +14,7 @@
 @section('description', $page->seo_description ?: $module->description)
 
 @section('content')
-    <x-public-hero class="development-hero" :eyebrow="$page->hero_eyebrow ?: 'Mwanafunzi Investor / Digital Systems'" :title="$page->hero_title ?: $module->name" :title-html="$heroTitleHtml" :summary="$page->hero_summary ?: $module->description" :image="$page->hero_image" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
+    <x-public-hero class="development-hero" :eyebrow="$page->hero_eyebrow ?: 'Mwanafunzi Investor / Digital Systems'" :title="$page->hero_title ?: $module->name" :title-html="$heroTitleHtml" :summary="$page->hero_summary ?: $module->description" :image="$page->hero_image" :focal-point="$page->hero_focal_point" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
         <div class="detail-actions">
             <a class="button button-dark" href="{{ $page->hero_primary_url ?: route('contact', ['module' => $module->slug]) }}">{{ $page->hero_primary_label ?: 'Discuss a project' }} <span aria-hidden="true">↗</span></a>
             <a class="text-link text-link-light" href="{{ $page->hero_secondary_url ?: '#capabilities' }}">{{ $page->hero_secondary_label ?: 'See what we build' }} <span aria-hidden="true">↓</span></a>

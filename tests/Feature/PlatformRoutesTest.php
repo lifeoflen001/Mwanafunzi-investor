@@ -32,6 +32,8 @@ class PlatformRoutesTest extends TestCase
         foreach (['/', '/development', '/studio', '/learn', '/learn/forex-core-basics', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
             $this->get($route)->assertSuccessful();
         }
+
+        $this->get('/about')->assertDontSee('\\n\\n');
     }
 
     public function test_business_module_content_propagates_from_pages_cms(): void
@@ -116,11 +118,11 @@ class PlatformRoutesTest extends TestCase
             'title' => $topic->title, 'slug' => $topic->slug, 'short_description' => $topic->short_description,
             'full_description' => $topic->full_description, 'hero_eyebrow' => 'A managed learning path', 'hero_title' => 'Study the market deliberately',
             'hero_summary' => 'A hero summary controlled by the CMS.', 'hero_image' => $media->path, 'hero_overlay' => 'strong', 'hero_alignment' => 'center',
-            'seo_title' => 'Managed learning SEO title', 'seo_description' => 'Managed learning SEO description.', 'og_image' => $media->path,
+            'seo_title' => 'Managed learning SEO title', 'seo_description' => 'Managed learning SEO description.', 'og_image' => $media->path, 'hero_focal_point' => 'left bottom',
             'skill_level' => $topic->skill_level, 'study_time' => $topic->study_time, 'sort_order' => $topic->sort_order, 'is_published' => 1,
         ])->assertRedirect();
 
-        $this->get(route('learn.show', $topic))->assertOk()->assertSee('Study the market deliberately')->assertSee('Managed learning SEO title')->assertSee(asset('storage/'.$media->path));
+        $this->get(route('learn.show', $topic))->assertOk()->assertSee('Study the market deliberately')->assertSee('Managed learning SEO title')->assertSee(asset('storage/'.$media->path))->assertSee('--hero-image-position: left bottom');
     }
 
     public function test_published_page_slug_changes_create_safe_redirects(): void
@@ -200,7 +202,7 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->post(route('admin.products.features.store', $product), ['title' => 'Clear risk inputs', 'description' => 'A focused feature', 'sort_order' => 1])->assertRedirect();
         $this->assertDatabaseHas('product_features', ['product_id' => $product->id, 'title' => 'Clear risk inputs']);
         Storage::fake('public');
-        $this->actingAs($admin)->post(route('admin.products.images.store', $product), ['file' => UploadedFile::fake()->create('screen.svg', 10, 'image/svg+xml'), 'alt_text' => 'Risk planner screenshot'])->assertRedirect();
+        $this->actingAs($admin)->post(route('admin.products.images.store', $product), ['file' => UploadedFile::fake()->create('screen.png', 10, 'image/png'), 'alt_text' => 'Risk planner screenshot'])->assertRedirect();
         $this->assertDatabaseHas('product_images', ['product_id' => $product->id, 'alt_text' => 'Risk planner screenshot']);
         $this->actingAs($admin)->post(route('admin.courses.faqs.store', $course), ['question' => 'Who is this for?', 'answer' => 'Careful students.', 'sort_order' => 1])->assertRedirect();
         $this->actingAs($admin)->post(route('admin.products.faqs.store', $product), ['question' => 'When is it ready?', 'answer' => 'When the process is ready.', 'sort_order' => 1])->assertRedirect();
@@ -241,6 +243,7 @@ class PlatformRoutesTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         Storage::fake('public');
         $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('editorial.jpg', 120, 'image/jpeg'), 'alt_text' => 'Editorial desk', 'title' => 'Editorial desk'])->assertRedirect();
+        $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('unsafe.svg', 10, 'image/svg+xml'), 'alt_text' => 'Unsafe vector'])->assertSessionHasErrors('file');
         $this->assertDatabaseHas('media', ['filename' => 'editorial.jpg', 'alt_text' => 'Editorial desk']);
         $this->actingAs($admin)->get(route('admin.media.search', ['q' => 'editorial']))->assertOk()->assertJsonPath('0.label', 'editorial.jpg');
         $this->actingAs($admin)->get(route('admin.media', ['q' => 'editorial', 'type' => 'image']))->assertOk()->assertSee('Editorial desk');

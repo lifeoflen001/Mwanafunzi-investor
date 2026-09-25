@@ -24,9 +24,9 @@ class Media extends Model
             Course::where('featured_image', $this->path)->orWhere('og_image', $this->path)->count()
             + Product::where('thumbnail', $this->path)->orWhere('og_image', $this->path)->count()
             + Article::where('featured_image', $this->path)->orWhere('og_image', $this->path)->count()
-            + LearningTopic::where('image', $this->path)->count()
+            + LearningTopic::where(fn ($query) => $query->where('image', $this->path)->orWhere('hero_image', $this->path)->orWhere('og_image', $this->path))->count()
             + ProductImage::where('path', $this->path)->count()
-            + Page::where('hero_image', $this->path)->count()
+            + Page::where(fn ($query) => $query->where('hero_image', $this->path)->orWhere('og_image', $this->path))->count()
             + PageSection::where('image', $this->path)->count()
             + SiteSetting::where('value', $this->path)->count()
         );

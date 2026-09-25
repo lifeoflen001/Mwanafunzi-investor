@@ -27,6 +27,11 @@ class RichText
     {
         if (! $value) return new HtmlString('');
         $hasMarkup = $value !== strip_tags($value);
-        return new HtmlString($hasMarkup ? (string) static::sanitize($value) : nl2br(e($value)));
+        if ($hasMarkup) return new HtmlString((string) static::sanitize($value));
+
+        // Some seeded/imported CMS records contain escaped newline sequences.
+        // Normalize them before escaping so editors see the intended paragraph breaks.
+        $value = str_replace(['\\r\\n', '\\n', '\\r'], "\n", $value);
+        return new HtmlString(nl2br(e($value)));
     }
 }

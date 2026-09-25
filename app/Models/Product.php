@@ -10,7 +10,7 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'product_type', 'thumbnail', 'short_description', 'detailed_description', 'version', 'price', 'sale_price', 'currency', 'availability', 'download_format', 'system_requirements', 'demo_url', 'purchase_url', 'documentation_url', 'is_featured', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description', 'sort_order'];
+    protected $fillable = ['name', 'slug', 'product_type', 'thumbnail', 'hero_focal_point', 'short_description', 'detailed_description', 'version', 'price', 'sale_price', 'currency', 'availability', 'download_format', 'system_requirements', 'demo_url', 'purchase_url', 'documentation_url', 'is_featured', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description', 'sort_order'];
     protected function casts(): array { return ['price' => 'decimal:2', 'sale_price' => 'decimal:2', 'is_featured' => 'boolean']; }
     public function features() { return $this->hasMany(ProductFeature::class)->orderBy('sort_order'); }
     public function images() { return $this->hasMany(ProductImage::class)->orderBy('sort_order'); }

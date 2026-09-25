@@ -8,6 +8,7 @@
     'setting' => null,
     'overlay' => 'medium',
     'alignment' => 'left',
+    'focalPoint' => 'center center',
     'textColor' => 'light',
     'compact' => false,
     'metadata' => null,
@@ -36,12 +37,15 @@
     }
     $summary = $cmsPage?->hero_summary ?: $summary;
     $overlay = $cmsPage?->hero_overlay ?: $overlay;
+    $overlay = in_array($overlay, ['light', 'medium', 'strong'], true) ? $overlay : 'medium';
     $alignment = $cmsPage?->hero_alignment ?: $alignment;
+    $alignment = in_array($alignment, ['left', 'center', 'right'], true) ? $alignment : 'left';
+    $focalPoint = \App\Support\HeroFocalPoint::normalise($cmsPage?->hero_focal_point ?: $focalPoint);
     $configuredImage = $setting ? \App\Models\SiteSetting::getValue($setting) : null;
     $defaultImage = \App\Models\SiteSetting::getValue('default_public_hero');
     $hero = \App\Support\PublicHero::resolve([$cmsPage?->hero_image, $image, $configuredImage, $fallbackImage, $defaultImage, config('public.hero_defaults.default')]);
 @endphp
-<section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $hero['position'] ?? 'center center' }}; --hero-overlay-strength: {{ $overlay }};">
+<section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $focalPoint }}; --hero-overlay-strength: {{ $overlay }};">
     @if($hero)
         <picture class="public-hero-media" aria-hidden="true">
             @if($hero['srcset'])<img src="{{ $hero['url'] }}" srcset="{{ $hero['srcset'] }}" sizes="100vw" alt="" fetchpriority="high">@else<img src="{{ $hero['url'] }}" alt="" fetchpriority="high">@endif

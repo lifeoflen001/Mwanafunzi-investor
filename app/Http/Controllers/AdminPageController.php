@@ -6,6 +6,7 @@ use App\Models\Media;
 use App\Models\Page;
 use App\Models\Redirect;
 use App\Support\AdminAudit;
+use App\Support\HeroFocalPoint;
 use App\Support\RichText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -80,6 +81,7 @@ class AdminPageController extends Controller
 
     private function validated(Request $request, ?Page $page = null): array
     {
+        $request->merge(['hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
         return $request->validate([
             'key' => ['required', 'string', 'max:100', Rule::unique('pages', 'key')->ignore($page?->id)],
             'slug' => ['nullable', 'string', 'max:190', Rule::unique('pages', 'slug')->ignore($page?->id)],
@@ -91,6 +93,7 @@ class AdminPageController extends Controller
             'hero_highlight' => ['nullable', 'string', 'max:190'],
             'hero_summary' => ['nullable', 'string', 'max:1000'],
             'hero_image' => ['nullable', 'string', 'max:255'],
+            'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())],
             'hero_primary_label' => ['nullable', 'string', 'max:120'],
             'hero_primary_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'hero_secondary_label' => ['nullable', 'string', 'max:120'],
