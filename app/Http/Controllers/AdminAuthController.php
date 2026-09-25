@@ -12,8 +12,9 @@ class AdminAuthController extends Controller
     public function store(Request $request)
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        if (Auth::attempt([...$credentials, 'is_admin' => true], $request->boolean('remember'))) {
+        if (Auth::attempt([...$credentials, 'is_admin' => true, 'status' => 'active'], $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $request->user()->forceFill(['last_login_at' => now()])->saveQuietly();
             return to_route('admin.dashboard');
         }
         return back()->withErrors(['email' => 'Those admin credentials were not recognised.'])->onlyInput('email');

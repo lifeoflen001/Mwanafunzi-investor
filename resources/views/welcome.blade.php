@@ -32,6 +32,12 @@
     $homeHeroAsideIndex = $homePage?->hero_aside_index ?: '01 / 04';
     $homeSeoTitle = $homePage?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title', $brandName.' — Become a Student of Money');
     $homeSeoDescription = $homePage?->seo_description ?: $seoDescription;
+    $homeCanonical = $homePage?->canonical_url ?: route('home');
+    $homeRobots = $homePage?->robots ?: 'index,follow';
+    $homeOgTitle = $homePage?->og_title ?: $homeSeoTitle;
+    $homeOgDescription = $homePage?->og_description ?: $homeSeoDescription;
+    $homeOgImage = $homePage?->og_image ? \App\Support\PublicHero::candidate($homePage->og_image) : null;
+    $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -39,14 +45,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ $homeSeoDescription }}">
+    <meta name="robots" content="{{ $homeRobots }}">
+    <link rel="canonical" href="{{ $homeCanonical }}">
     <meta name="theme-color" content="#171817">
-    <meta property="og:title" content="{{ $homeSeoTitle }}">
-    <meta property="og:description" content="{{ $homeSeoDescription }}">
+    <meta property="og:title" content="{{ $homeOgTitle }}">
+    <meta property="og:description" content="{{ $homeOgDescription }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_TZ">
-    <meta property="og:image" content="{{ $socialImageUrl }}">
+    <meta property="og:image" content="{{ $homeOgImageUrl }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="{{ $socialImageUrl }}">
+    <meta name="twitter:title" content="{{ $homeOgTitle }}">
+    <meta name="twitter:description" content="{{ $homeOgDescription }}">
+    <meta name="twitter:image" content="{{ $homeOgImageUrl }}">
     <link rel="icon" href="{{ $faviconUrl }}">
     @if($appleTouchIcon)<link rel="apple-touch-icon" href="{{ asset('storage/'.$appleTouchIcon) }}">@endif
     <title>{{ $homeSeoTitle }}</title>

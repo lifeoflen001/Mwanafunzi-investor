@@ -385,6 +385,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .admin-table { border-top:1px solid var(--line); }
 .admin-table-head,.admin-table-row { display:grid; grid-template-columns:1fr 180px 160px; gap:20px; align-items:center; padding:18px 0; border-bottom:1px solid var(--line); }
 .admin-table-head { color:var(--copper-dark); font:10px var(--mono); text-transform:uppercase; }
+.admin-user-row { grid-template-columns:minmax(210px,1.3fr) 150px 150px 120px; }
 .admin-table-row small { display:block; margin-top:5px; color:var(--muted); font:11px var(--mono); }
 .admin-table-row p { margin:8px 0 0; color:var(--muted); font-size:13px; }
 .admin-actions { display:flex; gap:14px; align-items:center; font-size:13px; }

@@ -133,6 +133,9 @@
             <label>SEO description
                 <textarea name="seo_description" rows="3">{{ old('seo_description', $page->seo_description) }}</textarea>
             </label>
+            <div class="form-row"><label>Canonical URL <span>(optional)</span><input type="url" name="canonical_url" value="{{ old('canonical_url', $page->canonical_url) }}" placeholder="https://example.com/page"></label><label>Robots directive<select name="robots"><option value="">Index and follow (default)</option><option value="index,follow" @selected(old('robots', $page->robots) === 'index,follow')>Index, follow</option><option value="index,nofollow" @selected(old('robots', $page->robots) === 'index,nofollow')>Index, nofollow</option><option value="noindex,follow" @selected(old('robots', $page->robots) === 'noindex,follow')>Noindex, follow</option><option value="noindex,nofollow" @selected(old('robots', $page->robots) === 'noindex,nofollow')>Noindex, nofollow</option></select><small>Use noindex only for intentionally excluded pages.</small></label></div>
+            <div class="form-row"><label>OpenGraph title<input name="og_title" value="{{ old('og_title', $page->og_title) }}"></label><label>OpenGraph description<textarea name="og_description" rows="2">{{ old('og_description', $page->og_description) }}</textarea></label></div>
+            @include('admin.components.media-field', ['name' => 'og_image', 'label' => 'OpenGraph image', 'value' => $page->og_image, 'media' => $media])
         </fieldset>
 
         @if($page->page_type === 'policy')

@@ -20,6 +20,7 @@ use App\Http\Controllers\AdminFaqController;
 use App\Http\Controllers\AdminRedirectController;
 use App\Http\Controllers\PublicRedirectController;
 use App\Http\Controllers\AdminBusinessUnitController;
+use App\Http\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -152,6 +153,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/business-units/{businessUnit}', [AdminBusinessUnitController::class, 'update'])->name('business-units.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
         Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
+        Route::get('/administrators', [AdminUserController::class, 'index'])->name('administrators');
+        Route::get('/administrators/create', [AdminUserController::class, 'create'])->name('administrators.create');
+        Route::post('/administrators', [AdminUserController::class, 'store'])->name('administrators.store');
+        Route::get('/administrators/{administrator}/edit', [AdminUserController::class, 'edit'])->name('administrators.edit');
+        Route::put('/administrators/{administrator}', [AdminUserController::class, 'update'])->name('administrators.update');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/policies', [AdminPageController::class, 'policies'])->name('policies');
         Route::get('/redirects', [AdminRedirectController::class, 'index'])->name('redirects');

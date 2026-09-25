@@ -2,6 +2,10 @@
 @php($ogImage = $article->og_image ? \App\Support\PublicHero::candidate($article->og_image) : null)
 @section('title', ($article->seo_title ?: $article->title) . ' — Mwanafunzi Investor')
 @section('description', $article->seo_description ?: $article->excerpt)
+@section('canonical', $article->canonical_url ?: route('journal.show', $article))
+@section('robots', $article->robots ?: 'index,follow')
+@section('og_title', $article->og_title ?: ($article->seo_title ?: $article->title))
+@section('og_description', $article->og_description ?: ($article->seo_description ?: $article->excerpt))
 @section('og_type', 'article')
 @if($ogImage) @section('og_image', $ogImage['url']) @endif
 @section('structured_data')<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Article', 'headline' => $article->title, 'description' => $article->excerpt, 'datePublished' => $article->published_at?->toIso8601String(), 'image' => $ogImage['url'] ?? null, 'author' => ['@type' => 'Organization', 'name' => $article->author ?: \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor')], 'mainEntityOfPage' => route('journal.show', $article)], JSON_UNESCAPED_SLASHES) !!}</script>@endsection

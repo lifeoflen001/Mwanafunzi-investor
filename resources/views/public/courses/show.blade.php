@@ -2,6 +2,10 @@
 @php($ogImage = $course->og_image ? \App\Support\PublicHero::candidate($course->og_image) : null)
 @section('title', ($course->seo_title ?: $course->title) . ' — Mwanafunzi Investor')
 @section('description', $course->seo_description ?: $course->short_description)
+@section('canonical', $course->canonical_url ?: route('courses.show', $course))
+@section('robots', $course->robots ?: 'index,follow')
+@section('og_title', $course->og_title ?: ($course->seo_title ?: $course->title))
+@section('og_description', $course->og_description ?: ($course->seo_description ?: $course->short_description))
 @if($ogImage) @section('og_image', $ogImage['url']) @endif
 @section('structured_data')<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Course', 'name' => $course->title, 'description' => $course->short_description, 'url' => route('courses.show', $course), 'image' => $ogImage['url'] ?? null, 'provider' => ['@type' => 'Organization', 'name' => \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor')]], JSON_UNESCAPED_SLASHES) !!}</script>@endsection
 @section('content')

@@ -10,12 +10,26 @@
     $footerCopyright = \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
     $footerBottomStatement = \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
     $disclaimer = \App\Models\SiteSetting::getValue('risk_disclaimer', 'Educational content only. This is not personalised financial advice. Trading involves risk.');
+    $seoPageKey = match (request()->route()?->getName()) {
+        'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
+        'legal' => request()->route('page'),
+        default => null,
+    };
+    $seoPage = $seoPageKey ? \App\Models\Page::published()->where('key', $seoPageKey)->first() : null;
+    if (! $seoPage && request()->routeIs('pages.show')) $seoPage = \App\Models\Page::published()->where('slug', request()->route('slug'))->first();
+    $headTitle = trim($__env->yieldContent('title')) ?: ($seoPage?->seo_title ?: $brandName);
+    $headDescription = trim($__env->yieldContent('description')) ?: ($seoPage?->seo_description ?: \App\Models\SiteSetting::getValue('default_seo_description', 'Financial education for systematic trading, probability, risk management and disciplined portfolio thinking.'));
+    $headCanonical = trim($__env->yieldContent('canonical')) ?: ($seoPage?->canonical_url ?: url()->current());
+    $headRobots = trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: 'index,follow');
+    $headOgTitle = trim($__env->yieldContent('og_title')) ?: ($seoPage?->og_title ?: $headTitle);
+    $headOgDescription = trim($__env->yieldContent('og_description')) ?: ($seoPage?->og_description ?: $headDescription);
     $favicon = \App\Models\SiteSetting::getValue('favicon', 'favicon.svg') ?: 'favicon.svg';
     $appleTouchIcon = \App\Models\SiteSetting::getValue('apple_touch_icon');
     $faviconUrl = str_starts_with($favicon, 'http') || str_starts_with($favicon, '/') || $favicon === 'favicon.svg' ? asset($favicon) : asset('storage/'.$favicon);
-    $socialImage = \App\Models\SiteSetting::getValue('default_social_image') ?: (request()->routeIs('legal') ? config('public.hero_defaults.legal') : config('public.hero_defaults.default'));
+    $socialImage = $seoPage?->og_image ?: \App\Models\SiteSetting::getValue('default_social_image') ?: (request()->routeIs('legal') ? config('public.hero_defaults.legal') : config('public.hero_defaults.default'));
     $socialImageData = \App\Support\PublicHero::candidate($socialImage);
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
+    $headOgImage = trim($__env->yieldContent('og_image')) ?: $socialImageUrl;
     $businessUnits = \App\Models\BusinessUnit::query()->active()->orderBy('sort_order')->get();
     $headerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get();
     $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
@@ -26,19 +40,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="@yield('description', \App\Models\SiteSetting::getValue('default_seo_description', 'Financial education for systematic trading, probability, risk management and disciplined portfolio thinking.'))">
-    <meta name="robots" content="{{ !empty($preview) ? 'noindex,nofollow,noarchive' : 'index,follow' }}">
-    <link rel="canonical" href="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('title', $brandName)">
-    <meta property="og:description" content="@yield('description', $disclaimer)">
+    <meta name="description" content="{{ $headDescription }}">
+    <meta name="robots" content="{{ !empty($preview) ? 'noindex,nofollow,noarchive' : $headRobots }}">
+    <link rel="canonical" href="{{ $headCanonical }}">
+    <meta property="og:title" content="{{ $headOgTitle }}">
+    <meta property="og:description" content="{{ $headOgDescription }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="@yield('og_image', $socialImageUrl)">
+    <meta property="og:image" content="{{ $headOgImage }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="@yield('og_image', $socialImageUrl)">
+    <meta name="twitter:title" content="{{ $headOgTitle }}">
+    <meta name="twitter:description" content="{{ $headOgDescription }}">
+    <meta name="twitter:image" content="{{ $headOgImage }}">
     <link rel="icon" href="{{ $faviconUrl }}">
     @if($appleTouchIcon)<link rel="apple-touch-icon" href="{{ asset('storage/'.$appleTouchIcon) }}">@endif
-    <title>@yield('title', $brandName)</title>
+    <title>{{ $headTitle }}</title>
     <script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
     @yield('structured_data')
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -2,6 +2,10 @@
 @php($ogImage = $product->og_image ? \App\Support\PublicHero::candidate($product->og_image) : null)
 @section('title', ($product->seo_title ?: $product->name) . ' — Mwanafunzi Investor')
 @section('description', $product->seo_description ?: $product->short_description)
+@section('canonical', $product->canonical_url ?: route('tools.show', $product))
+@section('robots', $product->robots ?: 'index,follow')
+@section('og_title', $product->og_title ?: ($product->seo_title ?: $product->name))
+@section('og_description', $product->og_description ?: ($product->seo_description ?: $product->short_description))
 @if($ogImage) @section('og_image', $ogImage['url']) @endif
 @section('structured_data')<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $product->name, 'description' => $product->short_description, 'url' => route('tools.show', $product), 'image' => $ogImage['url'] ?? null, 'brand' => ['@type' => 'Brand', 'name' => \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor')]], JSON_UNESCAPED_SLASHES) !!}</script>@endsection
 @section('content')

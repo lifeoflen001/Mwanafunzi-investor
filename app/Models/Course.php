@@ -10,7 +10,7 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'subtitle', 'featured_image', 'level', 'duration', 'expected_availability', 'price', 'currency', 'status', 'is_featured', 'short_description', 'full_description', 'learning_outcomes', 'prerequisites', 'instructor', 'cta_label', 'enrollment_available', 'seo_title', 'seo_description', 'og_image', 'sort_order'];
+    protected $fillable = ['title', 'slug', 'subtitle', 'featured_image', 'level', 'duration', 'expected_availability', 'price', 'currency', 'status', 'is_featured', 'short_description', 'full_description', 'learning_outcomes', 'prerequisites', 'instructor', 'cta_label', 'enrollment_available', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description', 'sort_order'];
 
     protected function casts(): array
     {

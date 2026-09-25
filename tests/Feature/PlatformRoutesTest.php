@@ -69,10 +69,39 @@ class PlatformRoutesTest extends TestCase
 
         $this->actingAs($admin)->put(route('admin.courses.update', $course), [
             'title' => $course->title, 'slug' => $course->slug, 'status' => $course->status, 'short_description' => $course->short_description,
-            'full_description' => $course->full_description, 'og_image' => $media->path, 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+            'full_description' => $course->full_description, 'og_image' => $media->path, 'canonical_url' => 'https://example.com/managed-course', 'robots' => 'noindex,nofollow', 'og_title' => 'Managed course social title', 'og_description' => 'Managed course social description.', 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
         ])->assertRedirect();
 
-        $this->get(route('courses.show', $course))->assertOk()->assertSee(asset('storage/'.$media->path));
+        $this->get(route('courses.show', $course))->assertOk()->assertSee(asset('storage/'.$media->path))->assertSee('https://example.com/managed-course')->assertSee('noindex,nofollow')->assertSee('Managed course social title');
+    }
+
+    public function test_administrator_management_tracks_access_and_protects_final_admin(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)->get(route('admin.administrators'))->assertOk()->assertSee($admin->email);
+        $this->actingAs($admin)->put(route('admin.administrators.update', $admin), [
+            'name' => $admin->name, 'email' => $admin->email, 'status' => 'suspended',
+        ])->assertSessionHasErrors('status');
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'status' => 'active']);
+
+        $this->actingAs($admin)->post(route('admin.administrators.store'), [
+            'name' => 'Desk Operator', 'email' => 'operator@example.com', 'password' => 'password123', 'password_confirmation' => 'password123', 'status' => 'active',
+        ])->assertRedirect();
+        $operator = User::where('email', 'operator@example.com')->firstOrFail();
+        $this->assertTrue($operator->is_admin);
+
+        $this->post(route('admin.logout'))->assertRedirect(route('admin.login'));
+        $this->post(route('admin.login.store'), ['email' => $operator->email, 'password' => 'password123'])->assertRedirect(route('admin.dashboard'));
+        $this->assertNotNull($operator->fresh()->last_login_at);
+    }
+
+    public function test_suspended_administrator_cannot_sign_in(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'suspended']);
+
+        $this->post(route('admin.login.store'), ['email' => $admin->email, 'password' => 'password'])->assertSessionHasErrors('email');
+        $this->assertGuest();
     }
 
     public function test_admin_learning_topic_hero_and_seo_propagate_to_public_page(): void
