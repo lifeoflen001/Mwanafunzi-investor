@@ -1,3 +1,4 @@
-@extends('layouts.public')
+@extends('layouts.account')
 @section('title', 'My courses — Mwanafunzi Investor')
+@section('portal-heading', 'My courses')
 @section('content')<section class="page-hero"><div class="container"><p class="eyebrow">Account / My courses</p><h1>Course access.</h1>@include('account.partials.nav')</div></section><section class="platform-section"><div class="container account-grid">@forelse($enrollments as $enrollment)<a class="detail-card" href="{{ route('account.courses.show', $enrollment) }}"><p class="eyebrow">{{ $enrollment->status->value }}</p><h2>{{ $enrollment->course->title }}</h2><p>{{ $enrollment->course->short_description }}</p><span class="text-link">Open course →</span></a>@empty<div class="empty-state"><p>Your course enrollments will appear here after confirmation.</p></div>@endforelse{{ $enrollments->links() }}</div></section>@endsection

@@ -1,3 +1,4 @@
-@extends('layouts.public')
+@extends('layouts.account')
 @section('title', $enrollment->course->title.' — Mwanafunzi Investor')
+@section('portal-heading', 'Course workspace')
 @section('content')<section class="page-hero"><div class="container narrow"><p class="eyebrow">My course / {{ $enrollment->status->value }}</p><h1>{{ $enrollment->course->title }}</h1><p class="lede">{{ $enrollment->course->short_description }}</p></div></section><section class="platform-section"><div class="container narrow"><div class="detail-card"><p class="eyebrow">Course access shell</p><div class="rich-copy">{!! \App\Support\RichText::render($enrollment->course->full_description ?: $enrollment->course->short_description) !!}</div></div><div class="module-list">@forelse($enrollment->course->modules as $module)<details><summary>{{ $module->title }} <span>+</span></summary><p>{{ $module->description }}</p>@foreach($module->lessons as $lesson)<div class="lesson-row">{{ $lesson->title }}</div>@endforeach</details>@empty<div class="empty-state compact"><p>The curriculum is being prepared.</p></div>@endforelse</div></div></section>@endsection

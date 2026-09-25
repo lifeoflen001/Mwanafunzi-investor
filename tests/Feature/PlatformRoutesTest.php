@@ -161,4 +161,13 @@ class PlatformRoutesTest extends TestCase
             'business_unit_id' => $studio->id,
         ]);
     }
+
+    public function test_student_and_admin_portals_render_the_dashboard_shells(): void
+    {
+        $student = User::factory()->create(['email_verified_at' => now()]);
+        $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Course access');
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Content management');
+    }
 }
