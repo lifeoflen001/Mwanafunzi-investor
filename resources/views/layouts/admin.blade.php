@@ -1,3 +1,6 @@
+@php
+    $unreadEnquiries = auth()->check() ? \App\Models\ContactMessage::whereNull('read_at')->count() : 0;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,7 +70,7 @@
                 <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
                 <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
                 <form class="portal-search" method="get" action="{{ route('admin.search') }}"><label class="sr-only" for="admin-search">Search the desk</label><span aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk"></form>
-                <div class="portal-topbar-actions"><button class="admin-topbar-action" type="button" title="Notifications" aria-label="Notifications">◌</button><span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span></div>
+                <div class="portal-topbar-actions">@auth<span class="admin-message-indicator"><a class="admin-topbar-action" href="{{ route('admin.messages') }}" title="Unread enquiries" aria-label="Unread enquiries">✉</a>@if($unreadEnquiries)<span class="admin-notification-count">{{ $unreadEnquiries }}</span>@endif</span><span class="portal-avatar portal-avatar-admin" aria-hidden="true">{{ strtoupper(substr(auth()->user()->name ?: 'A', 0, 1)) }}</span><span class="portal-user-name">{{ auth()->user()->name }}</span>@else<span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span>@endauth</div>
             </header>
             <main class="portal-content" id="admin-main-content">
                 @if(session('success'))<div class="form-success" role="status">{{ session('success') }}</div>@endif

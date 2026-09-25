@@ -422,6 +422,8 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .admin-breadcrumbs a { color:var(--portal-blue); }
 .admin-topbar .portal-search { margin-left:auto; }
 .admin-topbar-action { color:var(--portal-blue); font-size:23px; line-height:1; }
+.admin-message-indicator { position:relative; display:inline-flex; align-items:center; }
+.admin-notification-count { position:absolute; top:-9px; right:-9px; min-width:16px; height:16px; padding:0 4px; border-radius:999px; background:var(--portal-coral); color:#fff; font-size:10px; line-height:16px; text-align:center; }
 .admin-portal .portal-kpi,.admin-portal .portal-panel,.admin-portal .admin-stats div,.admin-portal .admin-nav-grid a,.admin-portal .admin-subresource,.admin-portal .admin-table,.admin-portal .admin-auth { border-radius:var(--admin-radius); }
 .settings-token-group { margin-top:25px; padding-top:22px; border-top:1px solid var(--line); }
 .settings-token-group h2 { margin:0 0 16px; font-size:17px; font-weight:600; }
