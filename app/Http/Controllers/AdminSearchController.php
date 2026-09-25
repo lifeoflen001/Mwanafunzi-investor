@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminSearchController extends Controller
@@ -26,7 +27,8 @@ class AdminSearchController extends Controller
                 ->merge(Product::withTrashed()->where(fn ($query) => $query->where('name', 'like', $like)->orWhere('slug', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Product', $item->name, route('admin.products.edit', $item), $item->availability)))
                 ->merge(Article::withTrashed()->where(fn ($query) => $query->where('title', 'like', $like)->orWhere('slug', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Article', $item->title, route('admin.articles.edit', $item), $item->status)))
                 ->merge(Order::where(fn ($query) => $query->where('order_number', 'like', $like)->orWhere('customer_email', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Order', $item->order_number, route('admin.commerce.orders.show', $item), $item->payment_status)))
-                ->merge(ContactMessage::where(fn ($query) => $query->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('message', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Enquiry', $item->name, route('admin.messages'), $item->status)));
+                ->merge(ContactMessage::where(fn ($query) => $query->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('message', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Enquiry', $item->name, route('admin.messages'), $item->status)))
+                ->merge(User::where('is_admin', false)->where(fn ($query) => $query->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like))->limit(8)->get()->map(fn ($item) => $this->result('Customer', $item->name, route('admin.customers.show', $item), $item->status)));
         }
 
         return view('admin.search.index', compact('term', 'results'));

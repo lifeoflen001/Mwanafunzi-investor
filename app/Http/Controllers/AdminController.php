@@ -162,6 +162,12 @@ class AdminController extends Controller
     public function articleRestore(int $article) { $record = Article::withTrashed()->findOrFail($article); $record->restore(); AdminAudit::record('article.restored', 'Restored article '.$record->title, $record); return back()->with('success', 'Article restored.'); }
 
     public function messages() { return view('admin.messages.index', ['messages' => ContactMessage::with('businessUnit')->latest()->paginate(30)]); }
+    public function messageShow(ContactMessage $message)
+    {
+        $message->load('businessUnit');
+        if (! $message->read_at) $message->update(['read_at' => now()]);
+        return view('admin.messages.show', compact('message'));
+    }
     public function messageUpdate(Request $request, ContactMessage $message)
     {
         $data = $request->validate(['status' => ['required', 'in:new,in_progress,resolved,spam']]);

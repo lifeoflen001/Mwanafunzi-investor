@@ -106,6 +106,20 @@ class PlatformRoutesTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_admin_can_review_customers_and_update_account_status(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create(['name' => 'Student Customer', 'email' => 'student@example.com', 'is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($admin)->get(route('admin.customers'))->assertOk()->assertSee('Student Customer')->assertSee('student@example.com');
+        $this->actingAs($admin)->get(route('admin.search', ['q' => 'student@example.com']))->assertOk()->assertSee('Customer')->assertSee(route('admin.customers.show', $customer));
+        $this->actingAs($admin)->get(route('admin.customers.show', $customer))->assertOk()->assertSee('Account status')->assertSee('Student Customer');
+        $this->actingAs($admin)->patch(route('admin.customers.status', $customer), ['status' => 'suspended'])->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $customer->id, 'status' => 'suspended']);
+        $this->assertDatabaseHas('admin_audit_logs', ['action' => 'customer.status_updated', 'auditable_id' => $customer->id]);
+    }
+
     public function test_admin_learning_topic_hero_and_seo_propagate_to_public_page(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
@@ -255,6 +269,7 @@ class PlatformRoutesTest extends TestCase
         $message = ContactMessage::where('email', 'ops@example.com')->firstOrFail();
         $this->actingAs($admin)->patch(route('admin.messages.update', $message), ['status' => 'resolved'])->assertRedirect();
         $this->assertDatabaseHas('contact_messages', ['id' => $message->id, 'status' => 'resolved']);
+        $this->actingAs($admin)->get(route('admin.messages.show', $message))->assertOk()->assertSee($message->message)->assertSee('Contact details');
 
         $this->actingAs($admin)->post(route('admin.courses.store'), ['title' => 'Duplicate course', 'slug' => 'forex-foundations', 'status' => 'draft', 'short_description' => 'Should fail'])->assertSessionHasErrors('slug');
         $this->assertDatabaseMissing('courses', ['title' => 'Duplicate course']);

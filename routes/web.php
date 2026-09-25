@@ -21,6 +21,7 @@ use App\Http\Controllers\AdminRedirectController;
 use App\Http\Controllers\PublicRedirectController;
 use App\Http\Controllers\AdminBusinessUnitController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminCustomerController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -131,6 +132,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/articles/{article}', [AdminController::class, 'articleDestroy'])->name('articles.destroy');
         Route::post('/articles/{article}/restore', [AdminController::class, 'articleRestore'])->name('articles.restore');
         Route::get('/messages', [AdminController::class, 'messages'])->name('messages');
+        Route::get('/messages/{message}', [AdminController::class, 'messageShow'])->name('messages.show');
         Route::patch('/messages/{message}', [AdminController::class, 'messageUpdate'])->name('messages.update');
         Route::post('/messages/{message}/read', [AdminController::class, 'messageRead'])->name('messages.read');
         Route::get('/topics', [AdminController::class, 'topics'])->name('topics');
@@ -158,6 +160,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/administrators', [AdminUserController::class, 'store'])->name('administrators.store');
         Route::get('/administrators/{administrator}/edit', [AdminUserController::class, 'edit'])->name('administrators.edit');
         Route::put('/administrators/{administrator}', [AdminUserController::class, 'update'])->name('administrators.update');
+        Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers');
+        Route::get('/customers/{customer}', [AdminCustomerController::class, 'show'])->name('customers.show');
+        Route::patch('/customers/{customer}/status', [AdminCustomerController::class, 'updateStatus'])->name('customers.status');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/policies', [AdminPageController::class, 'policies'])->name('policies');
         Route::get('/redirects', [AdminRedirectController::class, 'index'])->name('redirects');

@@ -41,6 +41,7 @@
                 <nav class="portal-nav" aria-label="Commerce navigation">
                     <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
                     <a class="{{ request()->routeIs('admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce</a>
+                    <a class="{{ request()->routeIs('admin.customers*') ? 'is-active' : '' }}" href="{{ route('admin.customers') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Customers</a>
                 </nav>
                 <p class="portal-section-label">Platform</p>
                 <nav class="portal-nav" aria-label="Platform navigation">

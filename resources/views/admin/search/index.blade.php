@@ -2,7 +2,7 @@
 @section('title', 'Search')
 @section('portal-heading', 'Search')
 @section('content')
-    <div class="admin-heading"><div><p class="eyebrow">Admin desk / Search</p><h1>Search the desk</h1><p>Search real pages, courses, products, journal entries, orders and enquiries.</p></div></div>
+    <div class="admin-heading"><div><p class="eyebrow">Admin desk / Search</p><h1>Search the desk</h1><p>Search real pages, courses, products, journal entries, customers, orders and enquiries.</p></div></div>
     @if($term === '')
         <div class="empty-state"><p>Enter a search term to find content and operational records.</p></div>
     @elseif($results->isEmpty())
