@@ -58,6 +58,20 @@ class PlatformRoutesTest extends TestCase
         $this->get('/tools/trading-journal-sheet')->assertSuccessful()->assertSee('Trading Journal Sheet')->assertSee('application/ld+json');
     }
 
+    public function test_published_page_slug_changes_create_safe_redirects(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $page = Page::create(['key' => 'redirect-test', 'slug' => 'old-name', 'name' => 'Redirect test', 'page_type' => 'standard', 'status' => 'published', 'is_visible' => true, 'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'hero_title' => 'Old page']);
+        $this->get('/pages/old-name')->assertSuccessful()->assertSee('Old page');
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => 'new-name', 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'hero_title' => 'New page',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('redirects', ['source_path' => '/pages/old-name', 'destination_path' => '/pages/new-name']);
+        $this->get('/pages/old-name')->assertRedirect('/pages/new-name');
+        $this->get('/pages/new-name')->assertSuccessful()->assertSee('New page');
+    }
+
     public function test_draft_articles_are_not_public(): void
     {
         $category = ArticleCategory::first();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\Redirect;
 use App\Support\AdminAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -61,7 +62,15 @@ class AdminPageController extends Controller
         $data['key'] = Str::slug($data['key'], '-');
         $data['slug'] = $data['slug'] ? Str::slug($data['slug']) : null;
         $data['is_visible'] = $request->boolean('is_visible');
+        $oldPublicPath = $page->slug ? '/pages/'.$page->slug : null;
+        $wasPublished = $page->status === 'published' && $page->is_visible;
         $page->update($data);
+        if ($wasPublished && $oldPublicPath && $page->slug && $oldPublicPath !== '/pages/'.$page->slug) {
+            Redirect::updateOrCreate(
+                ['source_path' => $oldPublicPath],
+                ['destination_path' => '/pages/'.$page->slug, 'status_code' => 301, 'is_enabled' => true]
+            );
+        }
         $this->saveSections($request, $page);
         $this->createSection($request, $page);
         AdminAudit::record('page.updated', 'Updated page '.$page->name, $page, ['sections' => $page->sections()->count()]);

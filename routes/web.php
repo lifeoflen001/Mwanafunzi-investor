@@ -17,6 +17,8 @@ use App\Http\Controllers\AdminNavigationController;
 use App\Http\Controllers\AdminAuditController;
 use App\Http\Controllers\AdminSearchController;
 use App\Http\Controllers\AdminFaqController;
+use App\Http\Controllers\AdminRedirectController;
+use App\Http\Controllers\PublicRedirectController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -32,7 +34,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/journal/{article:slug}', 'article')->name('journal.show');
     Route::get('/about', 'page')->defaults('page', 'about')->name('about');
     Route::get('/student-of-money', 'page')->defaults('page', 'student-of-money')->name('student-of-money');
-    Route::get('/pages/{page:slug}', 'pageBySlug')->name('pages.show');
+    Route::get('/pages/{slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
@@ -145,6 +147,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/policies', [AdminPageController::class, 'policies'])->name('policies');
+        Route::get('/redirects', [AdminRedirectController::class, 'index'])->name('redirects');
+        Route::post('/redirects', [AdminRedirectController::class, 'store'])->name('redirects.store');
+        Route::put('/redirects/{redirect}', [AdminRedirectController::class, 'update'])->name('redirects.update');
+        Route::delete('/redirects/{redirect}', [AdminRedirectController::class, 'destroy'])->name('redirects.destroy');
         Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
         Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');
         Route::get('/pages/{page}/edit', [AdminPageController::class, 'edit'])->name('pages.edit');
@@ -176,3 +182,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/product-assets/{asset}', [AdminCommerceController::class, 'assetDestroy'])->name('product-assets.destroy');
     });
 });
+
+Route::get('/{path}', [PublicRedirectController::class, 'handle'])->where('path', '.*')->name('redirect.handle');

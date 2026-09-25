@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
 use App\Models\Page;
+use App\Models\Redirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
@@ -91,8 +92,14 @@ class PublicSiteController extends Controller
         abort(404);
     }
 
-    public function pageBySlug(Page $page)
+    public function pageBySlug(string $slug)
     {
+        $page = Page::where('slug', $slug)->first();
+        if (! $page) {
+            $redirect = Redirect::where('source_path', '/pages/'.$slug)->where('is_enabled', true)->first();
+            if ($redirect) return redirect()->to($redirect->destination_path, $redirect->status_code);
+            abort(404);
+        }
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
         $page->load(['sections', 'faqs']);
         return view('public.pages.cms', compact('page'));

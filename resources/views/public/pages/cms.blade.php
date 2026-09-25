@@ -1,8 +1,10 @@
 @extends('layouts.public')
 @section('title', $page->seo_title ?: $page->name.' — Mwanafunzi Investor')
-@section('description', $page->seo_description ?: $page->hero_summary)
+@section('description', $page->seo_description ?: $page->hero_summary ?: '')
 @section('content')
-@php($pageTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $page->name).'<br><em>'.e($page->hero_highlight).'</em>' : null)
+@php
+    $pageTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $page->name).'<br><em>'.e($page->hero_highlight).'</em>' : null;
+@endphp
 <x-public-hero class="public-page-hero" :eyebrow="$page->hero_eyebrow ?: $page->name" :title="$page->hero_title ?: $page->name" :title-html="$pageTitleHtml" :summary="$page->hero_summary" :image="$page->hero_image" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" />
 @foreach($page->sections->where('is_enabled', true)->sortBy('sort_order') as $section)
     @php($sectionImage = $section->image ? \App\Support\PublicHero::candidate($section->image) : null)
