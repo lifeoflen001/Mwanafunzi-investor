@@ -129,7 +129,7 @@ class AdminController extends Controller
     public function articleDestroy(Article $article) { $article->delete(); return back()->with('success', 'Article archived.'); }
     public function articleRestore(int $article) { Article::withTrashed()->findOrFail($article)->restore(); return back()->with('success', 'Article restored.'); }
 
-    public function messages() { return view('admin.messages.index', ['messages' => ContactMessage::latest()->paginate(30)]); }
+    public function messages() { return view('admin.messages.index', ['messages' => ContactMessage::with('businessUnit')->latest()->paginate(30)]); }
     public function messageUpdate(Request $request, ContactMessage $message)
     {
         $data = $request->validate(['status' => ['required', 'in:new,in_progress,resolved,spam']]);

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Article;
 use App\Models\ArticleCategory;
+use App\Models\BusinessUnit;
 use App\Models\Course;
 use App\Models\Product;
 use App\Models\Media;
@@ -140,5 +141,24 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->post(route('admin.courses.store'), ['title' => 'Duplicate course', 'slug' => 'forex-foundations', 'status' => 'draft', 'short_description' => 'Should fail'])->assertSessionHasErrors('slug');
         $this->assertDatabaseMissing('courses', ['title' => 'Duplicate course']);
         $this->assertDatabaseHas('site_settings', ['key' => 'contact_email', 'value' => 'desk@example.com']);
+    }
+
+    public function test_module_enquiries_are_saved_with_business_unit(): void
+    {
+        $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
+
+        $this->post('/contact', [
+            'name' => 'Studio Client',
+            'email' => 'studio@example.com',
+            'business_unit_id' => $studio->id,
+            'category' => 'partnership',
+            'message' => 'I would like to discuss a studio project.',
+            'consent' => '1',
+        ])->assertRedirect('/contact');
+
+        $this->assertDatabaseHas('contact_messages', [
+            'email' => 'studio@example.com',
+            'business_unit_id' => $studio->id,
+        ]);
     }
 }

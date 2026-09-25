@@ -4,15 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\ArticleCategory;
+use App\Models\BusinessUnit;
 use App\Models\ContactMessage;
 use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 
 class PublicSiteController extends Controller
 {
+    public function module(string $slug)
+    {
+        $module = BusinessUnit::query()->active()->where('slug', $slug)->firstOrFail();
+
+        if ($module->route_name === 'home') {
+            return to_route('home');
+        }
+
+        if ($module->slug === 'development') {
+            return view('public.modules.development', compact('module'));
+        }
+
+        if ($module->slug === 'studio') {
+            return view('public.modules.studio', compact('module'));
+        }
+
+        return view('public.modules.show', compact('module'));
+    }
+
     public function home()
     {
         return view('welcome', [
@@ -102,7 +123,10 @@ class PublicSiteController extends Controller
 
     public function contact()
     {
-        return view('public.contact');
+        $businessUnits = BusinessUnit::query()->active()->orderBy('sort_order')->get();
+        $selectedBusinessUnit = $businessUnits->firstWhere('slug', request('module'));
+
+        return view('public.contact', compact('businessUnits', 'selectedBusinessUnit'));
     }
 
     public function submitContact(Request $request)
@@ -111,6 +135,7 @@ class PublicSiteController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190'],
             'phone' => ['nullable', 'string', 'max:40'],
+            'business_unit_id' => ['nullable', 'integer', Rule::exists('business_units', 'id')->where(fn ($query) => $query->where('is_active', true))],
             'category' => ['required', 'in:general,course,product,partnership,support,other'],
             'message' => ['required', 'string', 'min:10', 'max:5000'],
             'consent' => ['accepted'],
@@ -132,6 +157,7 @@ class PublicSiteController extends Controller
             route('home'), route('learn'), route('courses'), route('tools'), route('journal'), route('about'), route('contact'), route('student-of-money'),
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
+        $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));
         $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
         $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
         $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('journal.show', $article)));

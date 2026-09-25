@@ -1,4 +1,4 @@
-<div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#27231f">
+<div style="font-family:'DM Sans',Arial,sans-serif;max-width:640px;margin:0 auto;color:#27231f">
     <h1>{{ $heading }}</h1>
     <p>{{ $body }}</p>
     @if($actionUrl && $actionLabel)<p><a href="{{ $actionUrl }}">{{ $actionLabel }} ↗</a></p>@endif

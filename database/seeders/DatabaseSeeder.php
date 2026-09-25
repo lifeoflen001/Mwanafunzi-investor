@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\ArticleCategory;
+use App\Models\BusinessUnit;
 use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
@@ -20,6 +21,40 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $businessUnits = [
+            [
+                'slug' => 'forex',
+                'name' => 'Forex Academy',
+                'tagline' => 'Student of Money. Systems. Discipline.',
+                'description' => 'Structured financial education for systematic trading, probability, risk management and disciplined portfolio thinking.',
+                'accent_color' => '#c56c38',
+                'route_name' => 'home',
+                'sort_order' => 1,
+            ],
+            [
+                'slug' => 'development',
+                'name' => 'Digital Systems',
+                'tagline' => 'Websites and software built for real work.',
+                'description' => 'Websites, Laravel systems, dashboards and integrations for organisations that need dependable digital tools.',
+                'accent_color' => '#56736d',
+                'route_name' => 'development',
+                'sort_order' => 2,
+            ],
+            [
+                'slug' => 'studio',
+                'name' => 'Creative Studio',
+                'tagline' => 'Photography and video with a point of view.',
+                'description' => 'Photography and videography for people, brands and organisations that need their story documented well.',
+                'accent_color' => '#a85b45',
+                'route_name' => 'studio',
+                'sort_order' => 3,
+            ],
+        ];
+
+        foreach ($businessUnits as $businessUnit) {
+            BusinessUnit::updateOrCreate(['slug' => $businessUnit['slug']], $businessUnit);
+        }
+
         User::updateOrCreate(['email' => 'test@example.com'], [
             'name' => 'Test User',
             'password' => 'password',
