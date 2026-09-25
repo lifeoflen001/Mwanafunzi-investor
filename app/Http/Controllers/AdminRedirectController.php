@@ -37,6 +37,7 @@ class AdminRedirectController extends Controller
 
     private function validated(Request $request, ?Redirect $redirect = null): array
     {
+        $request->merge(['source_path' => '/'.ltrim(trim((string) $request->input('source_path')), '/')]);
         $data = $request->validate([
             'source_path' => ['required', 'string', 'max:500', Rule::unique('redirects', 'source_path')->ignore($redirect?->id)],
             'destination_path' => ['required', 'string', 'max:500'],
@@ -45,7 +46,7 @@ class AdminRedirectController extends Controller
         ]);
         $data['source_path'] = '/'.ltrim(trim($data['source_path']), '/');
         $data['destination_path'] = trim($data['destination_path']);
-        abort_unless(str_starts_with($data['destination_path'], '/') || preg_match('/^https?:\/\//i', $data['destination_path']), 422, 'Redirect destinations must be local paths or https URLs.');
+        abort_unless((str_starts_with($data['destination_path'], '/') && ! str_starts_with($data['destination_path'], '//')) || preg_match('/^https?:\/\//i', $data['destination_path']), 422, 'Redirect destinations must be local paths or https URLs.');
         $data['is_enabled'] = $request->boolean('is_enabled');
         return $data;
     }
