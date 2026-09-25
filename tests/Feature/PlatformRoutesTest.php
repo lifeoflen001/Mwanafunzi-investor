@@ -28,9 +28,28 @@ class PlatformRoutesTest extends TestCase
 
     public function test_public_platform_routes_render(): void
     {
-        foreach (['/', '/learn', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
+        foreach (['/', '/development', '/studio', '/learn', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
             $this->get($route)->assertSuccessful();
         }
+    }
+
+    public function test_business_module_content_propagates_from_pages_cms(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $page = Page::where('key', 'development')->firstOrFail();
+        $capabilities = $page->sections()->where('key', 'capabilities')->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.pages.edit', $page))->assertOk()->assertSee('Cards');
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'strong', 'hero_alignment' => 'left',
+            'sections' => [$capabilities->id => [
+                'heading' => 'Systems managed from the desk.', 'body' => 'CMS-managed module copy.', 'sort_order' => 10, 'is_enabled' => 1,
+                'cards' => 'Web apps | A CMS-managed service card. | Laravel · Workflows',
+            ]],
+        ])->assertRedirect();
+
+        $this->get('/development')->assertOk()->assertSee('Systems managed from the desk.')->assertSee('A CMS-managed service card.');
     }
 
     public function test_published_and_coming_soon_content_resolves_by_slug(): void
@@ -63,6 +82,7 @@ class PlatformRoutesTest extends TestCase
         $this->get('/admin')->assertRedirect('/admin/login');
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->get('/admin')->assertSuccessful()->assertSee('Content management');
+        $this->actingAs($admin)->get(route('admin.search', ['q' => 'Forex']))->assertSuccessful()->assertSee('Search the desk')->assertSee('Forex');
     }
 
     public function test_admin_can_manage_course_modules_product_features_and_article_tags(): void
@@ -132,8 +152,8 @@ class PlatformRoutesTest extends TestCase
         $this->assertDatabaseHas('media', ['filename' => 'editorial.jpg', 'alt_text' => 'Editorial desk']);
         $this->actingAs($admin)->get(route('admin.media', ['q' => 'editorial', 'type' => 'image']))->assertOk()->assertSee('Editorial desk');
 
-        $this->actingAs($admin)->put(route('admin.settings.update'), ['brand_name' => 'Mwanafunzi Test', 'contact_email' => 'desk@example.com', 'contact_phone' => '+255700000000', 'contact_whatsapp' => '+255700000000', 'contact_location' => 'Dar es Salaam', 'logo' => '', 'dark_logo' => '', 'favicon' => '', 'default_social_image' => '', 'footer_copy' => 'Study. Test. Review.', 'default_seo_title' => 'Test title', 'default_seo_description' => 'Test description', 'risk_disclaimer' => 'Test disclaimer.'])->assertRedirect();
-        $this->get('/')->assertOk()->assertSee('desk@example.com')->assertSee('Study. Test. Review.');
+        $this->actingAs($admin)->put(route('admin.settings.update'), ['brand_name' => 'Mwanafunzi Test', 'contact_email' => 'desk@example.com', 'contact_phone' => '+255700000000', 'contact_whatsapp' => '+255711111111', 'contact_location' => 'Dar es Salaam', 'logo' => '', 'dark_logo' => '', 'light_logo' => '', 'icon_logo' => '', 'favicon' => '', 'apple_touch_icon' => '', 'default_social_image' => '', 'footer_copy' => 'Study. Test. Review.', 'footer_copyright' => 'Copyright managed from settings', 'footer_bottom_statement' => 'PROCESS OVER HYPE.', 'default_seo_title' => 'Test title', 'default_seo_description' => 'Test description', 'risk_disclaimer' => 'Test disclaimer.'])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('desk@example.com')->assertSee('WhatsApp +255711111111')->assertSee('Study. Test. Review.')->assertSee('Copyright managed from settings')->assertSee('PROCESS OVER HYPE.');
 
         $this->post('/contact', ['name' => 'Operations', 'email' => 'ops@example.com', 'category' => 'support', 'message' => 'Please help with the platform.', 'consent' => '1'])->assertRedirect();
         $message = ContactMessage::where('email', 'ops@example.com')->firstOrFail();
@@ -226,6 +246,16 @@ class PlatformRoutesTest extends TestCase
         ])->assertRedirect();
         $this->get('/')->assertOk()->assertSee('Study');
 
+        $philosophy = $home->sections()->where('key', 'philosophy')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.pages.update', $home), [
+            'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_overlay' => 'strong', 'hero_alignment' => 'left', 'sections' => [$philosophy->id => [
+                'eyebrow' => 'A CMS-managed philosophy', 'heading' => $philosophy->heading, 'body' => $philosophy->body, 'sort_order' => 10, 'is_enabled' => 1,
+                'cards' => 'A new pillar | Managed without Blade. |',
+            ]],
+        ])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('A new pillar')->assertSee('Managed without Blade.');
+
         $navigation = NavigationItem::where('location', 'header')->where('label', 'About')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.navigation'))->assertOk()->assertSee('Navigation');
         $this->actingAs($admin)->put(route('admin.navigation.update', $navigation), [
@@ -246,11 +276,12 @@ class PlatformRoutesTest extends TestCase
     public function test_media_metadata_and_page_sections_are_editable_from_admin(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
         $media = Media::create(['disk' => 'public', 'path' => 'media/test.jpg', 'filename' => 'test.jpg', 'mime_type' => 'image/jpeg', 'size' => 100, 'alt_text' => 'Old alt', 'title' => 'Old title']);
 
-        $this->actingAs($admin)->get(route('admin.media'))->assertOk()->assertSee('test.jpg');
-        $this->actingAs($admin)->put(route('admin.media.update', $media), ['title' => 'Updated title', 'alt_text' => 'Updated alt text'])->assertRedirect();
-        $this->assertDatabaseHas('media', ['id' => $media->id, 'title' => 'Updated title', 'alt_text' => 'Updated alt text']);
+        $this->actingAs($admin)->get(route('admin.media', ['view' => 'list']))->assertOk()->assertSee('test.jpg');
+        $this->actingAs($admin)->put(route('admin.media.update', $media), ['title' => 'Updated title', 'alt_text' => 'Updated alt text', 'caption' => 'Updated caption', 'file' => UploadedFile::fake()->create('replacement.png', 100, 'image/png')])->assertRedirect();
+        $this->assertDatabaseHas('media', ['id' => $media->id, 'path' => 'media/test.jpg', 'filename' => 'replacement.png', 'title' => 'Updated title', 'alt_text' => 'Updated alt text', 'caption' => 'Updated caption']);
 
         $page = Page::where('key', 'about')->firstOrFail();
         $this->actingAs($admin)->put(route('admin.pages.update', $page), [

@@ -70,6 +70,9 @@ class AdminPageController extends Controller
             'hero_note' => ['nullable', 'string', 'max:500'],
             'hero_aside' => ['nullable', 'string', 'max:500'],
             'hero_aside_index' => ['nullable', 'string', 'max:50'],
+            'support_heading' => ['nullable', 'string', 'max:190'],
+            'support_copy' => ['nullable', 'string', 'max:2000'],
+            'effective_date' => ['nullable', 'date'],
             'hero_overlay' => ['required', 'in:light,medium,strong'],
             'hero_alignment' => ['required', 'in:left,center,right'],
             'seo_title' => ['nullable', 'string', 'max:190'],
@@ -78,6 +81,7 @@ class AdminPageController extends Controller
             'is_visible' => ['nullable', 'boolean'],
             'sections' => ['nullable', 'array'],
             'sections.*.heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.eyebrow' => ['nullable', 'string', 'max:190'],
             'sections.*.body' => ['nullable', 'string', 'max:20000'],
             'sections.*.image' => ['nullable', 'string', 'max:255'],
             'sections.*.cta_label' => ['nullable', 'string', 'max:120'],
@@ -87,6 +91,14 @@ class AdminPageController extends Controller
             'sections.*.list' => ['nullable', 'string', 'max:10000'],
             'sections.*.callout' => ['nullable', 'string', 'max:1000'],
             'sections.*.steps' => ['nullable', 'string', 'max:10000'],
+            'sections.*.cards' => ['nullable', 'string', 'max:20000'],
+            'sections.*.secondary_cta_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.secondary_cta_url' => ['nullable', 'string', 'max:500'],
+            'sections.*.visual_caption' => ['nullable', 'string', 'max:190'],
+            'sections.*.visual_index' => ['nullable', 'string', 'max:30'],
+            'sections.*.dashboard_title' => ['nullable', 'string', 'max:120'],
+            'sections.*.dashboard_status' => ['nullable', 'string', 'max:120'],
+            'sections.*.metrics' => ['nullable', 'string', 'max:5000'],
             'new_section_key' => ['nullable', 'string', 'max:80', 'alpha_dash'],
             'new_section_type' => ['nullable', 'in:rich_text,split_content,featured_topics,featured_courses,featured_products,latest_journal,framework,faq,quote,feature_grid,contact_block,cta'],
             'new_section_heading' => ['nullable', 'string', 'max:190'],
@@ -125,12 +137,35 @@ class AdminPageController extends Controller
                     ->values()
                     ->all();
             }
+            if (array_key_exists('cards', $input)) {
+                $payload['cards'] = collect(preg_split('/\r\n|\r|\n/', (string) $input['cards']))
+                    ->map(function ($item, $index) {
+                        [$title, $body, $tags] = array_pad(explode('|', $item, 3), 3, '');
+                        return ['index' => str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT), 'title' => trim($title), 'body' => trim($body), 'tags' => trim($tags)];
+                    })
+                    ->filter(fn ($item) => $item['title'] !== '')
+                    ->values()
+                    ->all();
+            }
+            foreach (['eyebrow', 'secondary_cta_label', 'secondary_cta_url', 'visual_caption', 'visual_index', 'dashboard_title', 'dashboard_status'] as $payloadKey) {
+                if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = trim((string) $input[$payloadKey]) ?: null;
+            }
+            if (array_key_exists('metrics', $input)) {
+                $payload['metrics'] = collect(preg_split('/\r\n|\r|\n/', (string) $input['metrics']))
+                    ->map(function ($item) {
+                        [$label, $value] = array_pad(explode('|', $item, 2), 2, '');
+                        return ['label' => trim($label), 'value' => trim($value)];
+                    })
+                    ->filter(fn ($item) => $item['label'] !== '')
+                    ->values()
+                    ->all();
+            }
             $section->update([
-                'heading' => $input['heading'] ?? null,
-                'body' => $input['body'] ?? null,
-                'image' => $input['image'] ?? null,
-                'cta_label' => $input['cta_label'] ?? null,
-                'cta_url' => $input['cta_url'] ?? null,
+                'heading' => array_key_exists('heading', $input) ? $input['heading'] : $section->heading,
+                'body' => array_key_exists('body', $input) ? $input['body'] : $section->body,
+                'image' => array_key_exists('image', $input) ? $input['image'] : $section->image,
+                'cta_label' => array_key_exists('cta_label', $input) ? $input['cta_label'] : $section->cta_label,
+                'cta_url' => array_key_exists('cta_url', $input) ? $input['cta_url'] : $section->cta_url,
                 'payload' => $payload,
                 'sort_order' => max(0, (int) ($input['sort_order'] ?? $section->sort_order)),
                 'is_enabled' => filter_var($input['is_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),

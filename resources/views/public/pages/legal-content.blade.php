@@ -4,6 +4,8 @@
     $related = $related ?? [];
     $supportHeading = $supportHeading ?? 'Questions about this policy?';
     $supportCopy = $supportCopy ?? 'Contact the Mwanafunzi Investor desk and tell us which part needs clarification.';
+    $eyebrow = $page?->hero_eyebrow ?: ($eyebrow ?? 'Policies and legal information');
+    $heading = $page?->hero_title ?: $heading;
     $cmsSections = $page?->sections?->where('is_enabled', true)->sortBy('sort_order') ?? collect();
     if ($cmsSections->isNotEmpty()) {
         $sections = $cmsSections->map(function ($section) {
@@ -18,7 +20,9 @@
         })->values()->all();
     }
     $intro = $page?->hero_summary ?: $intro;
-    $updated = $updated ?? $page?->updated_at?->format('F j, Y');
+    $supportHeading = $page?->support_heading ?: $supportHeading;
+    $supportCopy = $page?->support_copy ?: $supportCopy;
+    $updated = $page?->effective_date?->format('F j, Y') ?: ($updated ?? $page?->updated_at?->format('F j, Y'));
 @endphp
 
 <x-public-hero class="legal-hero" compact :eyebrow="$eyebrow ?? 'Policies and legal information'" :title="$heading" :summary="$intro" setting="hero_legal_image" :fallback-image="config('public.hero_defaults.legal')" />

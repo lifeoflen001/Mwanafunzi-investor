@@ -26,13 +26,17 @@
                 </nav>
                 <p class="portal-section-label">Content</p>
                 <nav class="portal-nav" aria-label="Content navigation">
-                    <a class="{{ request()->routeIs('admin.courses*', 'admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Learning</a>
+                    <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
+                    <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
                     <a class="{{ request()->routeIs('admin.articles*') ? 'is-active' : '' }}" href="{{ route('admin.articles') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span>Journal</a>
+                    <a class="{{ request()->routeIs('admin.categories*') ? 'is-active' : '' }}" href="{{ route('admin.categories') }}"><span class="portal-nav-icon" aria-hidden="true">#</span>Categories</a>
+                    <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span>Tags</a>
                     <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
                 </nav>
                 <p class="portal-section-label">Commerce</p>
                 <nav class="portal-nav" aria-label="Commerce navigation">
-                    <a class="{{ request()->routeIs('admin.products*', 'admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Commerce</a>
+                    <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
+                    <a class="{{ request()->routeIs('admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce</a>
                 </nav>
                 <p class="portal-section-label">Platform</p>
                 <nav class="portal-nav" aria-label="Platform navigation">
@@ -59,7 +63,7 @@
                 <button class="admin-sidebar-toggle" type="button" aria-label="Open admin navigation" aria-controls="admin-sidebar" aria-expanded="false" data-admin-sidebar-toggle>☰</button>
                 <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
                 <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
-                <div class="portal-search" aria-label="Portal search"><span aria-hidden="true">⌕</span><span>Search the desk</span></div>
+                <form class="portal-search" method="get" action="{{ route('admin.search') }}"><label class="sr-only" for="admin-search">Search the desk</label><span aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk"></form>
                 <div class="portal-topbar-actions"><button class="admin-topbar-action" type="button" title="Notifications" aria-label="Notifications">◌</button><span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span></div>
             </header>
             <main class="portal-content" id="admin-main-content">

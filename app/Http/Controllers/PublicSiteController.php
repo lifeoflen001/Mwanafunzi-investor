@@ -19,20 +19,21 @@ class PublicSiteController extends Controller
     public function module(string $slug)
     {
         $module = BusinessUnit::query()->active()->where('slug', $slug)->firstOrFail();
+        $page = $this->cmsPage($slug);
 
         if ($module->route_name === 'home') {
             return to_route('home');
         }
 
         if ($module->slug === 'development') {
-            return view('public.modules.development', compact('module'));
+            return view('public.modules.development', compact('module', 'page'));
         }
 
         if ($module->slug === 'studio') {
-            return view('public.modules.studio', compact('module'));
+            return view('public.modules.studio', compact('module', 'page'));
         }
 
-        return view('public.modules.show', compact('module'));
+        return view('public.modules.show', compact('module', 'page'));
     }
 
     public function home()

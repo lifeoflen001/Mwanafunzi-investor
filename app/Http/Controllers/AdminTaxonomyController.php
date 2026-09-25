@@ -7,6 +7,7 @@ use App\Models\SocialLink;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Support\AdminAudit;
 
 class AdminTaxonomyController extends Controller
 {
@@ -19,7 +20,7 @@ class AdminTaxonomyController extends Controller
     public function tagDestroy(Tag $tag) { $tag->delete(); return back()->with('success', 'Tag removed.'); }
 
     public function socialLinks() { return view('admin.social-links.index', ['links' => SocialLink::orderBy('sort_order')->get()]); }
-    public function socialLinkStore(Request $request) { $data = $request->validate(['label' => ['required', 'string', 'max:80'], 'url' => ['required', 'url'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_visible' => ['nullable', 'boolean']]); $data['is_visible'] = $request->boolean('is_visible'); SocialLink::create($data); return back()->with('success', 'Social link added.'); }
-    public function socialLinkUpdate(Request $request, SocialLink $socialLink) { $data = $request->validate(['label' => ['required', 'string', 'max:80'], 'url' => ['required', 'url'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_visible' => ['nullable', 'boolean']]); $data['is_visible'] = $request->boolean('is_visible'); $socialLink->update($data); return back()->with('success', 'Social link updated.'); }
-    public function socialLinkDestroy(SocialLink $socialLink) { $socialLink->delete(); return back()->with('success', 'Social link removed.'); }
+    public function socialLinkStore(Request $request) { $data = $request->validate(['label' => ['required', 'string', 'max:80'], 'url' => ['required', 'url'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_visible' => ['nullable', 'boolean']]); $data['is_visible'] = $request->boolean('is_visible'); $link = SocialLink::create($data); AdminAudit::record('social.created', 'Added social link '.$link->label, $link); return back()->with('success', 'Social link added.'); }
+    public function socialLinkUpdate(Request $request, SocialLink $socialLink) { $data = $request->validate(['label' => ['required', 'string', 'max:80'], 'url' => ['required', 'url'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_visible' => ['nullable', 'boolean']]); $data['is_visible'] = $request->boolean('is_visible'); $socialLink->update($data); AdminAudit::record('social.updated', 'Updated social link '.$socialLink->label, $socialLink); return back()->with('success', 'Social link updated.'); }
+    public function socialLinkDestroy(SocialLink $socialLink) { $socialLink->delete(); AdminAudit::record('social.deleted', 'Removed social link '.$socialLink->label, $socialLink); return back()->with('success', 'Social link removed.'); }
 }

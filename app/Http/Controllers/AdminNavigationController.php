@@ -6,6 +6,7 @@ use App\Models\NavigationItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use App\Support\AdminAudit;
 
 class AdminNavigationController extends Controller
 {
@@ -16,19 +17,22 @@ class AdminNavigationController extends Controller
 
     public function store(Request $request)
     {
-        NavigationItem::create($this->validated($request));
+        $item = NavigationItem::create($this->validated($request));
+        AdminAudit::record('navigation.created', 'Added navigation item '.$item->label, $item);
         return back()->with('success', 'Navigation item added.');
     }
 
     public function update(Request $request, NavigationItem $navigationItem)
     {
         $navigationItem->update($this->validated($request, $navigationItem));
+        AdminAudit::record('navigation.updated', 'Updated navigation item '.$navigationItem->label, $navigationItem);
         return back()->with('success', 'Navigation item updated.');
     }
 
     public function destroy(NavigationItem $navigationItem)
     {
         $navigationItem->delete();
+        AdminAudit::record('navigation.deleted', 'Removed navigation item '.$navigationItem->label, $navigationItem);
         return back()->with('success', 'Navigation item removed.');
     }
 

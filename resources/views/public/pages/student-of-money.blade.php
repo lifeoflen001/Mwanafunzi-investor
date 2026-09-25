@@ -1,9 +1,39 @@
 @extends('layouts.public')
-@php($intro = $page?->section('intro'))
+
+@php
+    $intro = $page?->section('intro');
+    $framework = $page?->section('framework');
+    $heroTitleHtml = $page?->hero_highlight ? e($page->hero_title ?: 'Student of Money').'<br><em>'.e($page->hero_highlight).'</em>' : null;
+    $steps = $framework?->payload['steps'] ?? [];
+@endphp
+
 @section('title', $page?->seo_title ?: 'Student of Money — Mwanafunzi Investor')
-@section('description', $page?->seo_description ?: 'The Mwanafunzi Investor philosophy: probability over prediction, process over outcome and responsible stewardship of capital.')
+@section('description', $page?->seo_description ?: $page?->hero_summary)
+
 @section('content')
-<x-public-hero class="manifesto-hero" :eyebrow="$intro?->payload['eyebrow'] ?? 'The signature philosophy'" title-html="Always a <em>student</em> of money." summary="Continuous learning. Probability over prediction. Process over outcome. Stewardship over shortcuts." setting="hero_student_image" :fallback-image="config('public.hero_defaults.student-of-money')" />
-<section class="platform-section"><div class="container editorial-copy"><p class="eyebrow">{{ $intro?->payload['eyebrow'] ?? 'The Student of Money' }}</p><h2>{{ $intro?->heading ?? 'Good decisions become easier when they have somewhere to live.' }}</h2><div class="rich-copy">{!! \App\Support\RichText::render($intro?->body ?? 'A Student of Money does not need to be right on every trade. They need controlled losses, repeatable execution and an edge that can express itself across a meaningful sample.') !!}</div><p>They stay curious, write down what must be true before acting, protect capital, review honestly and make one thoughtful change at a time.</p></div></section>
-<section class="platform-dark framework-platform"><div class="container"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> A process you can come back to</p><h2>The framework.</h2><div class="framework-steps platform-framework">@foreach([['01','Learn','Understand the market and your assumptions.'],['02','Define Rules','Write down what must be true before you act.'],['03','Plan Risk','Decide what you can responsibly put at risk.'],['04','Execute','Follow the plan without negotiating with fear.'],['05','Journal','Capture the decision while the context is clear.'],['06','Review','Look for patterns across a meaningful sample.'],['07','Improve','Make one thoughtful change at a time.']] as $step)<div class="framework-step"><span>{{ $step[0] }}</span><strong>{{ $step[1] }}</strong><p>{{ $step[2] }}</p></div>@endforeach</div></div></section>
+    <x-public-hero class="manifesto-hero" :eyebrow="$page?->hero_eyebrow ?: ($intro?->payload['eyebrow'] ?? 'The signature philosophy')" :title="$page?->hero_title ?: 'Student of Money'" :title-html="$heroTitleHtml" :summary="$page?->hero_summary" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'medium'" :alignment="$page?->hero_alignment ?: 'left'" setting="hero_student_image" :fallback-image="config('public.hero_defaults.student-of-money')" />
+
+    @if($intro)
+        <section class="platform-section">
+            <div class="container editorial-copy">
+                <p class="eyebrow">{{ $intro->payload['eyebrow'] ?? 'The Student of Money' }}</p>
+                <h2>{{ $intro->heading }}</h2>
+                <div class="rich-copy">{!! \App\Support\RichText::render($intro->body) !!}</div>
+            </div>
+        </section>
+    @endif
+
+    @if($framework)
+        <section class="platform-dark framework-platform">
+            <div class="container">
+                <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $framework->payload['eyebrow'] ?? 'A process you can come back to' }}</p>
+                <h2>{{ $framework->heading }}</h2>
+                <div class="framework-steps platform-framework">
+                    @foreach($steps as $step)
+                        <div class="framework-step"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><strong>{{ $step['title'] ?? '' }}</strong><p>{{ $step['body'] ?? '' }}</p></div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 @endsection

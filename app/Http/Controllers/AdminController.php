@@ -23,6 +23,7 @@ use App\Models\CourseFaq;
 use App\Models\Faq;
 use App\Services\MediaService;
 use App\Support\RichText;
+use App\Support\AdminAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -46,61 +47,67 @@ class AdminController extends Controller
     public function courseStore(Request $request) { return $this->saveCourse($request, new Course()); }
     public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules.lessons', 'faqs']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.update', $course)]); }
     public function courseUpdate(Request $request, Course $course) { return $this->saveCourse($request, $course); }
-    public function courseDestroy(Course $course) { $course->delete(); return back()->with('success', 'Course archived.'); }
-    public function courseRestore(int $course) { Course::withTrashed()->findOrFail($course)->restore(); return back()->with('success', 'Course restored.'); }
+    public function courseDestroy(Course $course) { $course->delete(); AdminAudit::record('course.archived', 'Archived course '.$course->title, $course); return back()->with('success', 'Course archived.'); }
+    public function courseRestore(int $course) { $record = Course::withTrashed()->findOrFail($course); $record->restore(); AdminAudit::record('course.restored', 'Restored course '.$record->title, $record); return back()->with('success', 'Course restored.'); }
     public function moduleStore(Request $request, Course $course)
     {
         $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'description' => ['nullable', 'string'], 'sort_order' => ['required', 'integer', 'min:0']]);
-        $course->modules()->create($data);
+        $module = $course->modules()->create($data);
+        AdminAudit::record('course.module.created', 'Added module '.$module->title, $course);
         return back()->with('success', 'Course module added.');
     }
-    public function moduleDestroy(CourseModule $module) { $module->delete(); return back()->with('success', 'Course module removed.'); }
+    public function moduleDestroy(CourseModule $module) { $module->delete(); AdminAudit::record('course.module.deleted', 'Removed course module '.$module->title, $module); return back()->with('success', 'Course module removed.'); }
     public function lessonStore(Request $request, CourseModule $module)
     {
         $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'content' => ['nullable', 'string'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
         $data['slug'] = Str::slug($data['title']);
         $data['is_published'] = $request->boolean('is_published');
         $data['content'] = RichText::sanitize($data['content'] ?? null);
-        $module->lessons()->create($data);
+        $lesson = $module->lessons()->create($data);
+        AdminAudit::record('course.lesson.created', 'Added lesson '.$lesson->title, $module);
         return back()->with('success', 'Course lesson added.');
     }
-    public function lessonDestroy(CourseLesson $lesson) { $lesson->delete(); return back()->with('success', 'Course lesson removed.'); }
+    public function lessonDestroy(CourseLesson $lesson) { $lesson->delete(); AdminAudit::record('course.lesson.deleted', 'Removed course lesson '.$lesson->title, $lesson); return back()->with('success', 'Course lesson removed.'); }
     public function courseFaqStore(Request $request, Course $course)
     {
         $data = $request->validate(['question' => ['required', 'string', 'max:255'], 'answer' => ['required', 'string'], 'sort_order' => ['required', 'integer', 'min:0']]);
-        $course->faqs()->create($data);
+        $faq = $course->faqs()->create($data);
+        AdminAudit::record('course.faq.created', 'Added course FAQ', $faq);
         return back()->with('success', 'Course FAQ added.');
     }
-    public function courseFaqDestroy(CourseFaq $faq) { $faq->delete(); return back()->with('success', 'Course FAQ removed.'); }
+    public function courseFaqDestroy(CourseFaq $faq) { $faq->delete(); AdminAudit::record('course.faq.deleted', 'Removed course FAQ', $faq); return back()->with('success', 'Course FAQ removed.'); }
 
     public function products() { return view('admin.products.index', ['products' => Product::withTrashed()->latest()->paginate(20)]); }
     public function productCreate() { return view('admin.products.form', ['product' => new Product(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.products.store')]); }
     public function productStore(Request $request) { return $this->saveProduct($request, new Product()); }
     public function productEdit(Product $product) { return view('admin.products.form', ['product' => $product->load(['features', 'versions', 'faqs', 'images', 'assets']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.products.update', $product)]); }
     public function productUpdate(Request $request, Product $product) { return $this->saveProduct($request, $product); }
-    public function productDestroy(Product $product) { $product->delete(); return back()->with('success', 'Product archived.'); }
-    public function productRestore(int $product) { Product::withTrashed()->findOrFail($product)->restore(); return back()->with('success', 'Product restored.'); }
+    public function productDestroy(Product $product) { $product->delete(); AdminAudit::record('product.archived', 'Archived product '.$product->name, $product); return back()->with('success', 'Product archived.'); }
+    public function productRestore(int $product) { $record = Product::withTrashed()->findOrFail($product); $record->restore(); AdminAudit::record('product.restored', 'Restored product '.$record->name, $record); return back()->with('success', 'Product restored.'); }
     public function featureStore(Request $request, Product $product)
     {
         $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'description' => ['nullable', 'string'], 'sort_order' => ['required', 'integer', 'min:0']]);
-        $product->features()->create($data);
+        $feature = $product->features()->create($data);
+        AdminAudit::record('product.feature.created', 'Added product feature '.$feature->title, $product);
         return back()->with('success', 'Product feature added.');
     }
-    public function featureDestroy(ProductFeature $feature) { $feature->delete(); return back()->with('success', 'Product feature removed.'); }
+    public function featureDestroy(ProductFeature $feature) { $feature->delete(); AdminAudit::record('product.feature.deleted', 'Removed product feature', $feature); return back()->with('success', 'Product feature removed.'); }
     public function versionStore(Request $request, Product $product)
     {
         $data = $request->validate(['version' => ['required', 'string', 'max:40'], 'released_at' => ['nullable', 'date'], 'notes' => ['nullable', 'string']]);
-        $product->versions()->create($data);
+        $version = $product->versions()->create($data);
+        AdminAudit::record('product.version.created', 'Added product version '.$version->version, $product);
         return back()->with('success', 'Product version added.');
     }
-    public function versionDestroy(ProductVersion $version) { $version->delete(); return back()->with('success', 'Product version removed.'); }
+    public function versionDestroy(ProductVersion $version) { $version->delete(); AdminAudit::record('product.version.deleted', 'Removed product version', $version); return back()->with('success', 'Product version removed.'); }
     public function productFaqStore(Request $request, Product $product)
     {
         $data = $request->validate(['question' => ['required', 'string', 'max:255'], 'answer' => ['required', 'string'], 'sort_order' => ['required', 'integer', 'min:0']]);
-        $product->faqs()->create($data);
+        $faq = $product->faqs()->create($data);
+        AdminAudit::record('product.faq.created', 'Added product FAQ', $faq);
         return back()->with('success', 'Product FAQ added.');
     }
-    public function productFaqDestroy(Faq $faq) { $faq->delete(); return back()->with('success', 'Product FAQ removed.'); }
+    public function productFaqDestroy(Faq $faq) { $faq->delete(); AdminAudit::record('product.faq.deleted', 'Removed product FAQ', $faq); return back()->with('success', 'Product FAQ removed.'); }
     public function productImageStore(Request $request, Product $product, MediaService $mediaService)
     {
         $data = $request->validate(['file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif,svg', 'max:8192'], 'existing_path' => ['nullable', 'string', 'max:255'], 'alt_text' => ['required', 'string', 'max:190']]);
@@ -111,7 +118,8 @@ class AdminController extends Controller
         } else {
             $path = $mediaService->store($request->file('file'), 'products', $data['alt_text'])->path;
         }
-        $product->images()->create(['path' => $path, 'alt_text' => $data['alt_text'], 'sort_order' => $product->images()->max('sort_order') + 1]);
+        $image = $product->images()->create(['path' => $path, 'alt_text' => $data['alt_text'], 'sort_order' => $product->images()->max('sort_order') + 1]);
+        AdminAudit::record('product.image.created', 'Added product screenshot', $image);
         return back()->with('success', 'Product screenshot added.');
     }
     public function productImageDestroy(ProductImage $image)
@@ -121,6 +129,7 @@ class AdminController extends Controller
         if ($media && ! $isShared) app(MediaService::class)->delete($media);
         elseif (! $media && ! $isShared) Storage::disk('public')->delete($image->path);
         $image->delete();
+        AdminAudit::record('product.image.deleted', 'Removed product screenshot', $image);
         return back()->with('success', 'Product screenshot removed.');
     }
 
@@ -129,8 +138,8 @@ class AdminController extends Controller
     public function articleStore(Request $request) { return $this->saveArticle($request, new Article()); }
     public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load('tags'), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.articles.update', $article)]); }
     public function articleUpdate(Request $request, Article $article) { return $this->saveArticle($request, $article); }
-    public function articleDestroy(Article $article) { $article->delete(); return back()->with('success', 'Article archived.'); }
-    public function articleRestore(int $article) { Article::withTrashed()->findOrFail($article)->restore(); return back()->with('success', 'Article restored.'); }
+    public function articleDestroy(Article $article) { $article->delete(); AdminAudit::record('article.archived', 'Archived article '.$article->title, $article); return back()->with('success', 'Article archived.'); }
+    public function articleRestore(int $article) { $record = Article::withTrashed()->findOrFail($article); $record->restore(); AdminAudit::record('article.restored', 'Restored article '.$record->title, $record); return back()->with('success', 'Article restored.'); }
 
     public function messages() { return view('admin.messages.index', ['messages' => ContactMessage::with('businessUnit')->latest()->paginate(30)]); }
     public function messageUpdate(Request $request, ContactMessage $message)
@@ -153,7 +162,8 @@ class AdminController extends Controller
         $data['is_published'] = $request->boolean('is_published');
         $data['status'] = $data['is_published'] ? 'published' : 'draft';
         $data['full_description'] = RichText::sanitize($data['full_description'] ?? null);
-        LearningTopic::create($data);
+        $topic = LearningTopic::create($data);
+        AdminAudit::record('topic.created', 'Created learning topic '.$topic->title, $topic);
         return to_route('admin.topics')->with('success', 'Learning topic created.');
     }
     public function topicEdit(LearningTopic $topic) { return view('admin.topics.form', ['topic' => $topic, 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.topics.update', $topic), 'isCreate' => false]); }
@@ -165,6 +175,7 @@ class AdminController extends Controller
         $data['status'] = $data['is_published'] ? 'published' : 'draft';
         $data['full_description'] = RichText::sanitize($data['full_description'] ?? null);
         $topic->update($data);
+        AdminAudit::record('topic.updated', 'Updated learning topic '.$topic->title, $topic);
         return to_route('admin.topics')->with('success', 'Learning topic updated.');
     }
 
@@ -176,7 +187,9 @@ class AdminController extends Controller
         $data['enrollment_available'] = $request->boolean('enrollment_available');
         $data['is_featured'] = $request->boolean('is_featured');
         $data['full_description'] = RichText::sanitize($data['full_description'] ?? null);
+        $wasExisting = $course->exists;
         $course->fill($data)->save();
+        AdminAudit::record($wasExisting ? 'course.updated' : 'course.created', ($wasExisting ? 'Updated course ' : 'Created course ').$course->title, $course);
         return to_route('admin.courses')->with('success', 'Course saved.');
     }
 
@@ -187,7 +200,9 @@ class AdminController extends Controller
         $data['slug'] = Str::slug($data['slug'] ?? '') ?: Str::slug($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['detailed_description'] = RichText::sanitize($data['detailed_description'] ?? null);
+        $wasExisting = $product->exists;
         $product->fill($data)->save();
+        AdminAudit::record($wasExisting ? 'product.updated' : 'product.created', ($wasExisting ? 'Updated product ' : 'Created product ').$product->name, $product);
         return to_route('admin.products')->with('success', 'Product saved.');
     }
 
@@ -202,9 +217,11 @@ class AdminController extends Controller
         $data['content'] = RichText::sanitize($data['content']);
         $tagNames = collect(explode(',', (string) ($data['tags'] ?? '')))->map(fn ($tag) => trim($tag))->filter()->unique()->values();
         unset($data['tags']);
+        $wasExisting = $article->exists;
         $article->fill($data)->save();
         $tagIds = $tagNames->map(fn ($name) => \App\Models\Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name])->id);
         $article->tags()->sync($tagIds);
+        AdminAudit::record($wasExisting ? 'article.updated' : 'article.created', ($wasExisting ? 'Updated article ' : 'Created article ').$article->title, $article);
         return to_route('admin.articles')->with('success', 'Article saved.');
     }
 }

@@ -135,6 +135,21 @@
             </label>
         </fieldset>
 
+        @if($page->page_type === 'policy')
+            <fieldset class="form-section">
+                <legend>Policy metadata</legend>
+                <label>Effective date
+                    <input type="date" name="effective_date" value="{{ old('effective_date', $page->effective_date?->format('Y-m-d')) }}">
+                </label>
+                <label>Support heading
+                    <input name="support_heading" value="{{ old('support_heading', $page->support_heading) }}">
+                </label>
+                <label>Support copy
+                    <textarea name="support_copy" rows="3">{{ old('support_copy', $page->support_copy) }}</textarea>
+                </label>
+            </fieldset>
+        @endif
+
         @if($page->exists && $page->sections->isNotEmpty())
             <fieldset class="form-section">
                 <legend>Structured sections</legend>
@@ -149,6 +164,9 @@
                         </div>
 
                         <div class="form-row">
+                            <label>Eyebrow
+                                <input name="sections[{{ $section->id }}][eyebrow]" value="{{ old('sections.'.$section->id.'.eyebrow', $sectionPayload['eyebrow'] ?? '') }}">
+                            </label>
                             <label>Heading
                                 <input name="sections[{{ $section->id }}][heading]" value="{{ old('sections.'.$section->id.'.heading', $section->heading) }}">
                             </label>
@@ -196,6 +214,53 @@
                             <label>Steps
                                 <textarea name="sections[{{ $section->id }}][steps]" rows="7">{{ old('sections.'.$section->id.'.steps', collect($sectionPayload['steps'] ?? [])->map(fn($step) => ($step['title'] ?? '').' | '.($step['body'] ?? ''))->implode("\n")) }}</textarea>
                                 <small>One step per line using <code>Title | Description</code>. The visual step layout remains code-controlled.</small>
+                            </label>
+                        @endif
+
+                        @if(array_key_exists('cards', $sectionPayload))
+                            <label>Cards
+                                <textarea name="sections[{{ $section->id }}][cards]" rows="8">{{ old('sections.'.$section->id.'.cards', collect($sectionPayload['cards'] ?? [])->map(fn($card) => ($card['title'] ?? '').' | '.($card['body'] ?? '').' | '.($card['tags'] ?? ''))->implode("\n")) }}</textarea>
+                                <small>One card per line using <code>Title | Description | Tags</code>. Card layout remains code-controlled.</small>
+                            </label>
+                        @endif
+
+                        @if(array_key_exists('secondary_cta_label', $sectionPayload) || array_key_exists('secondary_cta_url', $sectionPayload))
+                            <div class="form-row">
+                                <label>Secondary CTA label
+                                    <input name="sections[{{ $section->id }}][secondary_cta_label]" value="{{ old('sections.'.$section->id.'.secondary_cta_label', $sectionPayload['secondary_cta_label'] ?? '') }}">
+                                </label>
+                                <label>Secondary CTA URL
+                                    <input name="sections[{{ $section->id }}][secondary_cta_url]" value="{{ old('sections.'.$section->id.'.secondary_cta_url', $sectionPayload['secondary_cta_url'] ?? '') }}">
+                                </label>
+                            </div>
+                        @endif
+
+                        @if(array_key_exists('visual_caption', $sectionPayload) || array_key_exists('visual_index', $sectionPayload))
+                            <div class="form-row">
+                                <label>Visual caption
+                                    <input name="sections[{{ $section->id }}][visual_caption]" value="{{ old('sections.'.$section->id.'.visual_caption', $sectionPayload['visual_caption'] ?? '') }}">
+                                </label>
+                                <label>Visual index
+                                    <input name="sections[{{ $section->id }}][visual_index]" value="{{ old('sections.'.$section->id.'.visual_index', $sectionPayload['visual_index'] ?? '') }}">
+                                </label>
+                            </div>
+                        @endif
+
+                        @if(array_key_exists('dashboard_title', $sectionPayload) || array_key_exists('dashboard_status', $sectionPayload))
+                            <div class="form-row">
+                                <label>Dashboard title
+                                    <input name="sections[{{ $section->id }}][dashboard_title]" value="{{ old('sections.'.$section->id.'.dashboard_title', $sectionPayload['dashboard_title'] ?? '') }}">
+                                </label>
+                                <label>Dashboard status
+                                    <input name="sections[{{ $section->id }}][dashboard_status]" value="{{ old('sections.'.$section->id.'.dashboard_status', $sectionPayload['dashboard_status'] ?? '') }}">
+                                </label>
+                            </div>
+                        @endif
+
+                        @if(array_key_exists('metrics', $sectionPayload))
+                            <label>Dashboard metrics
+                                <textarea name="sections[{{ $section->id }}][metrics]" rows="5">{{ old('sections.'.$section->id.'.metrics', collect($sectionPayload['metrics'] ?? [])->map(fn($metric) => ($metric['label'] ?? '').' | '.($metric['value'] ?? ''))->implode("\n")) }}</textarea>
+                                <small>One metric per line using <code>Label | Value</code>.</small>
                             </label>
                         @endif
 

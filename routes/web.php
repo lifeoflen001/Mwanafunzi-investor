@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminCommerceController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AdminNavigationController;
 use App\Http\Controllers\AdminAuditController;
+use App\Http\Controllers\AdminSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -134,6 +135,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
+        Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
         Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');

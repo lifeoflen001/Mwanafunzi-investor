@@ -10,23 +10,27 @@ use App\Models\Article;
 use App\Models\LearningTopic;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Services\MediaService;
+use App\Support\AdminAudit;
 
 class MediaController extends Controller
 {
     public function index(Request $request)
     {
         $query = Media::query();
-        if ($request->filled('q')) $query->where(fn ($q) => $q->where('filename', 'like', '%'.$request->string('q').'%')->orWhere('title', 'like', '%'.$request->string('q').'%'));
+        if ($request->filled('q')) $query->where(fn ($q) => $q->where('filename', 'like', '%'.$request->string('q').'%')->orWhere('title', 'like', '%'.$request->string('q').'%')->orWhere('caption', 'like', '%'.$request->string('q').'%'));
         if ($request->filled('type')) $query->where('mime_type', 'like', $request->string('type').'%');
         return view('admin.media.index', ['media' => $query->latest()->paginate(24)->withQueryString()]);
     }
 
     public function store(Request $request, MediaService $mediaService)
     {
-        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif,svg', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190']]);
+        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif,svg', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000']]);
         $file = $request->file('file');
-        $mediaService->store($file, 'media', $data['alt_text'], $data['title'] ?? null);
+        $media = $mediaService->store($file, 'media', $data['alt_text'], $data['title'] ?? null);
+        $media->update(['uploaded_by' => $request->user()->id, 'caption' => $request->input('caption')]);
+        AdminAudit::record('media.created', 'Uploaded media '.$media->filename, $media);
         return back()->with('success', 'Media uploaded.');
     }
 
@@ -35,8 +39,29 @@ class MediaController extends Controller
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:190'],
             'alt_text' => ['required', 'string', 'max:190'],
+            'caption' => ['nullable', 'string', 'max:1000'],
+            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif,svg', 'max:8192'],
         ]);
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $disk = $media->disk ?: 'public';
+            Storage::disk($disk)->put($media->path, file_get_contents($file->getRealPath()));
+            foreach ($media->variants ?? [] as $variant) {
+                if (! empty($variant['path'])) Storage::disk($disk)->delete($variant['path']);
+            }
+            $dimensions = @getimagesize($file->getRealPath()) ?: [null, null];
+            $data = array_merge($data, [
+                'filename' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'width' => $dimensions[0],
+                'height' => $dimensions[1],
+                'variants' => [],
+            ]);
+        }
+        unset($data['file']);
         $media->update($data);
+        AdminAudit::record($request->hasFile('file') ? 'media.replaced' : 'media.updated', ($request->hasFile('file') ? 'Replaced media ' : 'Updated media ').$media->filename, $media);
         return back()->with('success', 'Media metadata updated.');
     }
 
@@ -54,6 +79,7 @@ class MediaController extends Controller
             return back()->withErrors(['media' => 'This asset is still assigned to published or draft content. Replace the reference first.']);
         }
         $mediaService->delete($media);
+        AdminAudit::record('media.deleted', 'Removed media '.$media->filename, $media);
         return back()->with('success', 'Media removed.');
     }
 }
