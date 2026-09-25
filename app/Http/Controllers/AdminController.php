@@ -45,7 +45,7 @@ class AdminController extends Controller
     public function courses() { return view('admin.courses.index', ['courses' => Course::withTrashed()->latest()->paginate(20)]); }
     public function courseCreate() { return view('admin.courses.form', ['course' => new Course(), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.store')]); }
     public function courseStore(Request $request) { return $this->saveCourse($request, new Course()); }
-    public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules.lessons', 'faqs']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.update', $course)]); }
+    public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules' => fn ($query) => $query->withTrashed(), 'modules.lessons' => fn ($query) => $query->withTrashed(), 'faqs']), 'media' => Media::orderBy('filename')->get(), 'action' => route('admin.courses.update', $course)]); }
     public function courseUpdate(Request $request, Course $course) { return $this->saveCourse($request, $course); }
     public function courseDestroy(Course $course) { $course->delete(); AdminAudit::record('course.archived', 'Archived course '.$course->title, $course); return back()->with('success', 'Course archived.'); }
     public function courseRestore(int $course) { $record = Course::withTrashed()->findOrFail($course); $record->restore(); AdminAudit::record('course.restored', 'Restored course '.$record->title, $record); return back()->with('success', 'Course restored.'); }
@@ -57,6 +57,7 @@ class AdminController extends Controller
         return back()->with('success', 'Course module added.');
     }
     public function moduleDestroy(CourseModule $module) { $module->delete(); AdminAudit::record('course.module.deleted', 'Removed course module '.$module->title, $module); return back()->with('success', 'Course module removed.'); }
+    public function moduleRestore(int $module) { $record = CourseModule::withTrashed()->findOrFail($module); $record->restore(); AdminAudit::record('course.module.restored', 'Restored course module '.$record->title, $record); return back()->with('success', 'Course module restored.'); }
     public function lessonStore(Request $request, CourseModule $module)
     {
         $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'content' => ['nullable', 'string'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_published' => ['nullable', 'boolean']]);
@@ -68,6 +69,7 @@ class AdminController extends Controller
         return back()->with('success', 'Course lesson added.');
     }
     public function lessonDestroy(CourseLesson $lesson) { $lesson->delete(); AdminAudit::record('course.lesson.deleted', 'Removed course lesson '.$lesson->title, $lesson); return back()->with('success', 'Course lesson removed.'); }
+    public function lessonRestore(int $lesson) { $record = CourseLesson::withTrashed()->findOrFail($lesson); $record->restore(); AdminAudit::record('course.lesson.restored', 'Restored course lesson '.$record->title, $record); return back()->with('success', 'Course lesson restored.'); }
     public function courseFaqStore(Request $request, Course $course)
     {
         $data = $request->validate(['question' => ['required', 'string', 'max:255'], 'answer' => ['required', 'string'], 'sort_order' => ['required', 'integer', 'min:0']]);

@@ -104,6 +104,15 @@ class PlatformRoutesTest extends TestCase
         $module = $course->modules()->firstOrFail();
         $this->actingAs($admin)->post(route('admin.modules.lessons.store', $module), ['title' => 'Lesson one', 'content' => 'Lesson content', 'sort_order' => 1, 'is_published' => 1])->assertRedirect();
         $this->assertDatabaseHas('course_lessons', ['course_module_id' => $module->id, 'slug' => 'lesson-one']);
+        $lesson = $module->lessons()->firstOrFail();
+        $this->actingAs($admin)->delete(route('admin.lessons.destroy', $lesson))->assertRedirect();
+        $this->assertSoftDeleted('course_lessons', ['id' => $lesson->id]);
+        $this->actingAs($admin)->post(route('admin.lessons.restore', $lesson->id))->assertRedirect();
+        $this->assertDatabaseHas('course_lessons', ['id' => $lesson->id, 'deleted_at' => null]);
+        $this->actingAs($admin)->delete(route('admin.modules.destroy', $module))->assertRedirect();
+        $this->assertSoftDeleted('course_modules', ['id' => $module->id]);
+        $this->actingAs($admin)->post(route('admin.modules.restore', $module->id))->assertRedirect();
+        $this->assertDatabaseHas('course_modules', ['id' => $module->id, 'deleted_at' => null]);
 
         $this->actingAs($admin)->post(route('admin.products.features.store', $product), ['title' => 'Clear risk inputs', 'description' => 'A focused feature', 'sort_order' => 1])->assertRedirect();
         $this->assertDatabaseHas('product_features', ['product_id' => $product->id, 'title' => 'Clear risk inputs']);

@@ -95,8 +95,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/courses/{course}/restore', [AdminController::class, 'courseRestore'])->name('courses.restore');
         Route::post('/courses/{course}/modules', [AdminController::class, 'moduleStore'])->name('courses.modules.store');
         Route::delete('/modules/{module}', [AdminController::class, 'moduleDestroy'])->name('modules.destroy');
+        Route::post('/modules/{module}/restore', [AdminController::class, 'moduleRestore'])->name('modules.restore');
         Route::post('/modules/{module}/lessons', [AdminController::class, 'lessonStore'])->name('modules.lessons.store');
         Route::delete('/lessons/{lesson}', [AdminController::class, 'lessonDestroy'])->name('lessons.destroy');
+        Route::post('/lessons/{lesson}/restore', [AdminController::class, 'lessonRestore'])->name('lessons.restore');
         Route::post('/courses/{course}/faqs', [AdminController::class, 'courseFaqStore'])->name('courses.faqs.store');
         Route::delete('/course-faqs/{faq}', [AdminController::class, 'courseFaqDestroy'])->name('course-faqs.destroy');
         Route::get('/products', [AdminController::class, 'products'])->name('products');
