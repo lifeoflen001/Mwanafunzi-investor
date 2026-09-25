@@ -6,6 +6,7 @@ use App\Models\Media;
 use App\Models\Page;
 use App\Models\Redirect;
 use App\Support\AdminAudit;
+use App\Support\RichText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -91,9 +92,9 @@ class AdminPageController extends Controller
             'hero_summary' => ['nullable', 'string', 'max:1000'],
             'hero_image' => ['nullable', 'string', 'max:255'],
             'hero_primary_label' => ['nullable', 'string', 'max:120'],
-            'hero_primary_url' => ['nullable', 'string', 'max:500'],
+            'hero_primary_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'hero_secondary_label' => ['nullable', 'string', 'max:120'],
-            'hero_secondary_url' => ['nullable', 'string', 'max:500'],
+            'hero_secondary_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'hero_note' => ['nullable', 'string', 'max:500'],
             'hero_aside' => ['nullable', 'string', 'max:500'],
             'hero_aside_index' => ['nullable', 'string', 'max:50'],
@@ -112,7 +113,7 @@ class AdminPageController extends Controller
             'sections.*.body' => ['nullable', 'string', 'max:20000'],
             'sections.*.image' => ['nullable', 'string', 'max:255'],
             'sections.*.cta_label' => ['nullable', 'string', 'max:120'],
-            'sections.*.cta_url' => ['nullable', 'string', 'max:500'],
+            'sections.*.cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'sections.*.sort_order' => ['nullable', 'integer', 'min:0'],
             'sections.*.is_enabled' => ['nullable', 'boolean'],
             'sections.*.list' => ['nullable', 'string', 'max:10000'],
@@ -120,7 +121,7 @@ class AdminPageController extends Controller
             'sections.*.steps' => ['nullable', 'string', 'max:10000'],
             'sections.*.cards' => ['nullable', 'string', 'max:20000'],
             'sections.*.secondary_cta_label' => ['nullable', 'string', 'max:120'],
-            'sections.*.secondary_cta_url' => ['nullable', 'string', 'max:500'],
+            'sections.*.secondary_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'sections.*.visual_caption' => ['nullable', 'string', 'max:190'],
             'sections.*.visual_index' => ['nullable', 'string', 'max:30'],
             'sections.*.dashboard_title' => ['nullable', 'string', 'max:120'],
@@ -133,14 +134,14 @@ class AdminPageController extends Controller
             'sections.*.empty_heading' => ['nullable', 'string', 'max:190'],
             'sections.*.empty_body' => ['nullable', 'string', 'max:1000'],
             'sections.*.empty_cta_label' => ['nullable', 'string', 'max:120'],
-            'sections.*.empty_cta_url' => ['nullable', 'string', 'max:500'],
+            'sections.*.empty_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'new_section_key' => ['nullable', 'string', 'max:80', 'alpha_dash'],
             'new_section_type' => ['nullable', 'in:rich_text,split_content,featured_topics,featured_courses,featured_products,latest_journal,framework,faq,quote,feature_grid,contact_block,cta'],
             'new_section_heading' => ['nullable', 'string', 'max:190'],
             'new_section_body' => ['nullable', 'string', 'max:20000'],
             'new_section_image' => ['nullable', 'string', 'max:255'],
             'new_section_cta_label' => ['nullable', 'string', 'max:120'],
-            'new_section_cta_url' => ['nullable', 'string', 'max:500'],
+            'new_section_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
             'new_section_sort_order' => ['nullable', 'integer', 'min:0'],
             'new_section_enabled' => ['nullable', 'boolean'],
         ]);
@@ -197,7 +198,7 @@ class AdminPageController extends Controller
             }
             $section->update([
                 'heading' => array_key_exists('heading', $input) ? $input['heading'] : $section->heading,
-                'body' => array_key_exists('body', $input) ? $input['body'] : $section->body,
+                'body' => array_key_exists('body', $input) ? RichText::sanitize($input['body']) : $section->body,
                 'image' => array_key_exists('image', $input) ? $input['image'] : $section->image,
                 'cta_label' => array_key_exists('cta_label', $input) ? $input['cta_label'] : $section->cta_label,
                 'cta_url' => array_key_exists('cta_url', $input) ? $input['cta_url'] : $section->cta_url,
@@ -218,7 +219,7 @@ class AdminPageController extends Controller
             'key' => $key,
             'section_type' => $request->input('new_section_type', 'rich_text'),
             'heading' => $request->input('new_section_heading'),
-            'body' => $request->input('new_section_body'),
+            'body' => RichText::sanitize($request->input('new_section_body')),
             'image' => $request->input('new_section_image'),
             'cta_label' => $request->input('new_section_cta_label'),
             'cta_url' => $request->input('new_section_cta_url'),

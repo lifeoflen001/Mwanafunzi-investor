@@ -61,6 +61,12 @@
         @if($titleHtml)<h1>{!! $titleHtml !!}</h1>@elseif($title)<h1>{{ $title }}</h1>@endif
         @if($summary)<p class="lede">{{ $summary }}</p>@endif
         @if($metadata)<div class="public-hero-metadata">@foreach((array) $metadata as $item)<span>{{ $item }}</span>@endforeach</div>@endif
+        @if($slot->isEmpty() && $cmsPage?->hero_primary_label && $cmsPage?->hero_primary_url)
+            <div class="hero-buttons">
+                <a class="button button-accent" href="{{ $cmsPage->hero_primary_url }}">{{ $cmsPage->hero_primary_label }} <span aria-hidden="true">↗</span></a>
+                @if($cmsPage->hero_secondary_label && $cmsPage->hero_secondary_url)<a class="text-link text-link-light" href="{{ $cmsPage->hero_secondary_url }}">{{ $cmsPage->hero_secondary_label }} <span aria-hidden="true">→</span></a>@endif
+            </div>
+        @endif
         {{ $slot }}
     </div>
     @isset($aside){{ $aside }}@endisset

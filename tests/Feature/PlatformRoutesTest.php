@@ -305,6 +305,18 @@ class PlatformRoutesTest extends TestCase
         ])->assertRedirect();
         $this->get('/about')->assertOk()->assertSee('A page managed from the desk')->assertSee('A different kind of education, managed from the CMS.')->assertSee('CMS about title');
 
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_primary_label' => 'Read our approach', 'hero_primary_url' => '#approach', 'hero_secondary_label' => 'Contact the desk', 'hero_secondary_url' => '/contact',
+            'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+        ])->assertRedirect();
+        $this->get('/about')->assertOk()->assertSee('Read our approach')->assertSee('Contact the desk');
+
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
+            'hero_primary_label' => 'Unsafe', 'hero_primary_url' => 'javascript:alert(1)', 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+        ])->assertSessionHasErrors('hero_primary_url');
+
         $terms = Page::where('key', 'terms')->firstOrFail();
         $acceptance = $terms->sections()->where('key', 'acceptance')->firstOrFail();
         $this->actingAs($admin)->put(route('admin.pages.update', $terms), [
@@ -395,9 +407,9 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->put(route('admin.pages.update', $page), [
             'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'published', 'is_visible' => 1,
             'hero_overlay' => 'medium', 'hero_alignment' => 'left', 'new_section_key' => 'editorial-note', 'new_section_type' => 'rich_text',
-            'new_section_heading' => 'A new controlled section', 'new_section_body' => 'This section was added through the admin interface.', 'new_section_sort_order' => 30, 'new_section_enabled' => 1,
+            'new_section_heading' => 'A new controlled section', 'new_section_body' => '<p>This section was added through the admin interface.</p><script>alert(1)</script>', 'new_section_sort_order' => 30, 'new_section_enabled' => 1,
         ])->assertRedirect();
-        $this->assertDatabaseHas('page_sections', ['page_id' => $page->id, 'key' => 'editorial-note']);
+        $this->assertDatabaseHas('page_sections', ['page_id' => $page->id, 'key' => 'editorial-note', 'body' => '<p>This section was added through the admin interface.</p>']);
         $this->actingAs($admin)->put(route('admin.pages.update', $page), [
             'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type, 'status' => 'draft', 'is_visible' => 0,
             'hero_overlay' => 'medium', 'hero_alignment' => 'left',
