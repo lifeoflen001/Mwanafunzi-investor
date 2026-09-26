@@ -27,7 +27,8 @@
                 <nav class="portal-nav" aria-label="Overview navigation">
                     <a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
                 </nav>
-                <p class="portal-section-label">Content</p>
+                <details class="admin-nav-group" @if(request()->routeIs('admin.courses*', 'admin.topics*', 'admin.articles*', 'admin.categories*', 'admin.tags*', 'admin.faqs*', 'admin.media*')) open @endif>
+                    <summary class="portal-section-label">Content <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Content navigation">
                     <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
                     <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
@@ -37,7 +38,9 @@
                     <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span>FAQs</a>
                     <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
                 </nav>
-                <p class="portal-section-label">Commerce</p>
+                </details>
+                <details class="admin-nav-group" @if(request()->routeIs('admin.products*', 'admin.commerce*', 'admin.customers*')) open @endif>
+                    <summary class="portal-section-label">Commerce <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Commerce navigation">
                     <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
                     <a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce overview</a>
@@ -47,7 +50,9 @@
                     <a class="admin-nav-child {{ request()->routeIs('admin.commerce.waitlists*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.waitlists') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Waitlists</a>
                     <a class="{{ request()->routeIs('admin.customers*') ? 'is-active' : '' }}" href="{{ route('admin.customers') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Customers</a>
                 </nav>
-                <p class="portal-section-label">Platform</p>
+                </details>
+                <details class="admin-nav-group" @if(request()->routeIs('admin.pages*', 'admin.policies*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*', 'admin.messages*', 'admin.settings*', 'admin.social-links*', 'admin.audit*', 'admin.administrators*')) open @endif>
+                    <summary class="portal-section-label">Platform <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Platform navigation">
                     <a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span>Pages</a>
                     <a class="{{ request()->routeIs('admin.policies*') ? 'is-active' : '' }}" href="{{ route('admin.policies') }}"><span class="portal-nav-icon" aria-hidden="true">§</span>Policies</a>
@@ -60,6 +65,7 @@
                     <a class="{{ request()->routeIs('admin.audit*') ? 'is-active' : '' }}" href="{{ route('admin.audit') }}"><span class="portal-nav-icon" aria-hidden="true">◷</span>Activity log</a>
                     <a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Administrators</a>
                 </nav>
+                </details>
             </div>
             <div class="portal-sidebar-footer">
                 <span class="portal-status portal-status-accent"><i></i> System online</span>
