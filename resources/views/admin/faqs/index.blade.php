@@ -2,12 +2,12 @@
 @section('title', 'FAQs')
 @section('portal-heading', 'FAQs')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">Content / FAQs</p><h1>Frequently asked questions</h1><p>Manage reusable answers across courses, products, pages and learning topics from one controlled desk.</p></div></div>
+<x-admin.page-header eyebrow="Content / FAQs" title="Frequently asked questions" description="Manage reusable answers across courses, products, pages and learning topics from one controlled desk." />
 
 <details class="admin-create-panel">
     <summary class="button button-primary">Add FAQ <span aria-hidden="true">+</span></summary>
     <section class="admin-card admin-subresource">
-    <div class="admin-heading"><div><p class="eyebrow">Add content</p><h2>New FAQ</h2></div></div>
+    <header class="admin-card-header"><div><p class="admin-eyebrow">Add content</p><h2>New FAQ</h2></div></header>
     <form class="admin-form admin-inline-form" method="post" action="{{ route('admin.faqs.store') }}">
         @csrf
         <div class="form-row">

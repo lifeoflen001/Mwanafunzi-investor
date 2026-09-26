@@ -2,11 +2,11 @@
 @section('title', 'Search')
 @section('portal-heading', 'Search')
 @section('content')
-    <div class="admin-heading"><div><p class="eyebrow">Admin desk / Search</p><h1>Search the desk</h1><p>Search real pages, courses, products, journal entries, customers, orders and enquiries.</p></div></div>
+    <x-admin.page-header eyebrow="Admin desk / Search" title="Search the desk" description="Search real pages, courses, products, journal entries, customers, orders and enquiries." />
     @if($term === '')
-        <div class="empty-state"><p>Enter a search term to find content and operational records.</p></div>
+        <x-admin.empty-state title="Search the desk" description="Enter a search term to find content and operational records." />
     @elseif($results->isEmpty())
-        <div class="empty-state"><p>No records matched “{{ $term }}”.</p></div>
+        <x-admin.empty-state title="No records matched" description="No records matched “{{ $term }}”." />
     @else
         <div class="admin-subresource-list">@foreach($results as $result)<a class="admin-subresource-header" href="{{ $result['url'] }}"><div><strong>{{ $result['type'] }} · {{ $result['title'] }}</strong><small>{{ $result['meta'] ?: 'No status' }}</small></div><span aria-hidden="true">↗</span></a>@endforeach</div>
     @endif

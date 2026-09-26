@@ -4,20 +4,10 @@
 @section('portal-heading', $page->exists ? 'Edit page' : 'Add page')
 
 @section('content')
-    <div class="admin-heading">
-        <div>
-            <p class="eyebrow">Website / Pages</p>
-            <h1>{{ $page->exists ? 'Edit '.$page->name : 'Add page' }}</h1>
-            <p>Keep content editable while the frontend structure remains protected.</p>
-        </div>
-        @if($page->exists)
-            <a class="button button-light" href="{{ URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'page', 'id' => $page->id]) }}" target="_blank" rel="noopener">
-                Preview page <span aria-hidden="true">↗</span>
-            </a>
-        @endif
-    </div>
+    <x-admin.page-header eyebrow="Website / Pages" title="{{ $page->exists ? 'Edit '.$page->name : 'Add page' }}" description="Keep content editable while the frontend structure remains protected." />
+    @if($page->exists)<a class="admin-back-link" href="{{ URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'page', 'id' => $page->id]) }}" target="_blank" rel="noopener">Preview page ↗</a>@endif
 
-    <form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>
+    <div class="admin-form-card"><form class="admin-form admin-editor-form" method="post" action="{{ $action }}" data-unsaved-warning>
         @csrf
         @if($page->exists) @method('put') @endif
 
@@ -354,5 +344,5 @@
         @endif
 
         <div class="form-actions"><button class="button button-dark" type="submit">Save page <span aria-hidden="true">↗</span></button>@if($page->exists)<a class="button button-light" href="{{ URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'page', 'id' => $page->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div>
-    </form>
+    </form></div>
 @endsection

@@ -4,14 +4,8 @@
 @section('portal-heading', 'Customers')
 
 @section('content')
-    <div class="admin-heading">
-        <div>
-            <p class="eyebrow">Students / Customers</p>
-            <h1>{{ $customer->name }}</h1>
-            <p>{{ $customer->email }} · Joined {{ $customer->created_at?->format('M j, Y') }}</p>
-        </div>
-        <a class="back-link" href="{{ route('admin.customers') }}">← Back to customers</a>
-    </div>
+    <x-admin.page-header eyebrow="Students / Customers" title="{{ $customer->name }}" description="{{ $customer->email }} · Joined {{ $customer->created_at?->format('M j, Y') }}" />
+    <a class="admin-back-link" href="{{ route('admin.customers') }}">← Back to customers</a>
 
     <div class="admin-stats">
         <div><span>Orders</span><strong>{{ $customer->orders_count }}</strong></div>
@@ -21,7 +15,7 @@
     </div>
 
     <section class="admin-card admin-subresource">
-        <div class="admin-heading"><div><p class="eyebrow">Profile</p><h2>Account details</h2></div></div>
+        <header class="admin-card-header"><div><p class="admin-eyebrow">Profile</p><h2>Account details</h2></div></header>
         <dl class="admin-definition-list">
             <div><dt>Email</dt><dd><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></dd></div>
             <div><dt>Phone</dt><dd>{{ $customer->phone ?: 'Not provided' }}</dd></div>
@@ -32,14 +26,14 @@
     </section>
 
     <section class="admin-card admin-subresource">
-        <div class="admin-heading">
+        <header class="admin-card-header">
             <div>
                 <p class="eyebrow">Account control</p>
                 <h2>Account status</h2>
                 <p>Suspending prevents normal customer authentication while retaining historical records.</p>
             </div>
-        </div>
-        <form class="admin-filter-row" method="post" action="{{ route('admin.customers.status', $customer) }}">
+        </header>
+        <form class="admin-filter-toolbar" method="post" action="{{ route('admin.customers.status', $customer) }}">
             @csrf @method('patch')
             <select name="status" aria-label="Customer status">
                 <option value="active" @selected(($customer->status ?: 'active') === 'active')>Active</option>
@@ -51,7 +45,7 @@
 
     <div class="admin-grid-two">
         <section class="admin-card admin-subresource">
-            <div class="admin-heading"><div><p class="eyebrow">Purchase history</p><h2>Orders</h2></div></div>
+            <header class="admin-card-header"><div><p class="admin-eyebrow">Purchase history</p><h2>Orders</h2></div></header>
             @forelse($customer->orders as $order)
                 <a class="admin-subresource-header" href="{{ route('admin.commerce.orders.show', $order) }}">
                     <div><strong>{{ $order->order_number }}</strong><small>{{ $order->created_at?->format('M j, Y') }} · {{ $order->items_count }} items · {{ app(\App\Services\MoneyFormatter::class)->format($order->total, $order->currency) }}</small></div>
@@ -63,7 +57,7 @@
         </section>
 
         <section class="admin-card admin-subresource">
-            <div class="admin-heading"><div><p class="eyebrow">Learning access</p><h2>Enrollments</h2></div></div>
+            <header class="admin-card-header"><div><p class="admin-eyebrow">Learning access</p><h2>Enrollments</h2></div></header>
             @forelse($customer->enrollments as $enrollment)
                 <div class="admin-subresource-header">
                     <div><strong>{{ $enrollment->course?->title ?: 'Course removed' }}</strong><small>{{ $enrollment->enrolled_at?->format('M j, Y') ?: 'Date unavailable' }}</small></div>
@@ -76,7 +70,7 @@
     </div>
 
     <section class="admin-card admin-subresource">
-        <div class="admin-heading"><div><p class="eyebrow">Owned access</p><h2>Entitlements and waitlists</h2></div></div>
+        <header class="admin-card-header"><div><p class="admin-eyebrow">Owned access</p><h2>Entitlements and waitlists</h2></div></header>
         <div class="admin-table">
             <div class="admin-table-head"><span>Resource</span><span>Type</span><span>Status</span></div>
             @forelse($customer->entitlements as $entitlement)

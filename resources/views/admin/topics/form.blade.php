@@ -2,8 +2,9 @@
 @section('title', $isCreate ? 'New learning topic' : 'Edit learning topic')
 @section('portal-heading', 'Learning topics')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">CMS / Learn</p><h1>{{ $isCreate ? 'New learning topic' : 'Edit learning topic' }}</h1><p>Publish structured learning paths with controlled content, media, outcomes and course relationships.</p></div><a class="back-link" href="{{ route('admin.topics') }}">← Back to topics</a></div>
-<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>
+<x-admin.page-header eyebrow="CMS / Learn" title="{{ $isCreate ? 'New learning topic' : 'Edit learning topic' }}" description="Publish structured learning paths with controlled content, media, outcomes and course relationships." />
+<a class="admin-back-link" href="{{ route('admin.topics') }}">← Back to topics</a>
+<div class="admin-form-card"><form class="admin-form admin-editor-form" method="post" action="{{ $action }}" data-unsaved-warning>
     @csrf @if(!$isCreate) @method('put') @endif
     <label>Title<input name="title" value="{{ old('title', $topic->title) }}" required></label>
     <label>Slug<input name="slug" value="{{ old('slug', $topic->slug) }}" placeholder="Generated from title if blank"></label>
@@ -20,5 +21,5 @@
     <label>Sort order<input type="number" name="sort_order" min="0" value="{{ old('sort_order', $topic->sort_order) }}" required></label>
     <label class="consent"><input type="checkbox" name="is_published" value="1" @checked(old('is_published', $topic->is_published))> <span>Published on the public site</span></label>
     <div class="form-actions"><button class="button button-dark" type="submit">{{ $isCreate ? 'Create topic' : 'Save topic' }} <span aria-hidden="true">↗</span></button>@if(!$isCreate)<a class="button button-light" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'topic', 'id' => $topic->id]) }}" target="_blank" rel="noopener">Preview</a><a class="button button-light" href="{{ route('learn.show', $topic) }}" target="_blank" rel="noopener">View public page</a>@endif</div>
-</form>
+</form></div>
 @endsection

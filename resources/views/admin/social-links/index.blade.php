@@ -2,7 +2,7 @@
 @section('title', 'Social links')
 @section('portal-heading', 'Social links')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">CMS / Settings</p><h1>Social links</h1><p>Keep outbound brand links centralised and optional. Visible links appear in the public footer.</p></div></div>
+<x-admin.page-header eyebrow="CMS / Settings" title="Social links" description="Keep outbound brand links centralised and optional. Visible links appear in the public footer." />
 <form class="admin-form admin-inline-form" method="post" action="{{ route('admin.social-links.store') }}">
     @csrf
     <div class="form-row"><label>Label<input name="label" placeholder="Instagram" required></label><label>URL<input type="url" name="url" placeholder="https://" required></label></div>

@@ -2,7 +2,7 @@
 @section('title', 'Business modules')
 @section('portal-heading', 'Business modules')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">Platform / Modules</p><h1>Business modules</h1><p>Manage the public module identity and availability. Public routes and application behavior remain controlled by code.</p></div></div>
+<x-admin.page-header eyebrow="Platform / Modules" title="Business modules" description="Manage the public module identity and availability. Public routes and application behavior remain controlled by code." />
 
 <div class="admin-subresource-list admin-business-unit-list">
     @forelse($units as $unit)
