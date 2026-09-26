@@ -97,7 +97,7 @@
                 </div>
             </header>
             <main class="portal-content" id="admin-main-content">
-                @if(session('success'))<div class="form-success" role="status">{{ session('success') }}</div>@endif
+                <x-admin.flash />
                 @if($errors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                 @yield('content')
             </main>

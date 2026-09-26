@@ -338,6 +338,20 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Content management');
     }
 
+    public function test_admin_shell_exposes_consistent_feedback_and_action_regions(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->withSession(['success' => 'Course saved.'])
+            ->actingAs($admin)
+            ->get(route('admin.courses'))
+            ->assertOk()
+            ->assertSee('admin-feedback-stack')
+            ->assertSee('Course saved.')
+            ->assertSee('admin-page-header-actions')
+            ->assertSee('Courses');
+    }
+
     public function test_pages_navigation_and_design_tokens_propagate_to_public_frontend(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

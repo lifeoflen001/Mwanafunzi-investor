@@ -277,3 +277,21 @@ document.querySelectorAll('form').forEach((form) => form.addEventListener('submi
         if (confirmModal) { confirmModal.hidden = false; confirmAccept?.focus(); }
     }
 }));
+
+document.querySelectorAll('[data-admin-toast-close]').forEach((button) => button.addEventListener('click', () => {
+    button.closest('[data-admin-toast]')?.remove();
+}));
+document.querySelectorAll('[data-admin-toast]').forEach((toast) => {
+    window.setTimeout(() => toast.remove(), 6500);
+});
+
+document.querySelectorAll('.admin-portal form.admin-form, .admin-portal form.admin-filter-toolbar, .admin-portal form.admin-inline-form').forEach((form) => form.addEventListener('submit', (event) => {
+    if (event.defaultPrevented || form.getAttribute('aria-busy') === 'true') return;
+    form.setAttribute('aria-busy', 'true');
+    const submitter = event.submitter || form.querySelector('button[type="submit"]');
+    if (!submitter || submitter.disabled) return;
+    submitter.disabled = true;
+    submitter.setAttribute('aria-busy', 'true');
+    submitter.dataset.originalContent = submitter.innerHTML;
+    submitter.innerHTML = '<span class="admin-button-progress" aria-hidden="true"></span><span>Working…</span>';
+}));
