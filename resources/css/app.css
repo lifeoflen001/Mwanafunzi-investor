@@ -458,7 +458,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .admin-sidebar-close,.admin-sidebar-toggle,.admin-topbar-action { border:0; background:transparent; cursor:pointer; }
 .admin-sidebar-close { display:none; color:rgba(255,255,255,.75); font-size:24px; line-height:1; }
 .admin-sidebar-backdrop { display:none; }
-.admin-sidebar-toggle { display:none; width:38px; height:38px; color:var(--portal-blue); font-size:20px; }
+.admin-sidebar-toggle { display:inline-flex; align-items:center; justify-content:center; flex:0 0 38px; width:38px; height:38px; color:var(--portal-blue); font-size:20px; }
 .admin-breadcrumbs { display:flex; align-items:center; gap:9px; color:#8b938f; font-size:11px; white-space:nowrap; }
 .admin-breadcrumbs a { color:var(--portal-blue); }
 .admin-topbar .portal-search { margin-left:auto; }
@@ -492,7 +492,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .admin-sidebar-backdrop { position:fixed; inset:0; z-index:35; display:block; background:rgba(17,24,22,.48); opacity:0; pointer-events:none; transition:opacity .25s ease; }
     .admin-shell.is-sidebar-open .admin-sidebar-backdrop { opacity:1; pointer-events:auto; }
     body.admin-menu-open { overflow:hidden; }
-    .admin-sidebar-toggle { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+    .admin-sidebar-toggle { flex-basis:36px; width:36px; }
     .admin-topbar { padding:0 20px; }
     .admin-topbar .portal-topbar-title { min-width:0; }
     .admin-topbar .portal-search { display:none; }
@@ -569,6 +569,22 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .admin-portal .portal-sidebar-footer>a,.admin-portal .portal-signout { color:rgba(255,255,255,.6); font-size:11px; }
 .admin-portal .portal-sidebar-footer>a:hover,.admin-portal .portal-signout:hover { color:#fff; }
 .admin-portal .portal-main { min-height:100vh; margin-left:var(--admin-sidebar-width,250px); }
+.admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar { width:72px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-main { margin-left:72px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar-head { justify-content:center; padding:0 10px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-brand { justify-content:center; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-brand>span:last-child { display:none; }
+.admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar-scroll { padding-right:8px; padding-left:8px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-section-label { justify-content:center; margin-right:0; margin-left:0; font-size:0; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-section-label span { margin-left:0; font-size:11px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a { justify-content:center; gap:0; padding-right:0; padding-left:0; font-size:0; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a.admin-nav-child { padding-left:0; font-size:0; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav-icon,.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a.admin-nav-child .portal-nav-icon { width:30px; font-size:15px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-sidebar-footer { align-items:center; padding-right:8px; padding-left:8px; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-status { font-size:0; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-status i { margin:0; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-signout { width:30px; height:30px; font-size:0; text-align:center; }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-signout::before { content:'↪'; font-size:17px; }
 .admin-portal .portal-topbar { min-height:var(--admin-topbar-height,72px); gap:18px; padding:0 var(--admin-content-gutter,32px); border-color:var(--admin-border,#dfddd6); background:rgba(255,253,250,.96); box-shadow:0 1px 0 rgba(32,37,33,.02); }
 .admin-portal .portal-topbar-title { min-width:130px; color:var(--admin-muted,#777870); font-size:10px; }
 .admin-portal .portal-topbar-title strong { color:var(--admin-text,#20221f); font-size:14px; font-weight:650; }
@@ -788,6 +804,20 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .admin-portal .admin-sidebar-close { display:block; }
     .admin-portal .admin-sidebar-backdrop { position:fixed; inset:0; z-index:35; display:block; background:rgba(17,24,22,.52); opacity:0; pointer-events:none; transition:opacity .22s ease; }
     .admin-portal .admin-shell.is-sidebar-open .admin-sidebar-backdrop { opacity:1; pointer-events:auto; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar { width:min(var(--admin-sidebar-width,250px),calc(100% - 42px)); }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-main { margin-left:0; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar-head { justify-content:space-between; padding:0 20px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-brand>span:last-child { display:block; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .admin-sidebar-scroll { padding:12px 12px 18px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-section-label { justify-content:space-between; margin-right:10px; margin-left:10px; font-size:10px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-section-label span { margin-left:auto; font-size:12px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a,.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a.admin-nav-child { justify-content:flex-start; gap:12px; padding-right:10px; padding-left:10px; font-size:12px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-nav-icon,.admin-portal .admin-shell.is-sidebar-collapsed .portal-nav a.admin-nav-child .portal-nav-icon { width:22px; font-size:15px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-sidebar-footer { align-items:stretch; padding-right:20px; padding-left:20px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-status { font-size:9px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-status i { margin-right:8px; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-signout { width:auto; height:auto; font-size:11px; text-align:left; }
+    .admin-portal .admin-shell.is-sidebar-collapsed .portal-signout::before { display:none; }
     .admin-portal .portal-topbar { min-height:64px; gap:9px; padding:0 16px; }
     .admin-portal .portal-topbar-title { min-width:0; flex:1; }
     .admin-portal .portal-search,.admin-portal .admin-quick-actions { display:none; }

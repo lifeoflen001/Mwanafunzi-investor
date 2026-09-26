@@ -41,19 +41,37 @@ document.addEventListener('click', (event) => {
 const adminShell = document.querySelector('[data-admin-shell]');
 const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
 const adminSidebar = document.querySelector('[data-admin-sidebar]');
+const adminSidebarCollapseKey = 'mwanafunzi-admin-sidebar-collapsed';
+const isAdminMobile = () => window.matchMedia('(max-width: 760px)').matches;
+const syncAdminSidebarToggle = () => {
+    if (!adminShell || !adminSidebarToggle) return;
+    const mobileOpen = adminShell.classList.contains('is-sidebar-open');
+    const collapsed = adminShell.classList.contains('is-sidebar-collapsed');
+    adminSidebarToggle.setAttribute('aria-expanded', String(isAdminMobile() ? mobileOpen : !collapsed));
+    adminSidebarToggle.setAttribute('aria-label', isAdminMobile() ? (mobileOpen ? 'Close admin navigation' : 'Open admin navigation') : (collapsed ? 'Expand admin navigation' : 'Collapse admin navigation'));
+};
+if (adminShell && !isAdminMobile() && window.localStorage.getItem(adminSidebarCollapseKey) === 'true') adminShell.classList.add('is-sidebar-collapsed');
 const closeAdminSidebar = (restoreFocus = true) => {
     const wasOpen = adminShell?.classList.contains('is-sidebar-open');
     adminShell?.classList.remove('is-sidebar-open');
-    adminSidebarToggle?.setAttribute('aria-expanded', 'false');
+    syncAdminSidebarToggle();
     document.body.classList.remove('admin-menu-open');
     if (restoreFocus && wasOpen) adminSidebarToggle?.focus();
 };
 adminSidebarToggle?.addEventListener('click', () => {
-    const isOpen = adminShell?.classList.toggle('is-sidebar-open') || false;
-    adminSidebarToggle.setAttribute('aria-expanded', String(isOpen));
-    document.body.classList.toggle('admin-menu-open', isOpen);
-    if (isOpen) adminSidebar?.querySelector('[data-admin-sidebar-close]')?.focus();
+    if (isAdminMobile()) {
+        const isOpen = adminShell?.classList.toggle('is-sidebar-open') || false;
+        document.body.classList.toggle('admin-menu-open', isOpen);
+        syncAdminSidebarToggle();
+        if (isOpen) adminSidebar?.querySelector('[data-admin-sidebar-close]')?.focus();
+        return;
+    }
+    const isCollapsed = adminShell?.classList.toggle('is-sidebar-collapsed') || false;
+    window.localStorage.setItem(adminSidebarCollapseKey, String(isCollapsed));
+    syncAdminSidebarToggle();
 });
+window.addEventListener('resize', syncAdminSidebarToggle, { passive: true });
+syncAdminSidebarToggle();
 document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', () => closeAdminSidebar()));
 adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeAdminSidebar(false)));
 document.addEventListener('keydown', (event) => {

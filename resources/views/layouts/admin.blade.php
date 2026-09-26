@@ -28,7 +28,7 @@
                     <a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
                 </nav>
                 <details class="admin-nav-group" @if(request()->routeIs('admin.courses*', 'admin.topics*', 'admin.articles*', 'admin.categories*', 'admin.tags*', 'admin.faqs*', 'admin.media*')) open @endif>
-                    <summary class="portal-section-label">Content <span aria-hidden="true">⌄</span></summary>
+                    <summary class="portal-section-label" title="Content">Content <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Content navigation">
                     <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
                     <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
@@ -40,7 +40,7 @@
                 </nav>
                 </details>
                 <details class="admin-nav-group" @if(request()->routeIs('admin.products*', 'admin.commerce*', 'admin.customers*')) open @endif>
-                    <summary class="portal-section-label">Commerce <span aria-hidden="true">⌄</span></summary>
+                    <summary class="portal-section-label" title="Commerce">Commerce <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Commerce navigation">
                     <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
                     <a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce overview</a>
@@ -52,7 +52,7 @@
                 </nav>
                 </details>
                 <details class="admin-nav-group" @if(request()->routeIs('admin.pages*', 'admin.policies*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*', 'admin.messages*', 'admin.settings*', 'admin.social-links*', 'admin.audit*', 'admin.administrators*')) open @endif>
-                    <summary class="portal-section-label">Platform <span aria-hidden="true">⌄</span></summary>
+                    <summary class="portal-section-label" title="Platform">Platform <span aria-hidden="true">⌄</span></summary>
                 <nav class="portal-nav" aria-label="Platform navigation">
                     <a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span>Pages</a>
                     <a class="{{ request()->routeIs('admin.policies*') ? 'is-active' : '' }}" href="{{ route('admin.policies') }}"><span class="portal-nav-icon" aria-hidden="true">§</span>Policies</a>
@@ -79,7 +79,7 @@
         <div class="admin-sidebar-backdrop" data-admin-sidebar-close></div>
         <div class="portal-main">
             <header class="portal-topbar admin-topbar">
-                <button class="admin-sidebar-toggle" type="button" aria-label="Open admin navigation" aria-controls="admin-sidebar" aria-expanded="false" data-admin-sidebar-toggle>☰</button>
+                <button class="admin-sidebar-toggle" type="button" aria-label="Toggle admin navigation" aria-controls="admin-sidebar" aria-expanded="true" data-admin-sidebar-toggle><span aria-hidden="true">☰</span></button>
                 <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
                 <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
                 <form class="portal-search" method="get" action="{{ route('admin.search') }}"><label class="sr-only" for="admin-search">Search the desk</label><span aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk"></form>
