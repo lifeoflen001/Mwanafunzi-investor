@@ -227,10 +227,35 @@ const filterFaqTargets = () => {
 faqTargetType?.addEventListener('change', filterFaqTargets);
 filterFaqTargets();
 
+const confirmModal = document.querySelector('[data-confirm-modal]');
+const confirmMessage = confirmModal?.querySelector('[data-confirm-message]');
+const confirmAccept = confirmModal?.querySelector('[data-confirm-accept]');
+const confirmCancel = confirmModal?.querySelector('[data-confirm-cancel]');
+let pendingConfirmForm = null;
+const closeConfirmModal = () => {
+    if (!confirmModal) return;
+    confirmModal.hidden = true;
+    pendingConfirmForm = null;
+};
+confirmCancel?.addEventListener('click', closeConfirmModal);
+confirmAccept?.addEventListener('click', () => {
+    if (!pendingConfirmForm) return;
+    const form = pendingConfirmForm;
+    form.dataset.confirmed = 'true';
+    closeConfirmModal();
+    form.requestSubmit();
+});
+confirmModal?.addEventListener('click', (event) => { if (event.target === confirmModal) closeConfirmModal(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && confirmModal && !confirmModal.hidden) closeConfirmModal(); });
+
 document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
+    if (form.dataset.confirmed === 'true') { delete form.dataset.confirmed; return; }
     const method = form.querySelector('input[name="_method"]')?.value?.toLowerCase();
     const button = form.querySelector('button[type="submit"]')?.textContent?.trim().toLowerCase() || '';
     if (method === 'delete' || /archive|remove|permanently delete/.test(button)) {
-        if (!window.confirm('Please confirm this destructive action.')) event.preventDefault();
+        event.preventDefault();
+        pendingConfirmForm = form;
+        if (confirmMessage) confirmMessage.textContent = form.dataset.confirm || 'Please confirm this destructive action.';
+        if (confirmModal) { confirmModal.hidden = false; confirmAccept?.focus(); }
     }
 }));

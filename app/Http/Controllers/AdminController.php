@@ -43,7 +43,12 @@ class AdminController extends Controller
         ]);
     }
 
-    public function courses() { return view('admin.courses.index', ['courses' => Course::withTrashed()->latest()->paginate(20)]); }
+    public function courses(Request $request)
+    {
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', 'in:published,draft,coming_soon']]);
+        $courses = Course::withTrashed()->withCount('modules')->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('title', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))->latest()->paginate(20)->withQueryString();
+        return view('admin.courses.index', compact('courses'));
+    }
     public function courseCreate() { return view('admin.courses.form', ['course' => new Course(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.courses.store')]); }
     public function courseStore(Request $request) { return $this->saveCourse($request, new Course()); }
     public function courseEdit(Course $course) { return view('admin.courses.form', ['course' => $course->load(['modules' => fn ($query) => $query->withTrashed(), 'modules.lessons' => fn ($query) => $query->withTrashed(), 'faqs']), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.courses.update', $course)]); }
@@ -97,7 +102,12 @@ class AdminController extends Controller
     }
     public function courseFaqDestroy(CourseFaq $faq) { $faq->delete(); AdminAudit::record('course.faq.deleted', 'Removed course FAQ', $faq); return back()->with('success', 'Course FAQ removed.'); }
 
-    public function products() { return view('admin.products.index', ['products' => Product::withTrashed()->latest()->paginate(20)]); }
+    public function products(Request $request)
+    {
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'availability' => ['nullable', 'in:available,waitlist,coming_soon']]);
+        $products = Product::withTrashed()->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('name', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('availability', $availability))->latest()->paginate(20)->withQueryString();
+        return view('admin.products.index', compact('products'));
+    }
     public function productCreate() { return view('admin.products.form', ['product' => new Product(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.products.store')]); }
     public function productStore(Request $request) { return $this->saveProduct($request, new Product()); }
     public function productEdit(Product $product) { return view('admin.products.form', ['product' => $product->load(['features', 'versions', 'faqs', 'images', 'assets']), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.products.update', $product)]); }
@@ -153,7 +163,12 @@ class AdminController extends Controller
         return back()->with('success', 'Product screenshot removed.');
     }
 
-    public function articles() { return view('admin.articles.index', ['articles' => Article::withTrashed()->with('category')->latest()->paginate(20)]); }
+    public function articles(Request $request)
+    {
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', 'in:draft,published']]);
+        $articles = Article::withTrashed()->with('category')->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('title', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))->latest()->paginate(20)->withQueryString();
+        return view('admin.articles.index', compact('articles'));
+    }
     public function articleCreate() { return view('admin.articles.form', ['article' => new Article(), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.store')]); }
     public function articleStore(Request $request) { return $this->saveArticle($request, new Article()); }
     public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load('tags'), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.update', $article)]); }
@@ -200,7 +215,12 @@ class AdminController extends Controller
         AdminAudit::record('message.read', 'Marked enquiry as read for '.$message->email, $message);
         return back()->with('success', 'Message marked as read.');
     }
-    public function topics() { return view('admin.topics.index', ['topics' => LearningTopic::orderBy('sort_order')->paginate(20)]); }
+    public function topics(Request $request)
+    {
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120']]);
+        $topics = LearningTopic::when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('title', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->orderBy('sort_order')->paginate(20)->withQueryString();
+        return view('admin.topics.index', compact('topics'));
+    }
     public function topicCreate() { return view('admin.topics.form', ['topic' => new LearningTopic(['sort_order' => 0]), 'courses' => Course::orderBy('sort_order')->orderBy('title')->get(), 'articles' => Article::orderByDesc('created_at')->get(), 'products' => Product::orderBy('sort_order')->orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.topics.store'), 'isCreate' => true]); }
     public function topicStore(Request $request)
     {

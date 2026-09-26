@@ -4,7 +4,9 @@
 @section('content')
 <div class="admin-heading"><div><p class="eyebrow">Content / FAQs</p><h1>Frequently asked questions</h1><p>Manage reusable answers across courses, products, pages and learning topics from one controlled desk.</p></div></div>
 
-<section class="admin-card admin-subresource">
+<details class="admin-create-panel">
+    <summary class="button button-primary">Add FAQ <span aria-hidden="true">+</span></summary>
+    <section class="admin-card admin-subresource">
     <div class="admin-heading"><div><p class="eyebrow">Add content</p><h2>New FAQ</h2></div></div>
     <form class="admin-form admin-inline-form" method="post" action="{{ route('admin.faqs.store') }}">
         @csrf
@@ -31,6 +33,7 @@
         <button class="button button-dark" type="submit">Add FAQ <span aria-hidden="true">+</span></button>
     </form>
 </section>
+</details>
 
 <div class="admin-table"><div class="admin-table-head"><span>Target</span><span>Question</span><span>Answer</span><span>Order</span><span>Updated</span><span></span></div>
     @forelse($faqs as $faq)

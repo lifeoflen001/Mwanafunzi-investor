@@ -1,8 +1,10 @@
 @extends('layouts.admin')
 @section('title', $course->exists ? 'Edit course' : 'New course')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">CMS / Courses</p><h1>{{ $course->exists ? 'Edit course' : 'New course' }}</h1></div><a class="back-link" href="{{ route('admin.courses') }}">← Back to courses</a></div>
-<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($course->exists) @method('put') @endif
+<x-admin.page-header eyebrow="Content / Learning" title="{{ $course->exists ? 'Edit course' : 'New course' }}" description="Build the course record, publishing state and learning architecture." />
+<a class="admin-back-link" href="{{ route('admin.courses') }}">← Back to courses</a>
+<form class="admin-form admin-editor-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($course->exists) @method('put') @endif
+    <div class="admin-form-card"><header class="admin-form-card-header"><div><p class="admin-eyebrow">Course record</p><h2>General information</h2><p>Core details shown across the public course catalogue.</p></div></header>
     <label>Title<input name="title" value="{{ old('title', $course->title) }}" required></label>
     <label>Slug<input name="slug" value="{{ old('slug', $course->slug) }}" placeholder="Generated from title if blank"></label>
     @include('admin.components.media-field', ['name' => 'featured_image', 'label' => 'Featured image', 'value' => $course->featured_image, 'media' => $media])
@@ -19,7 +21,7 @@
     <div class="form-row"><label>OpenGraph title<input name="og_title" value="{{ old('og_title', $course->og_title) }}"></label><label>OpenGraph description<textarea name="og_description" rows="2">{{ old('og_description', $course->og_description) }}</textarea></label></div>
     <label class="consent"><input type="checkbox" name="enrollment_available" value="1" @checked(old('enrollment_available', $course->enrollment_available))> <span>Enrollment available</span></label>
     <label class="consent"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $course->is_featured))> <span>Featured course</span></label>
-    <div class="form-actions"><button class="button button-dark" type="submit">Save course <span aria-hidden="true">↗</span></button>@if($course->exists)<a class="button button-light" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'course', 'id' => $course->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div>
+    <div class="form-actions"><button class="button button-primary" type="submit">Save course <span aria-hidden="true">↗</span></button>@if($course->exists)<a class="button button-secondary" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'course', 'id' => $course->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div></div>
 </form>
 @if($course->exists)
 <section class="admin-subresource"><div class="admin-heading"><div><p class="eyebrow">Course architecture</p><h2>FAQs</h2></div></div>

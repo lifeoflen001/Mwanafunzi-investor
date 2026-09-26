@@ -40,7 +40,11 @@
                 <p class="portal-section-label">Commerce</p>
                 <nav class="portal-nav" aria-label="Commerce navigation">
                     <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
-                    <a class="{{ request()->routeIs('admin.commerce*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce</a>
+                    <a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce overview</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.orders*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.orders') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Orders</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.payments*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.payments') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Payments</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.entitlements*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.entitlements') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Entitlements</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.waitlists*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.waitlists') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Waitlists</a>
                     <a class="{{ request()->routeIs('admin.customers*') ? 'is-active' : '' }}" href="{{ route('admin.customers') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Customers</a>
                 </nav>
                 <p class="portal-section-label">Platform</p>
@@ -73,13 +77,32 @@
                 <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
                 <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
                 <form class="portal-search" method="get" action="{{ route('admin.search') }}"><label class="sr-only" for="admin-search">Search the desk</label><span aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk"></form>
-                <div class="portal-topbar-actions">@auth<span class="admin-message-indicator"><a class="admin-topbar-action" href="{{ route('admin.messages') }}" title="Unread enquiries" aria-label="Unread enquiries">✉</a>@if($unreadEnquiries)<span class="admin-notification-count">{{ $unreadEnquiries }}</span>@endif</span><div class="portal-profile" data-admin-profile><button class="portal-profile-toggle" type="button" aria-expanded="false" aria-controls="admin-profile-menu" data-admin-profile-toggle><span class="portal-avatar portal-avatar-admin" aria-hidden="true">{{ strtoupper(substr(auth()->user()->name ?: 'A', 0, 1)) }}</span><span class="portal-user-name">{{ auth()->user()->name }}</span><span class="portal-profile-caret" aria-hidden="true">⌄</span></button><div class="portal-profile-menu" id="admin-profile-menu" hidden data-admin-profile-menu><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->email }}</small><a href="{{ route('admin.settings') }}">Site settings</a><a href="{{ route('home') }}" target="_blank" rel="noopener">View public site</a><a href="{{ route('account.dashboard') }}">Student portal</a><form method="post" action="{{ route('admin.logout') }}">@csrf<button type="submit">Sign out</button></form></div></div>@else<span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span>@endauth</div>
+                <div class="portal-topbar-actions">
+                    @auth
+                        <details class="admin-quick-actions">
+                            <summary class="button button-primary button-small"><span aria-hidden="true">+</span> New</summary>
+                            <div class="admin-quick-menu"><a href="{{ route('admin.articles.create') }}">Journal article</a><a href="{{ route('admin.courses.create') }}">Course</a><a href="{{ route('admin.products.create') }}">Product</a><a href="{{ route('admin.media') }}">Media asset</a></div>
+                        </details>
+                        <span class="admin-message-indicator"><a class="admin-topbar-action" href="{{ route('admin.messages') }}" title="Unread enquiries" aria-label="Unread enquiries">✉</a>@if($unreadEnquiries)<span class="admin-notification-count">{{ $unreadEnquiries }}</span>@endif</span>
+                        <div class="portal-profile" data-admin-profile><button class="portal-profile-toggle" type="button" aria-expanded="false" aria-controls="admin-profile-menu" data-admin-profile-toggle><span class="portal-avatar portal-avatar-admin" aria-hidden="true">{{ strtoupper(substr(auth()->user()->name ?: 'A', 0, 1)) }}</span><span class="portal-user-name">{{ auth()->user()->name }}</span><span class="portal-profile-caret" aria-hidden="true">⌄</span></button><div class="portal-profile-menu" id="admin-profile-menu" hidden data-admin-profile-menu><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->email }}</small><a href="{{ route('admin.settings') }}">Site settings</a><a href="{{ route('home') }}" target="_blank" rel="noopener">View public site</a><a href="{{ route('account.dashboard') }}">Student portal</a><form method="post" action="{{ route('admin.logout') }}">@csrf<button type="submit">Sign out</button></form></div></div>
+                    @else
+                        <span class="portal-avatar portal-avatar-admin" aria-hidden="true">A</span><span class="portal-user-name">Admin desk</span>
+                    @endauth
+                </div>
             </header>
             <main class="portal-content" id="admin-main-content">
                 @if(session('success'))<div class="form-success" role="status">{{ session('success') }}</div>@endif
                 @if($errors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                 @yield('content')
             </main>
+        </div>
+    </div>
+    <div class="admin-confirm-modal" data-confirm-modal hidden role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
+        <div class="admin-confirm-card">
+            <span class="admin-confirm-icon" aria-hidden="true">!</span>
+            <h2 id="admin-confirm-title">Confirm action</h2>
+            <p data-confirm-message>Please confirm this action.</p>
+            <div class="admin-confirm-actions"><button class="button button-secondary" type="button" data-confirm-cancel>Cancel</button><button class="button button-danger" type="button" data-confirm-accept>Continue</button></div>
         </div>
     </div>
 </body>

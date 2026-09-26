@@ -28,6 +28,14 @@ final class DesignTokens
             'portal_teal' => ['label' => 'Portal teal', 'group' => 'Portal colours', 'type' => 'color', 'default' => '#0eaa9a', 'css' => '--portal-teal'],
             'portal_gold' => ['label' => 'Portal gold', 'group' => 'Portal colours', 'type' => 'color', 'default' => '#dca943', 'css' => '--portal-gold'],
             'portal_coral' => ['label' => 'Portal coral', 'group' => 'Portal colours', 'type' => 'color', 'default' => '#d56c55', 'css' => '--portal-coral'],
+            'admin_bg' => ['label' => 'Admin background', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#f4f3ef', 'css' => '--admin-bg'],
+            'admin_card' => ['label' => 'Admin card', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#fffdfa', 'css' => '--admin-card'],
+            'admin_border' => ['label' => 'Admin borders', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#dfddd6', 'css' => '--admin-border'],
+            'admin_text' => ['label' => 'Admin text', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#20221f', 'css' => '--admin-text'],
+            'admin_muted' => ['label' => 'Admin muted text', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#777870', 'css' => '--admin-muted'],
+            'admin_sidebar' => ['label' => 'Admin sidebar', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#202521', 'css' => '--admin-sidebar'],
+            'admin_orange' => ['label' => 'Admin active accent', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#c56c38', 'css' => '--admin-orange'],
+            'admin_orange_hover' => ['label' => 'Admin accent hover', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#a75229', 'css' => '--admin-orange-hover'],
             'container_max_width' => ['label' => 'Public content max width', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 960, 'max' => 1600, 'default' => 1180, 'css' => '--container-max-width', 'unit' => 'px'],
             'page_gutter' => ['label' => 'Public page gutter', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 24, 'max' => 120, 'default' => 80, 'css' => '--page-gutter', 'unit' => 'px'],
             'body_size' => ['label' => 'Base text size', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 14, 'max' => 20, 'default' => 16, 'css' => '--body-size', 'unit' => 'px'],
@@ -37,6 +45,7 @@ final class DesignTokens
             'admin_sidebar_width' => ['label' => 'Admin sidebar width', 'group' => 'Admin layout tokens', 'type' => 'integer', 'min' => 220, 'max' => 320, 'default' => 250, 'css' => '--admin-sidebar-width', 'unit' => 'px'],
             'admin_topbar_height' => ['label' => 'Admin topbar height', 'group' => 'Admin layout tokens', 'type' => 'integer', 'min' => 56, 'max' => 96, 'default' => 72, 'css' => '--admin-topbar-height', 'unit' => 'px'],
             'admin_content_gutter' => ['label' => 'Admin content gutter', 'group' => 'Admin layout tokens', 'type' => 'integer', 'min' => 20, 'max' => 56, 'default' => 32, 'css' => '--admin-content-gutter', 'unit' => 'px'],
+            'admin_input_height' => ['label' => 'Admin input height', 'group' => 'Admin layout tokens', 'type' => 'integer', 'min' => 36, 'max' => 54, 'default' => 42, 'css' => '--admin-input-height', 'unit' => 'px'],
             'motion_duration' => ['label' => 'Motion duration', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 0, 'max' => 800, 'default' => 250, 'css' => '--motion-duration', 'unit' => 'ms'],
         ];
     }

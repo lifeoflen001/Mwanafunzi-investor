@@ -1,8 +1,10 @@
 @extends('layouts.admin')
 @section('title', $product->exists ? 'Edit product' : 'New product')
 @section('content')
-<div class="admin-heading"><div><p class="eyebrow">CMS / Tools</p><h1>{{ $product->exists ? 'Edit product' : 'New product' }}</h1></div><a class="back-link" href="{{ route('admin.products') }}">← Back to products</a></div>
-<form class="admin-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($product->exists) @method('put') @endif
+<x-admin.page-header eyebrow="Commerce / Tools" title="{{ $product->exists ? 'Edit product' : 'New product' }}" description="Manage the product record, availability, media and delivery details." />
+<a class="admin-back-link" href="{{ route('admin.products') }}">← Back to products</a>
+<form class="admin-form admin-editor-form" method="post" action="{{ $action }}" data-unsaved-warning>@csrf @if($product->exists) @method('put') @endif
+    <div class="admin-form-card"><header class="admin-form-card-header"><div><p class="admin-eyebrow">Product record</p><h2>General information</h2><p>Keep product presentation and fulfilment details in one controlled record.</p></div></header>
     <label>Name<input name="name" value="{{ old('name', $product->name) }}" required></label><label>Slug<input name="slug" value="{{ old('slug', $product->slug) }}"></label>
     @include('admin.components.media-field', ['name' => 'thumbnail', 'label' => 'Thumbnail', 'value' => $product->thumbnail, 'media' => $media])
     <label>Hero image focal point<select name="hero_focal_point">@foreach(\App\Support\HeroFocalPoint::options() as $focalPoint)<option value="{{ $focalPoint }}" @selected(old('hero_focal_point', $product->hero_focal_point ?: \App\Support\HeroFocalPoint::DEFAULT) === $focalPoint)>{{ str_replace(' ', ' · ', ucfirst($focalPoint)) }}</option>@endforeach</select></label>
@@ -17,7 +19,7 @@
     <label>SEO description<textarea name="seo_description" rows="3">{{ old('seo_description', $product->seo_description) }}</textarea></label>
     <div class="form-row"><label>Canonical URL<input type="url" name="canonical_url" value="{{ old('canonical_url', $product->canonical_url) }}"></label><label>Robots directive<select name="robots"><option value="">Index and follow (default)</option><option value="index,follow" @selected(old('robots', $product->robots) === 'index,follow')>Index, follow</option><option value="noindex,nofollow" @selected(old('robots', $product->robots) === 'noindex,nofollow')>Noindex, nofollow</option></select></label></div>
     <div class="form-row"><label>OpenGraph title<input name="og_title" value="{{ old('og_title', $product->og_title) }}"></label><label>OpenGraph description<textarea name="og_description" rows="2">{{ old('og_description', $product->og_description) }}</textarea></label></div>
-    <label class="consent"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured))> <span>Featured product</span></label><div class="form-actions"><button class="button button-dark" type="submit">Save product <span aria-hidden="true">↗</span></button>@if($product->exists)<a class="button button-light" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'product', 'id' => $product->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div>
+    <label class="consent"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured))> <span>Featured product</span></label><div class="form-actions"><button class="button button-primary" type="submit">Save product <span aria-hidden="true">↗</span></button>@if($product->exists)<a class="button button-secondary" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'product', 'id' => $product->id]) }}" target="_blank" rel="noopener">Preview</a>@endif</div></div>
 </form>
 @if($product->exists)
 <section class="admin-subresource"><div class="admin-heading"><div><p class="eyebrow">Product architecture</p><h2>FAQs</h2></div></div>
