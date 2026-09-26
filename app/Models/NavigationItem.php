@@ -18,8 +18,19 @@ class NavigationItem extends Model
 
     public function href(): string
     {
-        if ($this->route_name === 'legal' && $this->url) return route('legal', $this->url);
-        if ($this->route_name && \Illuminate\Support\Facades\Route::has($this->route_name)) return route($this->route_name);
+        $routeName = $this->publicRouteName();
+        if ($routeName === 'legal' && $this->url) return route('legal', $this->url);
+        if ($routeName && \Illuminate\Support\Facades\Route::has($routeName)) return route($routeName);
         return $this->url ?: '#';
+    }
+
+    public function publicRouteName(): ?string
+    {
+        return match ($this->route_name) {
+            'home' => $this->label === 'Forex Academy' ? 'forex-academy' : 'home',
+            'development' => 'digital-systems',
+            'studio' => 'creative-studio',
+            default => $this->route_name,
+        };
     }
 }

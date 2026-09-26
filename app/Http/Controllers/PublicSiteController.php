@@ -49,6 +49,20 @@ class PublicSiteController extends Controller
         ]);
     }
 
+    public function academy()
+    {
+        $page = $this->cmsPage('learn');
+        $homePage = $this->cmsPage('home');
+
+        return view('public.landing.forex-academy', [
+            'page' => $page,
+            'homePage' => $homePage,
+            'topics' => LearningTopic::query()->where('is_published', true)->orderBy('sort_order')->get(),
+            'courses' => Course::published()->orderBy('sort_order')->get(),
+            'products' => Product::available()->orderBy('sort_order')->get(),
+        ]);
+    }
+
     public function learn()
     {
         $topics = LearningTopic::with('courses')->where('is_published', true)->orderBy('sort_order')->get();
@@ -184,7 +198,7 @@ class PublicSiteController extends Controller
     public function sitemap()
     {
         $urls = collect([
-            route('home'), route('learn'), route('courses'), route('tools'), route('journal'), route('about'), route('contact'), route('student-of-money'),
+            route('home'), route('forex-academy'), route('digital-systems'), route('creative-studio'), route('learn'), route('courses'), route('tools'), route('journal'), route('about'), route('contact'), route('student-of-money'),
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
         $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));

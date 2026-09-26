@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
+    Route::get('/forex-academy', 'academy')->name('forex-academy');
+    Route::get('/digital-systems', 'module')->defaults('slug', 'development')->name('digital-systems');
+    Route::get('/creative-studio', 'module')->defaults('slug', 'studio')->name('creative-studio');
     Route::get('/development', 'module')->defaults('slug', 'development')->name('development');
     Route::get('/studio', 'module')->defaults('slug', 'studio')->name('studio');
     Route::get('/learn', 'learn')->name('learn');

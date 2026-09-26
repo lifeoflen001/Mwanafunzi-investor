@@ -17,13 +17,15 @@
 @php
     $pageKey = match (request()->route()?->getName()) {
         'home' => 'home',
-        'learn' => 'learn',
+        'learn', 'forex-academy' => 'learn',
         'courses' => 'courses',
         'tools' => 'tools',
         'journal' => 'journal',
         'about' => 'about',
         'contact' => 'contact',
         'student-of-money' => 'student-of-money',
+        'development', 'digital-systems' => 'development',
+        'studio', 'creative-studio' => 'studio',
         'legal' => request()->route('page'),
         default => null,
     };
