@@ -26,6 +26,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin',
         'phone',
         'country',
+        'job_title',
+        'department',
+        'bio',
+        'avatar_path',
         'status',
         'last_login_at',
     ];
@@ -59,4 +63,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function entitlements() { return $this->hasMany(Entitlement::class); }
     public function enrollments() { return $this->hasMany(Enrollment::class); }
     public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar_path ? asset('storage/'.$this->avatar_path) : null;
+    }
+
+    public function initials(): string
+    {
+        return collect(preg_split('/\s+/', trim((string) $this->name)))
+            ->filter()
+            ->take(2)
+            ->map(fn ($part) => strtoupper(substr($part, 0, 1)))
+            ->implode('') ?: 'A';
+    }
 }

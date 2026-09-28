@@ -22,6 +22,8 @@ use App\Http\Controllers\PublicRedirectController;
 use App\Http\Controllers\AdminBusinessUnitController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminCustomerController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -158,6 +160,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/business-units/{businessUnit}', [AdminBusinessUnitController::class, 'update'])->name('business-units.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
         Route::get('/search', [AdminSearchController::class, 'index'])->name('search');
+        Route::get('/search/suggestions', [AdminSearchController::class, 'suggestions'])->name('search.suggestions');
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications');
+        Route::post('/notifications/read-all', [AdminNotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('/notifications/{message}/read', [AdminNotificationController::class, 'read'])->name('notifications.read');
+        Route::get('/profile', [AdminProfileController::class, 'show'])->name('profile');
+        Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/avatar', [AdminProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+        Route::delete('/profile/avatar', [AdminProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+        Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
         Route::get('/administrators', [AdminUserController::class, 'index'])->name('administrators');
         Route::get('/administrators/create', [AdminUserController::class, 'create'])->name('administrators.create');
         Route::post('/administrators', [AdminUserController::class, 'store'])->name('administrators.store');

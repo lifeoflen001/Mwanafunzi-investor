@@ -94,6 +94,9 @@ document.addEventListener('keydown', (event) => {
 const adminProfile = document.querySelector('[data-admin-profile]');
 const adminProfileToggle = document.querySelector('[data-admin-profile-toggle]');
 const adminProfileMenu = document.querySelector('[data-admin-profile-menu]');
+const adminNotificationMenu = document.querySelector('[data-admin-notifications]');
+const adminNotificationToggle = document.querySelector('[data-admin-notifications-toggle]');
+const adminNotificationPopover = document.querySelector('[data-admin-notifications-menu]');
 const closeAdminProfile = () => {
     if (!adminProfileMenu || !adminProfileToggle) return;
     adminProfileMenu.hidden = true;
@@ -108,6 +111,143 @@ adminProfileToggle?.addEventListener('click', () => {
 adminProfile?.addEventListener('click', (event) => event.stopPropagation());
 document.addEventListener('click', closeAdminProfile);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminProfile(); });
+const closeAdminNotifications = () => {
+    if (!adminNotificationPopover || !adminNotificationToggle) return;
+    adminNotificationPopover.hidden = true;
+    adminNotificationToggle.setAttribute('aria-expanded', 'false');
+};
+adminNotificationToggle?.addEventListener('click', () => {
+    if (!adminNotificationPopover) return;
+    const isOpen = !adminNotificationPopover.hidden;
+    closeAdminProfile();
+    adminNotificationPopover.hidden = isOpen;
+    adminNotificationToggle.setAttribute('aria-expanded', String(!isOpen));
+});
+adminNotificationMenu?.addEventListener('click', (event) => event.stopPropagation());
+document.addEventListener('click', closeAdminNotifications);
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminNotifications(); });
+
+const adminFullscreenButton = document.querySelector('[data-admin-fullscreen]');
+const syncAdminFullscreen = () => {
+    if (!adminFullscreenButton) return;
+    const active = Boolean(document.fullscreenElement);
+    adminFullscreenButton.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+    adminFullscreenButton.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
+    adminFullscreenButton.dataset.fullscreenActive = String(active);
+};
+adminFullscreenButton?.addEventListener('click', async () => {
+    if (!document.fullscreenEnabled) return;
+    try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+    } catch { /* Fullscreen can be denied by the browser; leave the layout intact. */ }
+    syncAdminFullscreen();
+});
+document.addEventListener('fullscreenchange', syncAdminFullscreen);
+syncAdminFullscreen();
+
+const adminSearchForm = document.querySelector('[data-admin-search-form]');
+const adminSearchInput = document.querySelector('[data-admin-search-input]');
+const adminSearchSuggestions = document.querySelector('[data-admin-search-suggestions]');
+const adminSearchClear = document.querySelector('[data-admin-search-clear]');
+const adminSearchLoading = document.querySelector('[data-admin-search-loading]');
+const adminMobileSearchButton = document.querySelector('[data-admin-mobile-search]');
+let adminSearchTimer = null;
+let adminSearchAbort = null;
+let adminSearchActiveIndex = -1;
+const searchOptions = () => [...(adminSearchSuggestions?.querySelectorAll('[role="option"]') || [])];
+const closeAdminSearch = () => {
+    if (!adminSearchSuggestions || !adminSearchInput) return;
+    adminSearchSuggestions.hidden = true;
+    adminSearchInput.setAttribute('aria-expanded', 'false');
+    adminSearchActiveIndex = -1;
+};
+const openAdminSearch = () => {
+    if (!adminSearchSuggestions || !adminSearchInput) return;
+    adminSearchSuggestions.hidden = false;
+    adminSearchInput.setAttribute('aria-expanded', 'true');
+};
+const renderAdminSearchSuggestions = (payload, term) => {
+    if (!adminSearchSuggestions) return;
+    adminSearchSuggestions.replaceChildren();
+    adminSearchActiveIndex = -1;
+    if (!payload.total) {
+        const empty = document.createElement('p');
+        empty.className = 'admin-search-suggestion-empty';
+        empty.textContent = term ? `No results for “${term}”.` : 'Start typing to search the desk.';
+        adminSearchSuggestions.append(empty);
+        openAdminSearch();
+        return;
+    }
+    payload.groups.forEach((group) => {
+        const heading = document.createElement('strong');
+        heading.className = 'admin-search-suggestion-group';
+        heading.textContent = group.type;
+        adminSearchSuggestions.append(heading);
+        group.items.forEach((item) => {
+            const link = document.createElement('a');
+            link.href = item.url;
+            link.role = 'option';
+            link.className = 'admin-search-suggestion-item';
+            link.innerHTML = `<span class="admin-search-suggestion-icon" aria-hidden="true">◌</span><span><strong></strong><small></small></span>`;
+            link.querySelector('strong').textContent = item.title;
+            link.querySelector('small').textContent = item.meta || 'No status';
+            adminSearchSuggestions.append(link);
+        });
+    });
+    const footer = document.createElement('a');
+    footer.className = 'admin-search-suggestion-footer';
+    footer.href = `${adminSearchForm.action}?q=${encodeURIComponent(term)}`;
+    footer.textContent = 'View all results →';
+    adminSearchSuggestions.append(footer);
+    openAdminSearch();
+};
+const fetchAdminSearchSuggestions = () => {
+    if (!adminSearchInput || !adminSearchForm) return;
+    const term = adminSearchInput.value.trim();
+    if (adminSearchClear) adminSearchClear.hidden = !term;
+    window.clearTimeout(adminSearchTimer);
+    adminSearchAbort?.abort();
+    if (!term) { closeAdminSearch(); return; }
+    adminSearchTimer = window.setTimeout(async () => {
+        adminSearchLoading?.removeAttribute('hidden');
+        adminSearchAbort = new AbortController();
+        try {
+            const response = await fetch(`${adminSearchForm.dataset.suggestionsUrl}?q=${encodeURIComponent(term)}`, { headers: { Accept: 'application/json' }, signal: adminSearchAbort.signal });
+            if (response.ok) renderAdminSearchSuggestions(await response.json(), term);
+        } catch (error) { if (error.name !== 'AbortError') closeAdminSearch(); }
+        finally { adminSearchLoading?.setAttribute('hidden', 'hidden'); }
+    }, 220);
+};
+adminSearchInput?.addEventListener('input', fetchAdminSearchSuggestions);
+adminSearchInput?.addEventListener('focus', () => { if (adminSearchInput.value.trim()) fetchAdminSearchSuggestions(); });
+adminSearchInput?.addEventListener('keydown', (event) => {
+    const options = searchOptions();
+    if (event.key === 'Escape') { closeAdminSearch(); return; }
+    if (event.key === 'ArrowDown' && options.length) { event.preventDefault(); adminSearchActiveIndex = Math.min(adminSearchActiveIndex + 1, options.length - 1); options[adminSearchActiveIndex].focus(); }
+    if (event.key === 'Enter' && adminSearchActiveIndex >= 0 && options[adminSearchActiveIndex]) { event.preventDefault(); options[adminSearchActiveIndex].click(); }
+});
+adminSearchSuggestions?.addEventListener('keydown', (event) => {
+    const options = searchOptions();
+    if (event.key === 'ArrowDown') { event.preventDefault(); adminSearchActiveIndex = Math.min(adminSearchActiveIndex + 1, options.length - 1); options[adminSearchActiveIndex]?.focus(); }
+    if (event.key === 'ArrowUp') { event.preventDefault(); adminSearchActiveIndex = Math.max(adminSearchActiveIndex - 1, -1); (options[adminSearchActiveIndex] || adminSearchInput)?.focus(); }
+    if (event.key === 'Escape') { closeAdminSearch(); adminSearchInput?.focus(); }
+});
+adminSearchClear?.addEventListener('click', () => { if (adminSearchInput) { adminSearchInput.value = ''; adminSearchInput.focus(); } closeAdminSearch(); adminSearchClear.hidden = true; });
+adminMobileSearchButton?.addEventListener('click', () => { adminShell?.classList.add('is-mobile-search-open'); adminSearchForm?.classList.add('is-mobile-search-open'); adminSearchInput?.focus(); });
+document.addEventListener('click', (event) => { if (!event.target.closest('[data-admin-search-form]')) closeAdminSearch(); });
+document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); adminSearchInput?.focus(); }
+});
+
+document.querySelectorAll('[data-password-toggle]').forEach((button) => button.addEventListener('click', () => {
+    const input = button.closest('.admin-password-field')?.querySelector('input');
+    if (!input) return;
+    const visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+    button.textContent = visible ? 'Show' : 'Hide';
+    button.setAttribute('aria-label', `${visible ? 'Show' : 'Hide'} password`);
+}));
 
 const adminDetailsMenus = [...document.querySelectorAll('.admin-action-menu, .admin-quick-actions')];
 const closeAdminDetailsMenus = (except = null) => adminDetailsMenus.forEach((menu) => {

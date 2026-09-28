@@ -349,6 +349,10 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('admin-feedback-stack')
             ->assertSee('Course saved.')
             ->assertSee('admin-page-header-actions')
+            ->assertSee('data-admin-fullscreen')
+            ->assertSee('data-admin-notifications-toggle')
+            ->assertSee('data-admin-search-input')
+            ->assertSee(route('admin.profile'))
             ->assertSee('Courses');
     }
 
@@ -372,6 +376,34 @@ class PlatformRoutesTest extends TestCase
             ->assertOk()
             ->assertSee('admin-toggle')
             ->assertSee('Visible and accepting enquiries');
+    }
+
+    public function test_admin_search_notifications_and_profile_features_use_real_data(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'name' => 'Desk Administrator']);
+
+        $this->actingAs($admin)->get(route('admin.search', ['q' => 'Forex']))
+            ->assertOk()->assertSee('Search the desk')->assertSee('Forex');
+        $this->actingAs($admin)->get(route('admin.search.suggestions', ['q' => 'Forex']))
+            ->assertOk()->assertJsonStructure(['total', 'groups']);
+
+        $this->post('/contact', ['name' => 'Notification Student', 'email' => 'notification@example.com', 'category' => 'general', 'message' => 'A real notification enquiry.', 'consent' => '1'])->assertRedirect();
+        $message = ContactMessage::where('email', 'notification@example.com')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.notifications', ['filter' => 'unread']))
+            ->assertOk()->assertSee('Notification Student')->assertSee('Unread');
+        $this->actingAs($admin)->post(route('admin.notifications.read', $message))
+            ->assertRedirect(route('admin.messages.show', $message));
+        $this->assertNotNull($message->fresh()->read_at);
+
+        Storage::fake('public');
+        $this->actingAs($admin)->get(route('admin.profile'))->assertOk()->assertSee('Personal information')->assertSee('Password and security');
+        $this->actingAs($admin)->put(route('admin.profile.update'), ['name' => 'Desk Lead', 'phone' => '+255700000000', 'job_title' => 'Platform lead', 'department' => 'Operations', 'bio' => 'A careful administrator.'])->assertRedirect();
+        $this->assertDatabaseHas('users', ['id' => $admin->id, 'name' => 'Desk Lead', 'job_title' => 'Platform lead']);
+        $this->actingAs($admin)->post(route('admin.profile.avatar.update'), ['avatar' => UploadedFile::fake()->image('avatar.png')])->assertRedirect();
+        $this->assertNotNull($admin->fresh()->avatar_path);
+        $this->actingAs($admin)->delete(route('admin.profile.avatar.remove'))->assertRedirect();
+        $this->assertNull($admin->fresh()->avatar_path);
+        $this->actingAs($admin)->put(route('admin.profile.password'), ['current_password' => 'password', 'password' => 'new-password-123', 'password_confirmation' => 'new-password-123'])->assertRedirect();
     }
 
     public function test_all_static_admin_get_routes_render_for_an_authorised_admin(): void
