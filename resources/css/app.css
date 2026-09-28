@@ -1285,3 +1285,12 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .admin-search-results-form input { flex-basis:calc(100% - 35px); }
     .admin-search-results-form .button { flex:1; }
 }
+
+/* Keep the admin task bar stationary while the workspace scrolls. */
+.admin-portal .portal-main { padding-top:var(--admin-topbar-height,72px); }
+.admin-portal .portal-topbar { position:fixed; top:0; right:0; left:var(--admin-sidebar-width,250px); }
+.admin-portal .admin-shell.is-sidebar-collapsed .portal-topbar { left:72px; }
+@media (max-width:760px) {
+    .admin-portal .portal-main { padding-top:64px; }
+    .admin-portal .portal-topbar,.admin-portal .admin-shell.is-sidebar-collapsed .portal-topbar { left:0; }
+}
