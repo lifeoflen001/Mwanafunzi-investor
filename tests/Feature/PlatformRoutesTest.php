@@ -352,6 +352,24 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('Courses');
     }
 
+    public function test_all_static_admin_get_routes_render_for_an_authorised_admin(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $routes = collect(app('router')->getRoutes()->getRoutes())
+            ->filter(fn ($route) => str_starts_with((string) $route->getName(), 'admin.')
+                && in_array('GET', $route->methods(), true)
+                && ! str_contains($route->uri(), '{'))
+            ->map(fn ($route) => $route->getName())
+            ->filter()
+            ->values();
+
+        foreach ($routes as $routeName) {
+            $response = $this->actingAs($admin)->get(route($routeName));
+            $this->assertLessThan(500, $response->getStatusCode(), $routeName.' returned a server error.');
+            $this->assertNotSame(404, $response->getStatusCode(), $routeName.' returned not found.');
+        }
+    }
+
     public function test_pages_navigation_and_design_tokens_propagate_to_public_frontend(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

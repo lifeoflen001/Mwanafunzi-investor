@@ -1,8 +1,9 @@
 @php
+    $validationErrors = view()->shared('errors', new \Illuminate\Support\ViewErrorBag());
     $hasSuccess = session()->has('success');
     $hasInfo = session()->has('info');
     $hasWarning = session()->has('warning');
-    $hasError = $errors->any();
+    $hasError = $validationErrors->any();
 @endphp
 
 @if($hasSuccess || $hasInfo || $hasWarning || $hasError)
@@ -31,7 +32,7 @@
         @if($hasError)
             <div class="admin-toast admin-toast-danger" role="alert" data-admin-toast>
                 <span class="admin-toast-icon" aria-hidden="true">!</span>
-                <span>{{ $errors->first() }}</span>
+                <span>{{ $validationErrors->first() }}</span>
                 <button type="button" class="admin-toast-close" aria-label="Dismiss notification" data-admin-toast-close>×</button>
             </div>
         @endif

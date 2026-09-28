@@ -1,5 +1,6 @@
 @php
     $unreadEnquiries = auth()->check() ? \App\Models\ContactMessage::whereNull('read_at')->count() : 0;
+    $validationErrors = view()->shared('errors', new \Illuminate\Support\ViewErrorBag());
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -98,7 +99,7 @@
             </header>
             <main class="portal-content" id="admin-main-content">
                 <x-admin.flash />
-                @if($errors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+                @if($validationErrors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($validationErrors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                 @yield('content')
             </main>
         </div>
