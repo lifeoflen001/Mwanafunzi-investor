@@ -500,6 +500,75 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .settings-token-group .form-row { grid-template-columns:1fr; }
 }
 
+/* Admin system primitives: page-level views should compose these instead of
+   inventing their own spacing, surfaces, controls, or status treatments. */
+.admin-portal {
+    --admin-surface-muted:#f4f3ef;
+    --admin-border-strong:#c9c8c0;
+    --admin-success:#5f8c68;
+    --admin-warning:#b28232;
+    --admin-danger:#a34b3b;
+    --admin-info:#5e789a;
+}
+.admin-portal .admin-stat-card {
+    position:relative;
+    display:flex;
+    min-height:112px;
+    flex-direction:column;
+    justify-content:flex-start;
+    padding:16px;
+    border:1px solid var(--admin-border,#dfddd6);
+    border-top:3px solid var(--admin-orange,var(--copper));
+    border-radius:var(--admin-radius,4px);
+    background:var(--admin-card,#fffdfa);
+    box-shadow:var(--admin-shadow);
+}
+.admin-portal .admin-stat-card-ink { border-top-color:var(--admin-sidebar,#202521); }
+.admin-portal .admin-stat-card-gold { border-top-color:#a79268; }
+.admin-portal .admin-stat-card-teal { border-top-color:#5f8c68; }
+.admin-stat-card-label { display:block; color:var(--admin-muted,#777870); font-size:11px; }
+.admin-stat-card-value { display:block; margin-top:13px; color:var(--admin-text,#20221f); font:650 26px/1 var(--sans); letter-spacing:-.035em; }
+.admin-stat-card-description { display:block; margin-top:8px; color:var(--admin-muted,#777870); font:11px var(--sans); }
+.admin-portal .admin-form-section { display:grid; gap:16px; margin:0; padding:18px; border:1px solid var(--admin-border,#dfddd6); border-radius:var(--admin-radius,4px); background:var(--admin-card,#fffdfa); }
+.admin-portal .admin-form-section legend { padding:0; color:var(--admin-text,#20221f); font:650 16px/1.25 var(--sans); }
+.admin-form-section-description { grid-column:1/-1; margin:-8px 0 0; color:var(--admin-muted,#777870); font-size:12px; line-height:1.5; }
+.admin-portal .admin-form-section>label,.admin-portal .admin-form-section>.form-row { min-width:0; }
+.admin-portal .admin-toggle { display:grid!important; grid-template-columns:auto 1fr!important; align-items:center; gap:10px!important; min-height:42px; padding:10px 12px; border:1px solid var(--admin-border,#dfddd6); border-radius:var(--admin-radius,4px); background:var(--admin-surface-muted); color:var(--admin-text,#20221f)!important; font:400 12px var(--sans)!important; }
+.admin-portal .admin-toggle input[type=hidden] { display:none; }
+.admin-portal .admin-toggle input[type=checkbox] { position:absolute; width:1px!important; height:1px!important; opacity:0; pointer-events:none; }
+.admin-toggle-track { display:inline-flex; align-items:center; width:34px; height:20px; padding:2px; border-radius:999px; background:#c7c8c2; transition:background .18s ease; }
+.admin-toggle-track span { width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(20,24,21,.2); transition:transform .18s ease; }
+.admin-toggle input[type=checkbox]:checked + .admin-toggle-track { background:var(--admin-orange,var(--copper)); }
+.admin-toggle input[type=checkbox]:checked + .admin-toggle-track span { transform:translateX(14px); }
+.admin-toggle input[type=checkbox]:focus-visible + .admin-toggle-track { box-shadow:var(--admin-focus-ring); }
+.admin-toggle-copy { display:grid; gap:3px; min-width:0; }
+.admin-toggle-copy strong { color:var(--admin-text,#20221f); font-size:12px; font-weight:650; }
+.admin-toggle-copy small { color:var(--admin-muted,#777870); font-size:11px; line-height:1.4; }
+.admin-portal .admin-form input[type=checkbox],.admin-portal .admin-form input[type=radio],.admin-portal .admin-form-section input[type=checkbox],.admin-portal .admin-form-section input[type=radio] { min-height:0; width:16px; height:16px; padding:0; }
+.admin-portal .admin-form input[type=file] { height:auto; min-height:42px; padding:9px 11px; background:var(--admin-surface-muted); }
+.admin-portal .admin-form input[readonly] { background:var(--admin-surface-muted); color:var(--admin-muted,#777870); }
+.admin-portal .admin-form select,.admin-portal .admin-filter-toolbar select { appearance:auto; }
+.admin-portal .admin-action-menu-list [role=menuitem] { outline:0; }
+.admin-portal .admin-table-row>form { min-width:0; }
+.admin-portal .admin-table-row .admin-badge + small { display:block; margin-top:5px; }
+.admin-portal .admin-skeleton { display:grid; gap:10px; min-height:80px; padding:4px 0; }
+.admin-portal .admin-skeleton span { display:block; height:12px; border-radius:3px; background:linear-gradient(90deg,#e7e6df 25%,#f5f4ef 50%,#e7e6df 75%); background-size:200% 100%; animation:admin-skeleton-shimmer 1.35s linear infinite; }
+.admin-portal .admin-skeleton span:nth-child(2) { width:82%; }
+.admin-portal .admin-skeleton span:nth-child(3) { width:61%; }
+@keyframes admin-skeleton-shimmer { to { background-position:-200% 0; } }
+.admin-portal :is(button,a,input,select,textarea,summary):focus-visible { outline:2px solid var(--admin-orange,var(--copper)); outline-offset:2px; }
+.admin-portal .admin-page-header-actions .button:focus-visible,.admin-portal .button:focus-visible { outline-offset:3px; }
+@media (max-width:760px) {
+    .admin-portal .admin-stat-card { min-height:98px; padding:13px; }
+    .admin-stat-card-value { margin-top:10px; font-size:23px; }
+    .admin-portal .admin-form-section { padding:15px; }
+    .admin-portal .admin-form-section .form-row { grid-template-columns:1fr; }
+    .admin-portal .admin-toggle { min-height:48px; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .admin-portal *, .admin-portal *::before, .admin-portal *::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; }
+}
+
 /* Focused mother-brand and service landing compositions. */
 .mother-home .mother-intro { background:var(--paper); }
 .mother-intro-grid { display:grid; grid-template-columns:1fr 1fr; gap:12%; align-items:start; }
@@ -825,6 +894,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .admin-badge-success,.status-badge { background:#e8f1ea; color:#3c6b49; }
 .admin-badge-warning { background:#fff1da; color:#8a5b18; }
 .admin-badge-danger { background:#fae9e6; color:#9b4639; }
+.admin-badge-info { background:#e9eef6; color:#506d91; }
 .admin-badge-neutral { background:#ecece8; color:#5f625c; }
 
 .admin-portal .admin-filter-toolbar,.admin-portal .admin-filters,.admin-portal .media-filters,.admin-portal .admin-filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; padding:12px; border:1px solid var(--admin-border,#dfddd6); border-radius:var(--admin-radius,4px); background:var(--admin-card,#fffdfa); box-shadow:var(--admin-shadow); }
@@ -1070,4 +1140,20 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .legal-intro { font-size:16px; }
     .legal-section p,.legal-section li { font-size:15px; }
     .legal-support { padding:24px; }
+}
+
+/* Keep shared admin primitives authoritative after legacy page rules. */
+.admin-portal .admin-stat-card-ink { border-top-color:var(--admin-sidebar,#202521); }
+.admin-portal .admin-stat-card-gold { border-top-color:#a79268; }
+.admin-portal .admin-stat-card-teal { border-top-color:#5f8c68; }
+.admin-portal .admin-stat-card-label { display:block; color:var(--admin-muted,#777870); font-size:11px; }
+.admin-portal .admin-stat-card-value { display:block; margin-top:13px; color:var(--admin-text,#20221f); font:650 26px/1 var(--sans); letter-spacing:-.035em; }
+.admin-portal .admin-stat-card-description { display:block; margin-top:8px; color:var(--admin-muted,#777870); font:11px var(--sans); }
+.admin-portal .admin-form-section { display:grid; gap:16px; margin:0; padding:18px; border:1px solid var(--admin-border,#dfddd6); border-radius:var(--admin-radius,4px); background:var(--admin-card,#fffdfa); }
+.admin-portal .admin-form-section legend { padding:0; color:var(--admin-text,#20221f); font:650 16px/1.25 var(--sans); }
+.admin-portal .admin-form-section-description { grid-column:1/-1; margin:-8px 0 0; color:var(--admin-muted,#777870); font-size:12px; line-height:1.5; }
+@media (max-width:760px) {
+    .admin-portal .admin-stat-card { min-height:98px; padding:13px; }
+    .admin-portal .admin-stat-card-value { margin-top:10px; font-size:23px; }
+    .admin-portal .admin-form-section { padding:15px; }
 }

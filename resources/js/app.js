@@ -109,6 +109,20 @@ adminProfile?.addEventListener('click', (event) => event.stopPropagation());
 document.addEventListener('click', closeAdminProfile);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeAdminProfile(); });
 
+const adminDetailsMenus = [...document.querySelectorAll('.admin-action-menu, .admin-quick-actions')];
+const closeAdminDetailsMenus = (except = null) => adminDetailsMenus.forEach((menu) => {
+    if (menu !== except) menu.removeAttribute('open');
+});
+adminDetailsMenus.forEach((menu) => menu.addEventListener('toggle', () => {
+    if (menu.open) closeAdminDetailsMenus(menu);
+}));
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.admin-action-menu, .admin-quick-actions')) closeAdminDetailsMenus();
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAdminDetailsMenus();
+});
+
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -250,10 +264,14 @@ const confirmMessage = confirmModal?.querySelector('[data-confirm-message]');
 const confirmAccept = confirmModal?.querySelector('[data-confirm-accept]');
 const confirmCancel = confirmModal?.querySelector('[data-confirm-cancel]');
 let pendingConfirmForm = null;
+let confirmReturnFocus = null;
 const closeConfirmModal = () => {
     if (!confirmModal) return;
     confirmModal.hidden = true;
     pendingConfirmForm = null;
+    const returnFocus = confirmReturnFocus;
+    confirmReturnFocus = null;
+    returnFocus?.focus?.();
 };
 confirmCancel?.addEventListener('click', closeConfirmModal);
 confirmAccept?.addEventListener('click', () => {
@@ -264,7 +282,17 @@ confirmAccept?.addEventListener('click', () => {
     form.requestSubmit();
 });
 confirmModal?.addEventListener('click', (event) => { if (event.target === confirmModal) closeConfirmModal(); });
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && confirmModal && !confirmModal.hidden) closeConfirmModal(); });
+document.addEventListener('keydown', (event) => {
+    if (!confirmModal || confirmModal.hidden) return;
+    if (event.key === 'Escape') { closeConfirmModal(); return; }
+    if (event.key !== 'Tab') return;
+    const focusable = focusablesWithin(confirmModal);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
 
 document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
     if (form.dataset.confirmed === 'true') { delete form.dataset.confirmed; return; }
@@ -274,7 +302,7 @@ document.querySelectorAll('form').forEach((form) => form.addEventListener('submi
         event.preventDefault();
         pendingConfirmForm = form;
         if (confirmMessage) confirmMessage.textContent = form.dataset.confirm || 'Please confirm this destructive action.';
-        if (confirmModal) { confirmModal.hidden = false; confirmAccept?.focus(); }
+        if (confirmModal) { confirmReturnFocus = document.activeElement; confirmModal.hidden = false; confirmAccept?.focus(); }
     }
 }));
 

@@ -20,9 +20,9 @@
 
 <section class="admin-stats" aria-label="Platform summary">
     @foreach($counts as $label => $count)
-        <div><span>{{ ucfirst($label) }}</span><strong>{{ $count }}</strong><small>{{ $statDescriptions[$label] ?? 'Current total' }}</small></div>
+        <x-admin.stat-card :label="ucfirst($label)" :value="$count" :description="$statDescriptions[$label] ?? 'Current total'" :tone="$loop->iteration % 3 === 2 ? 'ink' : ($loop->iteration % 3 === 0 ? 'gold' : 'orange')" />
     @endforeach
-    <div><span>Media storage</span><strong>{{ number_format($mediaStorage / 1048576, 1) }}<small> MB</small></strong><small>Uploaded asset footprint</small></div>
+    <x-admin.stat-card label="Media storage" :value="number_format($mediaStorage / 1048576, 1).' MB'" description="Uploaded asset footprint" tone="gold" />
 </section>
 
 <div class="admin-dashboard-grid">

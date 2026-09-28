@@ -352,6 +352,28 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('Courses');
     }
 
+    public function test_admin_pages_use_shared_dashboard_form_and_control_primitives(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('admin-stat-card')
+            ->assertSee('admin-page-header-actions');
+        $this->actingAs($admin)->get(route('admin.commerce.dashboard'))
+            ->assertOk()
+            ->assertSee('admin-stat-card')
+            ->assertSee('Confirmed revenue');
+        $this->actingAs($admin)->get(route('admin.settings'))
+            ->assertOk()
+            ->assertSee('admin-form-section')
+            ->assertSee('Design tokens');
+        $this->actingAs($admin)->get(route('admin.business-units'))
+            ->assertOk()
+            ->assertSee('admin-toggle')
+            ->assertSee('Visible and accepting enquiries');
+    }
+
     public function test_all_static_admin_get_routes_render_for_an_authorised_admin(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

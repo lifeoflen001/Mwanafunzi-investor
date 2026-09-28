@@ -15,7 +15,7 @@
                 <label>Tagline<input name="tagline" value="{{ old('tagline', $unit->tagline) }}"></label>
                 <label>Description<textarea name="description" rows="3">{{ old('description', $unit->description) }}</textarea></label>
                 <div class="form-row"><label>Accent colour<span class="settings-token-control"><input type="color" name="accent_color" value="{{ old('accent_color', $unit->accent_color ?: '#c56c38') }}"></span></label><label>Public route <span>(code-controlled)</span><input value="{{ $unit->route_name ?: 'Not registered' }}" readonly></label></div>
-                <div class="form-row"><label>Display order<input type="number" name="sort_order" min="0" value="{{ old('sort_order', $unit->sort_order) }}" required></label><label class="checkbox-field"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $unit->is_active))> Visible and accepting enquiries</label></div>
+                <div class="form-row"><label>Display order<input type="number" name="sort_order" min="0" value="{{ old('sort_order', $unit->sort_order) }}" required></label><x-admin.toggle name="is_active" label="Visible and accepting enquiries" :checked="old('is_active', $unit->is_active) == true" help="Controls whether this module is available for new enquiries." /></div>
                 <button class="button button-dark" type="submit">Save module <span aria-hidden="true">↗</span></button>
             </form>
         </section>

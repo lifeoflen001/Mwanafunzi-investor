@@ -8,10 +8,10 @@
     <a class="admin-back-link" href="{{ route('admin.customers') }}">← Back to customers</a>
 
     <div class="admin-stats">
-        <div><span>Orders</span><strong>{{ $customer->orders_count }}</strong></div>
-        <div><span>Course access</span><strong>{{ $customer->enrollments_count }}</strong></div>
-        <div><span>Entitlements</span><strong>{{ $customer->entitlements_count }}</strong></div>
-        <div><span>Downloads</span><strong>{{ $downloadCount }}</strong></div>
+        <x-admin.stat-card label="Orders" :value="$customer->orders_count" description="Purchase history" />
+        <x-admin.stat-card label="Course access" :value="$customer->enrollments_count" description="Learning enrolments" tone="ink" />
+        <x-admin.stat-card label="Entitlements" :value="$customer->entitlements_count" description="Owned access" tone="gold" />
+        <x-admin.stat-card label="Downloads" :value="$downloadCount" description="Protected asset downloads" />
     </div>
 
     <section class="admin-card admin-subresource">
@@ -49,7 +49,7 @@
             @forelse($customer->orders as $order)
                 <a class="admin-subresource-header" href="{{ route('admin.commerce.orders.show', $order) }}">
                     <div><strong>{{ $order->order_number }}</strong><small>{{ $order->created_at?->format('M j, Y') }} · {{ $order->items_count }} items · {{ app(\App\Services\MoneyFormatter::class)->format($order->total, $order->currency) }}</small></div>
-                    <span>{{ $order->payment_status->value ?? $order->payment_status }}</span>
+                    <x-admin.status-badge :status="$order->payment_status->value ?? $order->payment_status" />
                 </a>
             @empty
                 <div class="empty-state compact"><p>No orders yet.</p></div>
@@ -61,7 +61,7 @@
             @forelse($customer->enrollments as $enrollment)
                 <div class="admin-subresource-header">
                     <div><strong>{{ $enrollment->course?->title ?: 'Course removed' }}</strong><small>{{ $enrollment->enrolled_at?->format('M j, Y') ?: 'Date unavailable' }}</small></div>
-                    <span>{{ $enrollment->status->value ?? $enrollment->status }}</span>
+                    <x-admin.status-badge :status="$enrollment->status->value ?? $enrollment->status" />
                 </div>
             @empty
                 <div class="empty-state compact"><p>No enrollments yet.</p></div>
@@ -74,7 +74,7 @@
         <div class="admin-table">
             <div class="admin-table-head"><span>Resource</span><span>Type</span><span>Status</span></div>
             @forelse($customer->entitlements as $entitlement)
-                <div class="admin-table-row"><span>{{ $entitlement->product?->name ?: $entitlement->course?->title ?: 'Resource removed' }}</span><span>{{ $entitlement->type }}</span><span>{{ $entitlement->status->value ?? $entitlement->status }} · {{ $entitlement->downloads->count() }} downloads</span></div>
+                <div class="admin-table-row"><span>{{ $entitlement->product?->name ?: $entitlement->course?->title ?: 'Resource removed' }}</span><span>{{ $entitlement->type }}</span><span><x-admin.status-badge :status="$entitlement->status->value ?? $entitlement->status" /> <small>{{ $entitlement->downloads->count() }} downloads</small></span></div>
             @empty
                 <div class="empty-state compact"><p>No entitlements yet.</p></div>
             @endforelse
@@ -82,7 +82,7 @@
         @if($customer->waitlists->isNotEmpty())
             <h3 class="subresource-heading">Waitlists</h3>
             @foreach($customer->waitlists as $waitlist)
-                <div class="admin-subresource-header"><div><strong>{{ $waitlist->course?->title ?: 'Course removed' }}</strong><small>{{ $waitlist->joined_at?->format('M j, Y') }}</small></div><span>{{ $waitlist->status }}</span></div>
+                <div class="admin-subresource-header"><div><strong>{{ $waitlist->course?->title ?: 'Course removed' }}</strong><small>{{ $waitlist->joined_at?->format('M j, Y') }}</small></div><x-admin.status-badge :status="$waitlist->status" /></div>
             @endforeach
         @endif
     </section>

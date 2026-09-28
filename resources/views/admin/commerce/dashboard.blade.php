@@ -3,12 +3,12 @@
 @section('content')
 <x-admin.page-header eyebrow="Commerce / Overview" title="Commerce operations" description="Confirmed payment totals only. Pending and failed attempts are not revenue." />
 <div class="admin-stats">
-    <div><span>Orders today</span><strong>{{ $ordersToday }}</strong></div>
-    <div><span>Paid orders</span><strong>{{ $paidOrders }}</strong></div>
-    <div><span>Pending payments</span><strong>{{ $pendingPayments }}</strong></div>
-    <div><span>Confirmed revenue</span><strong>{{ app(\App\Services\MoneyFormatter::class)->format($revenue, config('commerce.currency')) }}</strong></div>
-    <div><span>Active enrollments</span><strong>{{ $enrollments }}</strong></div>
-    <div><span>Waitlist</span><strong>{{ $waitlists }}</strong></div>
+    <x-admin.stat-card label="Orders today" :value="$ordersToday" description="New records today" />
+    <x-admin.stat-card label="Paid orders" :value="$paidOrders" description="Confirmed payments" tone="ink" />
+    <x-admin.stat-card label="Pending payments" :value="$pendingPayments" description="Need verification" tone="gold" />
+    <x-admin.stat-card label="Confirmed revenue" :value="app(\App\Services\MoneyFormatter::class)->format($revenue, config('commerce.currency'))" description="Confirmed only" />
+    <x-admin.stat-card label="Active enrollments" :value="$enrollments" description="Current course access" tone="ink" />
+    <x-admin.stat-card label="Waitlist" :value="$waitlists" description="Student interest" tone="gold" />
 </div>
 <div class="admin-quick-grid">
     <x-admin.card title="Orders" subtitle="Review historical order and payment records."><a class="button button-secondary button-small" href="{{ route('admin.commerce.orders') }}">Open orders <span aria-hidden="true">↗</span></a></x-admin.card>
