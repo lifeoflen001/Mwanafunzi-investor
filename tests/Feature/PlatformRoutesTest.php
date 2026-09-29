@@ -180,7 +180,7 @@ class PlatformRoutesTest extends TestCase
     {
         $this->get('/admin')->assertRedirect('/admin/login');
         $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin)->get('/admin')->assertSuccessful()->assertSee('Content management');
+        $this->actingAs($admin)->get('/admin')->assertSuccessful()->assertSee('Operational overview')->assertSee('Needs attention');
         $this->actingAs($admin)->get(route('admin.search', ['q' => 'Forex']))->assertSuccessful()->assertSee('Search the desk')->assertSee('Forex');
     }
 
@@ -335,7 +335,7 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Course access');
 
         $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Content management');
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Recent activity')->assertSee('Quick actions');
     }
 
     public function test_admin_shell_exposes_consistent_feedback_and_action_regions(): void
@@ -363,7 +363,14 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('admin-stat-card')
-            ->assertSee('admin-page-header-actions');
+            ->assertSee('admin-page-header-actions')
+            ->assertSee('Operational overview')
+            ->assertSee('Needs attention')
+            ->assertSee('Recent activity')
+            ->assertSee('Recent enquiries')
+            ->assertSee('Platform overview')
+            ->assertSee('New page')
+            ->assertSee('Upload media');
         $this->actingAs($admin)->get(route('admin.commerce.dashboard'))
             ->assertOk()
             ->assertSee('admin-stat-card')

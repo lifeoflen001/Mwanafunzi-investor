@@ -16,7 +16,9 @@ use App\Models\ProductImage;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
+use App\Models\AdminAuditLog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\CourseFaq;
@@ -32,15 +34,112 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        return view('admin.dashboard', [
-            'counts' => ['published pages' => Page::published()->count(), 'published courses' => Course::where('status', 'published')->count(), 'products' => Product::count(), 'articles' => Article::count(), 'media assets' => Media::count(), 'students' => User::where('is_admin', false)->count(), 'administrators' => User::where('is_admin', true)->count(), 'orders' => Order::count(), 'unread messages' => ContactMessage::whereNull('read_at')->count()],
-            'recentMessages' => ContactMessage::latest()->limit(6)->get(),
-            'recentContent' => collect([
-                ...Article::latest()->limit(3)->get()->map(fn ($item) => ['type' => 'Article', 'title' => $item->title, 'date' => $item->created_at]),
-                ...Course::latest()->limit(3)->get()->map(fn ($item) => ['type' => 'Course', 'title' => $item->title, 'date' => $item->created_at]),
-            ])->sortByDesc('date')->take(6),
-            'mediaStorage' => Media::sum('size'),
+        $confirmedPaymentStatuses = ['paid', 'partially_refunded'];
+        $publishedCourses = Course::where('status', 'published')->count();
+        $products = Product::count();
+        $students = User::where('is_admin', false)->count();
+        $orders = Order::count();
+        $unreadMessages = ContactMessage::whereNull('read_at')->count();
+        $confirmedRevenue = Order::whereIn('payment_status', $confirmedPaymentStatuses)->sum('total');
+        $mediaCount = Media::count();
+        $mediaStorage = Media::sum('size');
+
+        $recentEnquiries = ContactMessage::with('businessUnit')->latest()->limit(5)->get()->map(fn ($message) => [
+            'message' => $message,
+            'waiting' => in_array($message->status, ['new', 'in_progress'], true)
+                ? $message->created_at?->diffForHumans(now(), ['parts' => 2, 'short' => true])
+                : null,
         ]);
+        $recentAudit = AdminAuditLog::latest()->limit(6)->get()->map(fn ($log) => [
+            'label' => $this->activityLabel($log->action),
+            'title' => $log->summary,
+            'date' => $log->created_at,
+            'url' => $this->activityUrl($log),
+        ]);
+        $recentEnquiryActivity = $recentEnquiries->map(fn ($enquiry) => [
+            'label' => 'New enquiry received',
+            'title' => $enquiry['message']->name,
+            'date' => $enquiry['message']->created_at,
+            'url' => route('admin.messages.show', $enquiry['message']),
+        ]);
+        $recentOrderActivity = Order::latest()->limit(3)->get()->map(fn ($order) => [
+            'label' => 'Order created',
+            'title' => $order->order_number.' · '.$order->customer_name,
+            'date' => $order->created_at,
+            'url' => route('admin.commerce.orders.show', $order),
+        ]);
+        $recentActivity = $recentAudit->merge($recentEnquiryActivity)->merge($recentOrderActivity)->sortByDesc('date')->take(8)->values();
+        if ($recentActivity->isEmpty()) {
+            $recentActivity = collect([
+                ...Course::latest()->limit(3)->get()->map(fn ($course) => [
+                    'label' => $course->status === 'published' ? 'Course published' : 'Course record',
+                    'title' => $course->title,
+                    'date' => $course->updated_at ?: $course->created_at,
+                    'url' => route('admin.courses.edit', $course),
+                ]),
+                ...Article::latest()->limit(3)->get()->map(fn ($article) => [
+                    'label' => $article->status === 'published' ? 'Journal article published' : 'Journal record',
+                    'title' => $article->title,
+                    'date' => $article->updated_at ?: $article->created_at,
+                    'url' => route('admin.articles.edit', $article),
+                ]),
+            ])->sortByDesc('date')->take(8)->values();
+        }
+
+        return view('admin.dashboard', [
+            'primaryKpis' => [
+                ['label' => 'Students', 'value' => $students, 'description' => 'Customer accounts', 'url' => route('admin.customers')],
+                ['label' => 'Orders', 'value' => $orders, 'description' => 'Commerce records', 'url' => route('admin.commerce.orders')],
+                ['label' => 'Confirmed revenue', 'value' => app(\App\Services\MoneyFormatter::class)->format($confirmedRevenue, config('commerce.currency')), 'description' => 'Paid and verified', 'url' => route('admin.commerce.orders')],
+                ['label' => 'Unread enquiries', 'value' => $unreadMessages, 'description' => 'Needs attention', 'url' => route('admin.messages', ['status' => 'new'])],
+                ['label' => 'Published courses', 'value' => $publishedCourses, 'description' => 'Live learning', 'url' => route('admin.courses', ['status' => 'published'])],
+                ['label' => 'Products', 'value' => $products, 'description' => 'Tools and downloads', 'url' => route('admin.products')],
+            ],
+            'attentionItems' => collect([
+                ['label' => 'Unread enquiries', 'count' => $unreadMessages, 'action' => 'View inbox', 'url' => route('admin.messages', ['status' => 'new'])],
+                ['label' => 'Pending orders', 'count' => Order::whereIn('status', ['pending_payment', 'processing'])->count(), 'action' => 'View orders', 'url' => route('admin.commerce.orders')],
+                ['label' => 'Failed payments', 'count' => Payment::where('status', 'failed')->count(), 'action' => 'View payments', 'url' => route('admin.commerce.payments', ['status' => 'failed'])],
+                ['label' => 'Draft pages', 'count' => Page::where('status', 'draft')->count(), 'action' => 'Review pages', 'url' => route('admin.pages')],
+                ['label' => 'Products not available', 'count' => Product::whereIn('availability', ['waitlist', 'coming_soon'])->count(), 'action' => 'Review products', 'url' => route('admin.products')],
+            ])->filter(fn ($item) => $item['count'] > 0)->values(),
+            'recentActivity' => $recentActivity,
+            'recentEnquiries' => $recentEnquiries,
+            'platformOverview' => [
+                ['label' => 'Pages', 'value' => Page::count(), 'url' => route('admin.pages')],
+                ['label' => 'Products', 'value' => $products, 'url' => route('admin.products')],
+                ['label' => 'Articles', 'value' => Article::count(), 'url' => route('admin.articles')],
+                ['label' => 'Media assets', 'value' => $mediaCount, 'url' => route('admin.media')],
+                ['label' => 'Storage', 'value' => number_format($mediaStorage / 1048576, 1).' MB', 'url' => route('admin.media')],
+                ['label' => 'Administrators', 'value' => User::where('is_admin', true)->count(), 'url' => route('admin.administrators')],
+            ],
+        ]);
+    }
+
+    private function activityLabel(string $action): string
+    {
+        return match (true) {
+            Str::startsWith($action, 'course.') => 'Course activity',
+            Str::startsWith($action, 'product.') => 'Product activity',
+            Str::startsWith($action, 'article.') => 'Journal activity',
+            Str::startsWith($action, 'page.') => 'Page activity',
+            Str::startsWith($action, 'media.') => 'Media activity',
+            Str::startsWith($action, 'message.') => 'Enquiry activity',
+            Str::startsWith($action, 'settings.') => 'Settings updated',
+            default => 'Admin activity',
+        };
+    }
+
+    private function activityUrl(AdminAuditLog $log): ?string
+    {
+        return match (class_basename((string) $log->auditable_type)) {
+            'Course' => route('admin.courses'),
+            'Product' => route('admin.products'),
+            'Article' => route('admin.articles'),
+            'Page' => route('admin.pages'),
+            'Media' => route('admin.media'),
+            'ContactMessage' => route('admin.messages'),
+            default => null,
+        };
     }
 
     public function courses(Request $request)
