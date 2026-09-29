@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('title', 'Testimonials')
+@section('portal-heading', 'Testimonials')
+@section('content')
+<x-admin.page-header eyebrow="Portfolio / Social proof" title="Testimonials" description="Only publish client perspective that has been supplied and approved. Privacy controls are available per record." action-url="{{ route('admin.testimonials.create') }}" action-label="Add testimonial" />
+<x-admin.card class="admin-table-card"><div class="admin-table"><div class="admin-table-head"><span>Client</span><span>Project</span><span>Status</span><span>Order</span><span>Updated</span><span></span></div>@forelse($testimonials as $testimonial)<div class="admin-table-row"><span><strong>{{ $testimonial->anonymous_display ? 'Anonymous client' : $testimonial->client_name }}</strong><small>{{ $testimonial->company ?: 'Company not shown' }}</small></span><span>{{ $testimonial->project?->title ?: 'Not linked' }}</span><span><x-admin.status-badge :status="$testimonial->is_published ? 'published' : 'draft'" /> @if($testimonial->is_featured)<small>Featured</small>@endif</span><span>{{ $testimonial->sort_order }}</span><span>{{ $testimonial->updated_at?->format('M j, Y') }}</span><x-admin.action-menu><a href="{{ route('admin.testimonials.edit', $testimonial) }}">Edit testimonial</a><form method="post" action="{{ route('admin.testimonials.destroy', $testimonial) }}" data-confirm="Remove this testimonial?">@csrf @method('delete')<button type="submit">Remove</button></form></x-admin.action-menu></div>@empty<x-admin.empty-state title="No testimonials registered." description="The public site will not show a testimonial section until approved records exist." />@endforelse</div></x-admin.card>
+{{ $testimonials->links() }}
+@endsection

@@ -57,6 +57,9 @@
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Platform</p>
                 <nav class="portal-nav" aria-label="Platform navigation">
+                    <a class="{{ request()->routeIs('admin.services*') ? 'is-active' : '' }}" href="{{ route('admin.services') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Services</a>
+                    <a class="{{ request()->routeIs('admin.projects*') ? 'is-active' : '' }}" href="{{ route('admin.projects') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Projects</a>
+                    <a class="{{ request()->routeIs('admin.testimonials*') ? 'is-active' : '' }}" href="{{ route('admin.testimonials') }}"><span class="portal-nav-icon" aria-hidden="true">“</span>Testimonials</a>
                     <a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span>Pages</a>
                     <a class="{{ request()->routeIs('admin.policies*') ? 'is-active' : '' }}" href="{{ route('admin.policies') }}"><span class="portal-nav-icon" aria-hidden="true">§</span>Policies</a>
                     <a class="{{ request()->routeIs('admin.redirects*') ? 'is-active' : '' }}" href="{{ route('admin.redirects') }}"><span class="portal-nav-icon" aria-hidden="true">↪</span>Redirects</a>

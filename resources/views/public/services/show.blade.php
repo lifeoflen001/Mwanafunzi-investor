@@ -1,0 +1,18 @@
+@extends('layouts.public')
+
+@php($heroImage = $service->featured_image ? \App\Support\PublicHero::candidate($service->featured_image) : null)
+@section('title', $service->seo_title ?: $service->title.' — Mwanafunzi Investor')
+@section('description', $service->seo_description ?: $service->short_description)
+@section('canonical', $service->canonical_url ?: route('services.show', $service))
+@section('og_title', $service->seo_title ?: $service->title)
+@section('og_description', $service->seo_description ?: $service->short_description)
+@if($heroImage) @section('og_image', $heroImage['url']) @endif
+
+@section('content')
+    <x-public-hero class="public-page-hero service-detail-hero" :eyebrow="$service->icon ?: 'Service'" :title="$service->title" :summary="$service->short_description" :image="$service->featured_image" :overlay="'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
+        <a class="button button-accent" href="{{ $service->cta_url ?: route('contact', ['module' => 'development', 'service' => $service->slug]) }}">{{ $service->cta_label ?: 'Discuss your project' }} <span aria-hidden="true">↗</span></a>
+    </x-public-hero>
+    <section class="platform-section"><div class="container service-detail-grid"><div class="editorial-copy">@if($service->detailed_description)<div class="rich-copy">{!! \App\Support\RichText::render($service->detailed_description) !!}</div>@endif @if($service->included_features)<h2>What is included</h2><ul class="detail-list">@foreach($service->included_features as $feature)<li>{{ $feature }}</li>@endforeach</ul>@endif</div><aside class="service-detail-aside"><div><span>Pricing</span><strong>{{ $service->pricingText() }}</strong></div>@if($service->delivery_estimate)<div><span>Typical delivery</span><strong>{{ $service->delivery_estimate }}</strong></div>@endif<a class="button button-dark" href="{{ $service->cta_url ?: route('contact', ['module' => 'development', 'service' => $service->slug]) }}">{{ $service->cta_label ?: 'Discuss your project' }} <span aria-hidden="true">↗</span></a></aside></div></section>
+    @if($service->projects->isNotEmpty())<section class="platform-section platform-muted"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Related work</p><h2>Selected projects.</h2></div></div><div class="portfolio-project-grid">@foreach($service->projects as $project)<a class="portfolio-project-card" href="{{ route('projects.show', $project) }}">@if($project->featured_image)<img src="{{ \App\Support\PublicHero::candidate($project->featured_image)['url'] ?? asset(config('public.hero_defaults.default')) }}" alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Case study' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div></section>@endif
+    @if($relatedServices->isNotEmpty())<section class="platform-section"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Continue exploring</p><h2>Other services.</h2></div></div><div class="portfolio-service-grid">@foreach($relatedServices as $related)<a class="portfolio-service-card" href="{{ route('services.show', $related) }}"><h3>{{ $related->title }}</h3><p>{{ $related->short_description }}</p><span class="text-link">View service <span aria-hidden="true">→</span></span></a>@endforeach</div></div></section>@endif
+@endsection

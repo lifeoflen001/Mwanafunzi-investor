@@ -24,6 +24,9 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminCustomerController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AdminNotificationController;
+use App\Http\Controllers\AdminServiceController;
+use App\Http\Controllers\AdminProjectController;
+use App\Http\Controllers\AdminTestimonialController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -33,6 +36,10 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/creative-studio', 'module')->defaults('slug', 'studio')->name('creative-studio');
     Route::get('/development', 'module')->defaults('slug', 'development')->name('development');
     Route::get('/studio', 'module')->defaults('slug', 'studio')->name('studio');
+    Route::get('/services', 'services')->name('services');
+    Route::get('/services/{service:slug}', 'service')->name('services.show');
+    Route::get('/projects', 'projects')->name('projects');
+    Route::get('/projects/{project:slug}', 'project')->name('projects.show');
     Route::get('/learn', 'learn')->name('learn');
     Route::get('/learn/{topic:slug}', 'topic')->name('learn.show');
     Route::get('/courses', 'courses')->name('courses');
@@ -201,6 +208,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/social-links', [AdminTaxonomyController::class, 'socialLinkStore'])->name('social-links.store');
         Route::put('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkUpdate'])->name('social-links.update');
         Route::delete('/social-links/{socialLink}', [AdminTaxonomyController::class, 'socialLinkDestroy'])->name('social-links.destroy');
+        Route::get('/services', [AdminServiceController::class, 'index'])->name('services');
+        Route::get('/services/create', [AdminServiceController::class, 'create'])->name('services.create');
+        Route::post('/services', [AdminServiceController::class, 'store'])->name('services.store');
+        Route::get('/services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [AdminServiceController::class, 'destroy'])->name('services.destroy');
+        Route::get('/projects', [AdminProjectController::class, 'index'])->name('projects');
+        Route::get('/projects/create', [AdminProjectController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [AdminProjectController::class, 'store'])->name('projects.store');
+        Route::get('/projects/{project}/edit', [AdminProjectController::class, 'edit'])->name('projects.edit');
+        Route::put('/projects/{project}', [AdminProjectController::class, 'update'])->name('projects.update');
+        Route::delete('/projects/{project}', [AdminProjectController::class, 'destroy'])->name('projects.destroy');
+        Route::get('/testimonials', [AdminTestimonialController::class, 'index'])->name('testimonials');
+        Route::get('/testimonials/create', [AdminTestimonialController::class, 'create'])->name('testimonials.create');
+        Route::post('/testimonials', [AdminTestimonialController::class, 'store'])->name('testimonials.store');
+        Route::get('/testimonials/{testimonial}/edit', [AdminTestimonialController::class, 'edit'])->name('testimonials.edit');
+        Route::put('/testimonials/{testimonial}', [AdminTestimonialController::class, 'update'])->name('testimonials.update');
+        Route::delete('/testimonials/{testimonial}', [AdminTestimonialController::class, 'destroy'])->name('testimonials.destroy');
         Route::get('/commerce', [AdminCommerceController::class, 'dashboard'])->name('commerce.dashboard');
         Route::get('/commerce/orders', [AdminCommerceController::class, 'orders'])->name('commerce.orders');
         Route::get('/commerce/orders/{order}', [AdminCommerceController::class, 'order'])->name('commerce.orders.show');

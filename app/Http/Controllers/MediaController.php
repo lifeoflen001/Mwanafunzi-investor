@@ -103,6 +103,10 @@ class MediaController extends Controller
             || LearningTopic::where('image', $media->path)->exists()
             || \App\Models\Page::where(fn ($query) => $query->where('hero_image', $media->path)->orWhere('og_image', $media->path))->exists()
             || \App\Models\PageSection::where('image', $media->path)->exists()
+            || \App\Models\Project::where(fn ($query) => $query->where('featured_image', $media->path)->orWhere('og_image', $media->path))->exists()
+            || \App\Models\Project::whereHas('gallery', fn ($query) => $query->where('media.path', $media->path))->exists()
+            || \App\Models\Service::where(fn ($query) => $query->where('featured_image', $media->path)->orWhere('og_image', $media->path))->exists()
+            || \App\Models\Testimonial::where(fn ($query) => $query->where('client_photo', $media->path)->orWhere('company_logo', $media->path))->exists()
             || LearningTopic::where(fn ($query) => $query->where('image', $media->path)->orWhere('hero_image', $media->path)->orWhere('og_image', $media->path))->exists()
             || SiteSetting::where('value', $media->path)->exists();
         if ($inUse) {

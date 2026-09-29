@@ -28,6 +28,10 @@ class Media extends Model
             + ProductImage::where('path', $this->path)->count()
             + Page::where(fn ($query) => $query->where('hero_image', $this->path)->orWhere('og_image', $this->path))->count()
             + PageSection::where('image', $this->path)->count()
+            + Project::where(fn ($query) => $query->where('featured_image', $this->path)->orWhere('og_image', $this->path))->count()
+            + Project::whereHas('gallery', fn ($query) => $query->where('media.path', $this->path))->count()
+            + Service::where(fn ($query) => $query->where('featured_image', $this->path)->orWhere('og_image', $this->path))->count()
+            + Testimonial::where(fn ($query) => $query->where('client_photo', $this->path)->orWhere('company_logo', $this->path))->count()
             + SiteSetting::where('value', $this->path)->count()
         );
     }

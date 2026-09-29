@@ -10,6 +10,9 @@ use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
 use App\Models\Page;
+use App\Models\Project;
+use App\Models\Service;
+use App\Models\Testimonial;
 use App\Models\Redirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -46,7 +49,38 @@ class PublicSiteController extends Controller
             'courses' => Course::published()->orderBy('sort_order')->get(),
             'products' => Product::available()->orderBy('sort_order')->get(),
             'featuredArticle' => Article::published()->with('category')->where('is_featured', true)->latest('published_at')->first(),
+            'featuredServices' => Service::active()->where('is_featured', true)->orderBy('sort_order')->limit(4)->get(),
+            'featuredProjects' => Project::published()->where('is_featured', true)->with(['services', 'gallery'])->orderBy('display_order')->limit(4)->get(),
+            'featuredTestimonials' => Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(3)->get(),
         ]);
+    }
+
+    public function services()
+    {
+        return view('public.services.index', [
+            'services' => Service::active()->with('projects')->orderBy('sort_order')->orderBy('title')->get(),
+            'featuredProjects' => Project::published()->where('is_featured', true)->with('services')->orderBy('display_order')->limit(3)->get(),
+            'page' => $this->cmsPage('services'),
+        ]);
+    }
+
+    public function service(Service $service)
+    {
+        abort_unless($service->is_active, 404);
+        $service->load(['projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
+        return view('public.services.show', ['service' => $service, 'relatedServices' => Service::active()->whereKeyNot($service->id)->orderBy('sort_order')->limit(3)->get()]);
+    }
+
+    public function projects()
+    {
+        return view('public.projects.index', ['projects' => Project::published()->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12), 'page' => $this->cmsPage('projects')]);
+    }
+
+    public function project(Project $project)
+    {
+        abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
+        $project->load(['services', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
+        return view('public.projects.show', ['project' => $project, 'relatedProjects' => Project::published()->whereKeyNot($project->id)->with('services')->orderBy('display_order')->limit(3)->get()]);
     }
 
     public function academy()
@@ -198,7 +232,7 @@ class PublicSiteController extends Controller
     public function sitemap()
     {
         $urls = collect([
-            route('home'), route('forex-academy'), route('digital-systems'), route('creative-studio'), route('learn'), route('courses'), route('tools'), route('journal'), route('about'), route('contact'), route('student-of-money'),
+            route('home'), route('forex-academy'), route('digital-systems'), route('creative-studio'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('journal'), route('about'), route('contact'), route('student-of-money'),
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
         $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));
@@ -206,6 +240,8 @@ class PublicSiteController extends Controller
         $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
         $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
         $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('journal.show', $article)));
+        $urls = $urls->merge(Service::active()->get()->map(fn ($service) => route('services.show', $service)));
+        $urls = $urls->merge(Project::published()->get()->map(fn ($project) => route('projects.show', $project)));
         $urls = $urls->merge(Page::published()->whereNotNull('slug')->whereNotIn('key', ['learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->get()->map(fn ($page) => route('pages.show', $page)));
         $xml = view('seo.sitemap', ['urls' => $urls])->render();
         return response($xml)->header('Content-Type', 'application/xml');
