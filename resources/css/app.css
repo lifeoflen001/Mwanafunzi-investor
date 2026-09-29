@@ -1294,3 +1294,22 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .admin-portal .portal-main { padding-top:64px; }
     .admin-portal .portal-topbar,.admin-portal .admin-shell.is-sidebar-collapsed .portal-topbar { left:0; }
 }
+
+.admin-avatar-upload { flex-wrap:wrap; align-items:center; }
+.admin-avatar-upload small { flex-basis:100%; color:var(--admin-muted,#777870); font-size:10px; text-align:left; }
+.admin-avatar-crop-modal { position:fixed; inset:0; z-index:var(--admin-z-toast,100); display:grid; place-items:center; padding:20px; background:rgba(22,27,24,.58); }
+.admin-avatar-crop-modal[hidden] { display:none; }
+.admin-avatar-crop-card { width:min(100%,470px); padding:22px; border:1px solid var(--admin-border,#dfddd6); border-radius:var(--admin-radius,4px); background:var(--admin-card,#fffdfa); box-shadow:var(--admin-shadow-popover); }
+.admin-avatar-crop-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.admin-avatar-crop-header h2 { margin:0; color:var(--admin-text,#20221f); font-size:20px; }
+.admin-avatar-crop-close { width:30px; height:30px; padding:0; border:1px solid var(--admin-border,#dfddd6); border-radius:3px; background:transparent; color:var(--admin-muted,#777870); cursor:pointer; font-size:20px; line-height:1; }
+.admin-avatar-crop-help { margin:8px 0 16px; color:var(--admin-muted,#777870); font-size:12px; line-height:1.5; }
+.admin-avatar-crop-canvas-wrap { width:min(100%,360px); margin:0 auto; overflow:hidden; border-radius:50%; background:#202521; box-shadow:0 0 0 1px var(--admin-border,#dfddd6); }
+.admin-avatar-crop-canvas-wrap canvas { display:block; width:100%; height:auto; cursor:grab; touch-action:none; }
+.admin-avatar-crop-canvas-wrap canvas:active { cursor:grabbing; }
+.admin-avatar-zoom { display:grid; gap:7px; margin-top:18px; color:var(--admin-muted,#777870); font:600 11px var(--sans); }
+.admin-avatar-zoom input { width:100%; accent-color:var(--admin-orange,var(--copper)); }
+@media (max-width:760px) {
+    .admin-avatar-crop-card { padding:17px; }
+    .admin-avatar-crop-canvas-wrap { width:min(100%,320px); }
+}

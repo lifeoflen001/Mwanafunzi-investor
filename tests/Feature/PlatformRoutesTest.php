@@ -396,7 +396,14 @@ class PlatformRoutesTest extends TestCase
         $this->assertNotNull($message->fresh()->read_at);
 
         Storage::fake('public');
-        $this->actingAs($admin)->get(route('admin.profile'))->assertOk()->assertSee('Personal information')->assertSee('Password and security');
+        $this->actingAs($admin)
+            ->get(route('admin.profile'))
+            ->assertOk()
+            ->assertSee('Personal information')
+            ->assertSee('Password and security')
+            ->assertSee('Upload cropped photo')
+            ->assertSee('data-avatar-crop-modal')
+            ->assertSee('data-avatar-crop-canvas');
         $this->actingAs($admin)->put(route('admin.profile.update'), ['name' => 'Desk Lead', 'phone' => '+255700000000', 'job_title' => 'Platform lead', 'department' => 'Operations', 'bio' => 'A careful administrator.'])->assertRedirect();
         $this->assertDatabaseHas('users', ['id' => $admin->id, 'name' => 'Desk Lead', 'job_title' => 'Platform lead']);
         $this->actingAs($admin)->post(route('admin.profile.avatar.update'), ['avatar' => UploadedFile::fake()->image('avatar.png')])->assertRedirect();
