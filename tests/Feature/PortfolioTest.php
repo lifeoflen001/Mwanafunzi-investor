@@ -17,6 +17,7 @@ class PortfolioTest extends TestCase
 
     public function test_services_and_projects_are_admin_managed_and_publicly_visible(): void
     {
+        $this->get(route('services'))->assertOk()->assertSee(route('forex-academy'))->assertSee(route('digital-systems'))->assertSee(route('creative-studio'));
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)->post(route('admin.services.store'), [

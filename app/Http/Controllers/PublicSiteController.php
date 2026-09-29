@@ -60,6 +60,8 @@ class PublicSiteController extends Controller
         return view('public.services.index', [
             'services' => Service::active()->with('projects')->orderBy('sort_order')->orderBy('title')->get(),
             'featuredProjects' => Project::published()->where('is_featured', true)->with('services')->orderBy('display_order')->limit(3)->get(),
+            'businessUnits' => BusinessUnit::active()->orderBy('sort_order')->get(),
+            'serviceRoutes' => ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')],
             'page' => $this->cmsPage('services'),
         ]);
     }

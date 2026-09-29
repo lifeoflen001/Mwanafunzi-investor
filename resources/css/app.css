@@ -910,6 +910,15 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 
 /* Portfolio services, case studies and factual social proof. */
 .portfolio-service-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:16px; }
+.portfolio-division-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:1px; background:var(--line); }
+.portfolio-division-card { display:flex; flex-direction:column; min-height:230px; padding:25px; background:var(--paper); color:var(--ink); transition:background .2s ease, color .2s ease; }
+.portfolio-division-card:hover { background:var(--night); color:#fff; }
+.portfolio-division-card>span { color:var(--copper-dark); font:11px var(--mono); }
+.portfolio-division-card h3 { margin:38px 0 10px; font:500 clamp(23px, 2.6vw, 35px)/1 var(--serif); letter-spacing:-.04em; }
+.portfolio-division-card p { margin:0; max-width:340px; color:var(--muted); font-size:13px; }
+.portfolio-division-card:hover p { color:rgba(255,255,255,.68); }
+.portfolio-division-card strong { margin-top:auto; padding-top:25px; color:var(--copper-dark); font:600 11px var(--mono); letter-spacing:.03em; }
+.portfolio-division-card:hover strong { color:var(--copper); }
 .portfolio-service-card { display:flex; flex-direction:column; min-height:245px; padding:25px; border:1px solid var(--line); background:var(--white); color:var(--ink); transition:border-color .2s ease, transform .2s ease; }
 .portfolio-service-card:hover,.portfolio-project-card:hover { border-color:var(--copper); transform:translateY(-3px); }
 .portfolio-service-card h3 { margin:28px 0 10px; font:500 clamp(22px, 2.3vw, 31px)/1.05 var(--serif); letter-spacing:-.04em; }
@@ -982,7 +991,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .project-gallery-editor { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid var(--admin-border,#dfddd6); }
 
 @media (max-width: 900px) {
-    .portfolio-service-grid,.portfolio-project-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .portfolio-service-grid,.portfolio-division-grid,.portfolio-project-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     .portfolio-process-grid { grid-template-columns:repeat(2, 1fr); }
     .service-detail-grid,.project-detail-layout { grid-template-columns:1fr; gap:35px; }
     .service-detail-aside,.project-detail-aside { max-width:520px; }
@@ -990,7 +999,7 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .portfolio-logo-strip>div { grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
-    .portfolio-service-grid,.portfolio-project-grid,.portfolio-project-grid-large,.portfolio-process-grid,.project-feature-list,.project-results,.project-gallery { grid-template-columns:1fr; }
+    .portfolio-service-grid,.portfolio-division-grid,.portfolio-project-grid,.portfolio-project-grid-large,.portfolio-process-grid,.project-feature-list,.project-results,.project-gallery { grid-template-columns:1fr; }
     .portfolio-service-card { min-height:210px; padding:20px; }
     .portfolio-project-card h3 { font-size:26px; }
     .project-meta-row { gap:18px; }
