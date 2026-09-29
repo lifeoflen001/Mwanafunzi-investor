@@ -14,6 +14,7 @@ use App\Models\Page;
 use App\Models\NavigationItem;
 use App\Models\LearningTopic;
 use App\Models\User;
+use App\Models\AdminAuditLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -180,7 +181,8 @@ class PlatformRoutesTest extends TestCase
     {
         $this->get('/admin')->assertRedirect('/admin/login');
         $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin)->get('/admin')->assertSuccessful()->assertSee('Operational overview')->assertSee('Needs attention');
+        AdminAuditLog::create(['user_id' => $admin->id, 'action' => 'course.updated', 'summary' => 'A real dashboard event']);
+        $this->actingAs($admin)->get('/admin')->assertSuccessful()->assertSee('Operational overview')->assertSee('Needs attention')->assertSee('A real dashboard event');
         $this->actingAs($admin)->get(route('admin.search', ['q' => 'Forex']))->assertSuccessful()->assertSee('Search the desk')->assertSee('Forex');
     }
 

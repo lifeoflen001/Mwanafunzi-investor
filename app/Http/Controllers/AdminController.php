@@ -50,12 +50,12 @@ class AdminController extends Controller
                 ? $message->created_at?->diffForHumans(now(), ['parts' => 2, 'short' => true])
                 : null,
         ]);
-        $recentAudit = AdminAuditLog::latest()->limit(6)->get()->map(fn ($log) => [
+        $recentAudit = collect(AdminAuditLog::latest()->limit(6)->get()->map(fn ($log) => [
             'label' => $this->activityLabel($log->action),
             'title' => $log->summary,
             'date' => $log->created_at,
             'url' => $this->activityUrl($log),
-        ]);
+        ])->all());
         $recentEnquiryActivity = $recentEnquiries->map(fn ($enquiry) => [
             'label' => 'New enquiry received',
             'title' => $enquiry['message']->name,
