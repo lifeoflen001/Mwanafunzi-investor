@@ -9,6 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#202a27">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <title>@yield('title', 'Admin') — Mwanafunzi Investor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
@@ -19,7 +20,7 @@
         <aside class="portal-sidebar admin-sidebar" aria-label="Admin navigation" id="admin-sidebar" data-admin-sidebar>
             <div class="admin-sidebar-head">
                 <a class="portal-brand" href="{{ route('admin.dashboard') }}" aria-label="Mwanafunzi Investor admin portal">
-                    <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+                    <img class="brand-icon" src="{{ asset('favicon.svg') }}" alt="">
                     <span><strong>MWANAFUNZI</strong><small>ADMIN DESK</small></span>
                 </a>
                 <button class="admin-sidebar-close" type="button" aria-label="Close admin navigation" data-admin-sidebar-close>×</button>

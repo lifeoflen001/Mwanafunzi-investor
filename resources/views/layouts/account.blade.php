@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Your Mwanafunzi Investor student portal.">
+    <meta name="theme-color" content="#202a27">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <title>@yield('title', 'Student portal') — Mwanafunzi Investor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
@@ -15,7 +17,7 @@
     <div class="portal-shell">
         <aside class="portal-sidebar" aria-label="Student portal navigation">
             <a class="portal-brand" href="{{ route('account.dashboard') }}" aria-label="Mwanafunzi Investor student portal">
-                <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+                <img class="brand-icon" src="{{ asset('favicon.svg') }}" alt="">
                 <span><strong>MWANAFUNZI</strong><small>STUDENT PORTAL</small></span>
             </a>
             <p class="portal-section-label">Workspace</p>
