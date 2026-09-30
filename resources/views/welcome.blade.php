@@ -17,10 +17,10 @@
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.home'));
     $seoDescription = \App\Models\SiteSetting::getValue('default_seo_description', 'Financial education for systematic trading, probability, risk management and disciplined portfolio thinking.');
     $riskDisclaimer = \App\Models\SiteSetting::getValue('risk_disclaimer', 'Educational content only. This is not personalised financial advice. Trading involves risk.');
-    $businessUnits = \App\Models\BusinessUnit::query()->active()->orderBy('sort_order')->get();
-    $headerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get();
-    $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
-    $socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
+    $businessUnits = \App\Support\PublicSiteData::businessUnits();
+    $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
+    $footerNavigation = \App\Support\PublicSiteData::footerNavigation();
+    $socialLinks = \App\Support\PublicSiteData::socialLinks();
     $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
     $brandIntro = $homeSections->get('philosophy');
     $framework = $homeSections->get('framework');
@@ -96,7 +96,7 @@
         <section class="mother-divisions section" id="divisions"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span>The Mwanafunzi ecosystem</p><h2>Choose where the work <em>takes you.</em></h2></div><p class="body-copy">One brand, three focused divisions. Start with the part of the work that matters most to you now.</p></div><div class="mother-service-list">@foreach($businessUnits as $businessUnit)<x-service-preview :index="str_pad($loop->iteration, 2, '0', STR_PAD_LEFT)" :title="$businessUnit->name" :summary="$businessUnit->description" :href="$serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name)" :image="$serviceImages[$businessUnit->slug] ?? config('public.hero_defaults.default')" :eyebrow="$serviceEyebrows[$businessUnit->slug] ?? 'Explore'" :tone="$businessUnit->slug" />@endforeach</div></div></section>
 
         @if($featuredProjects->isNotEmpty())
-            <section class="mother-home-feature section" id="selected-work"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p><h2>Systems and digital products with a point of view.</h2></div><a class="text-link" href="{{ route('projects') }}">View all projects <span aria-hidden="true">→</span></a></div><div class="portfolio-project-grid">@foreach($featuredProjects as $project)<a class="portfolio-project-card" href="{{ route('projects.show', $project) }}">@if($project->featured_image)<img src="{{ \App\Support\PublicHero::candidate($project->featured_image)['url'] ?? asset(config('public.hero_defaults.default')) }}" alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Case study' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div></section>
+            <section class="mother-home-feature section" id="selected-work"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p><h2>Systems and digital products with a point of view.</h2></div><a class="text-link" href="{{ route('projects') }}">View all projects <span aria-hidden="true">→</span></a></div><div class="portfolio-project-grid">@foreach($featuredProjects as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="portfolio-project-card" href="{{ route('projects.show', $project) }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" @if($projectImage['srcset']) srcset="{{ $projectImage['srcset'] }}" sizes="(max-width: 760px) 100vw, 50vw" @endif alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Case study' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div></section>
         @endif
 
         @if($featuredServices->isNotEmpty())

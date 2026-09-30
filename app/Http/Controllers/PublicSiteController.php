@@ -17,6 +17,7 @@ use App\Models\Redirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
+use App\Support\PublicHero;
 
 class PublicSiteController extends Controller
 {
@@ -43,23 +44,29 @@ class PublicSiteController extends Controller
     public function home()
     {
         $homePage = $this->cmsPage('home');
+        $featuredProjects = Project::published()->where('is_featured', true)->with(['services', 'gallery'])->orderBy('display_order')->limit(4)->get();
+        $featuredServices = Service::active()->where('is_featured', true)->orderBy('sort_order')->limit(4)->get();
+        PublicHero::preloadMedia($featuredProjects->pluck('featured_image')->merge($featuredServices->pluck('featured_image')));
+
         return view('welcome', [
             'homePage' => $homePage,
-            'learningTopics' => LearningTopic::query()->where('is_published', true)->orderBy('sort_order')->get(),
-            'courses' => Course::published()->orderBy('sort_order')->get(),
-            'products' => Product::available()->orderBy('sort_order')->get(),
+            'products' => Product::available()->orderBy('sort_order')->limit(3)->get(),
             'featuredArticle' => Article::published()->with('category')->where('is_featured', true)->latest('published_at')->first(),
-            'featuredServices' => Service::active()->where('is_featured', true)->orderBy('sort_order')->limit(4)->get(),
-            'featuredProjects' => Project::published()->where('is_featured', true)->with(['services', 'gallery'])->orderBy('display_order')->limit(4)->get(),
+            'featuredServices' => $featuredServices,
+            'featuredProjects' => $featuredProjects,
             'featuredTestimonials' => Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(3)->get(),
         ]);
     }
 
     public function services()
     {
+        $services = Service::active()->with('projects')->orderBy('sort_order')->orderBy('title')->get();
+        $featuredProjects = Project::published()->where('is_featured', true)->with('services')->orderBy('display_order')->limit(3)->get();
+        PublicHero::preloadMedia($services->pluck('featured_image')->merge($featuredProjects->pluck('featured_image')));
+
         return view('public.services.index', [
-            'services' => Service::active()->with('projects')->orderBy('sort_order')->orderBy('title')->get(),
-            'featuredProjects' => Project::published()->where('is_featured', true)->with('services')->orderBy('display_order')->limit(3)->get(),
+            'services' => $services,
+            'featuredProjects' => $featuredProjects,
             'businessUnits' => BusinessUnit::active()->orderBy('sort_order')->get(),
             'serviceRoutes' => ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')],
             'page' => $this->cmsPage('services'),
@@ -70,19 +77,24 @@ class PublicSiteController extends Controller
     {
         abort_unless($service->is_active, 404);
         $service->load(['projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
+        PublicHero::preloadMedia([$service->featured_image, ...$service->projects->pluck('featured_image')->all()]);
         return view('public.services.show', ['service' => $service, 'relatedServices' => Service::active()->whereKeyNot($service->id)->orderBy('sort_order')->limit(3)->get()]);
     }
 
     public function projects()
     {
-        return view('public.projects.index', ['projects' => Project::published()->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12), 'page' => $this->cmsPage('projects')]);
+        $projects = Project::published()->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12);
+        PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
+        return view('public.projects.index', ['projects' => $projects, 'page' => $this->cmsPage('projects')]);
     }
 
     public function project(Project $project)
     {
         abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
         $project->load(['services', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
-        return view('public.projects.show', ['project' => $project, 'relatedProjects' => Project::published()->whereKeyNot($project->id)->with('services')->orderBy('display_order')->limit(3)->get()]);
+        $relatedProjects = Project::published()->whereKeyNot($project->id)->with('services')->orderBy('display_order')->limit(3)->get();
+        PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
+        return view('public.projects.show', ['project' => $project, 'relatedProjects' => $relatedProjects]);
     }
 
     public function academy()

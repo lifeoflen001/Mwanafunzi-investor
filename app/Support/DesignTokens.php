@@ -53,9 +53,8 @@ final class DesignTokens
     public static function values(): array
     {
         $definitions = static::definitions();
-        $stored = SiteSetting::query()
-            ->whereIn('key', collect($definitions)->keys()->map(fn (string $key) => 'design_'.$key))
-            ->pluck('value', 'key');
+        $stored = collect(SiteSetting::valuesForKeys(collect($definitions)->keys()->map(fn (string $key) => 'design_'.$key)->all()))
+            ->mapWithKeys(fn (array $setting, string $key) => [$key => $setting['value']]);
 
         return collect($definitions)->mapWithKeys(function (array $definition, string $key) use ($stored) {
             $value = $stored->get('design_'.$key, $definition['default']);

@@ -33,11 +33,11 @@
     $socialImageData = \App\Support\PublicHero::candidate($socialImage);
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
     $headOgImage = trim($__env->yieldContent('og_image')) ?: $socialImageUrl;
-    $businessUnits = \App\Models\BusinessUnit::query()->active()->orderBy('sort_order')->get();
+    $businessUnits = \App\Support\PublicSiteData::businessUnits();
     $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
-    $headerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get();
-    $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
-    $socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
+    $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
+    $footerNavigation = \App\Support\PublicSiteData::footerNavigation();
+    $socialLinks = \App\Support\PublicSiteData::socialLinks();
 @endphp
 <!DOCTYPE html>
 <html lang="en">

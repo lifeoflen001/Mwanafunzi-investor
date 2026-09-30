@@ -7,6 +7,7 @@ use App\Models\Page;
 use App\Support\AdminAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Support\PublicSiteData;
 
 class AdminBusinessUnitController extends Controller
 {
@@ -24,6 +25,7 @@ class AdminBusinessUnitController extends Controller
         $data['slug'] = Str::slug($data['slug']);
         $data['is_active'] = $request->boolean('is_active');
         $businessUnit->update($data);
+        PublicSiteData::forgetCache();
 
         AdminAudit::record('business_unit.updated', 'Updated business module '.$businessUnit->name, $businessUnit);
 

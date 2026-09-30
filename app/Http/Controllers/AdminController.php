@@ -29,20 +29,21 @@ use App\Support\AdminAudit;
 use App\Support\HeroFocalPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $confirmedPaymentStatuses = ['paid', 'partially_refunded'];
-        $publishedCourses = Course::where('status', 'published')->count();
-        $products = Product::count();
-        $students = User::where('is_admin', false)->count();
-        $orders = Order::count();
-        $unreadMessages = ContactMessage::whereNull('read_at')->count();
-        $confirmedRevenue = Order::whereIn('payment_status', $confirmedPaymentStatuses)->sum('total');
-        $mediaCount = Media::count();
-        $mediaStorage = Media::sum('size');
+        $metrics = $this->dashboardMetrics();
+        $publishedCourses = $metrics['published_courses'];
+        $products = $metrics['products'];
+        $students = $metrics['students'];
+        $orders = $metrics['orders'];
+        $unreadMessages = $metrics['unread_messages'];
+        $confirmedRevenue = $metrics['confirmed_revenue'];
+        $mediaCount = $metrics['media_count'];
+        $mediaStorage = $metrics['media_storage'];
 
         $recentEnquiries = ContactMessage::with('businessUnit')->latest()->limit(5)->get()->map(fn ($message) => [
             'message' => $message,
@@ -97,22 +98,49 @@ class AdminController extends Controller
             ],
             'attentionItems' => collect([
                 ['label' => 'Unread enquiries', 'count' => $unreadMessages, 'action' => 'View inbox', 'url' => route('admin.messages', ['status' => 'new'])],
-                ['label' => 'Pending orders', 'count' => Order::whereIn('status', ['pending_payment', 'processing'])->count(), 'action' => 'View orders', 'url' => route('admin.commerce.orders')],
-                ['label' => 'Failed payments', 'count' => Payment::where('status', 'failed')->count(), 'action' => 'View payments', 'url' => route('admin.commerce.payments', ['status' => 'failed'])],
-                ['label' => 'Draft pages', 'count' => Page::where('status', 'draft')->count(), 'action' => 'Review pages', 'url' => route('admin.pages')],
-                ['label' => 'Products not available', 'count' => Product::whereIn('availability', ['waitlist', 'coming_soon'])->count(), 'action' => 'Review products', 'url' => route('admin.products')],
+                ['label' => 'Pending orders', 'count' => $metrics['pending_orders'], 'action' => 'View orders', 'url' => route('admin.commerce.orders')],
+                ['label' => 'Failed payments', 'count' => $metrics['failed_payments'], 'action' => 'View payments', 'url' => route('admin.commerce.payments', ['status' => 'failed'])],
+                ['label' => 'Draft pages', 'count' => $metrics['draft_pages'], 'action' => 'Review pages', 'url' => route('admin.pages')],
+                ['label' => 'Products not available', 'count' => $metrics['unavailable_products'], 'action' => 'Review products', 'url' => route('admin.products')],
             ])->filter(fn ($item) => $item['count'] > 0)->values(),
             'recentActivity' => $recentActivity,
             'recentEnquiries' => $recentEnquiries,
             'platformOverview' => [
-                ['label' => 'Pages', 'value' => Page::count(), 'url' => route('admin.pages')],
+                ['label' => 'Pages', 'value' => $metrics['pages'], 'url' => route('admin.pages')],
                 ['label' => 'Products', 'value' => $products, 'url' => route('admin.products')],
-                ['label' => 'Articles', 'value' => Article::count(), 'url' => route('admin.articles')],
+                ['label' => 'Articles', 'value' => $metrics['articles'], 'url' => route('admin.articles')],
                 ['label' => 'Media assets', 'value' => $mediaCount, 'url' => route('admin.media')],
                 ['label' => 'Storage', 'value' => number_format($mediaStorage / 1048576, 1).' MB', 'url' => route('admin.media')],
-                ['label' => 'Administrators', 'value' => User::where('is_admin', true)->count(), 'url' => route('admin.administrators')],
+                ['label' => 'Administrators', 'value' => $metrics['administrators'], 'url' => route('admin.administrators')],
             ],
         ]);
+    }
+
+    private function dashboardMetrics(): array
+    {
+        $load = function (): array {
+            return [
+                'published_courses' => Course::where('status', 'published')->count(),
+                'products' => Product::count(),
+                'students' => User::where('is_admin', false)->count(),
+                'orders' => Order::count(),
+                'unread_messages' => ContactMessage::whereNull('read_at')->count(),
+                'confirmed_revenue' => Order::whereIn('payment_status', ['paid', 'partially_refunded'])->sum('total'),
+                'media_count' => Media::count(),
+                'media_storage' => Media::sum('size'),
+                'pending_orders' => Order::whereIn('status', ['pending_payment', 'processing'])->count(),
+                'failed_payments' => Payment::where('status', 'failed')->count(),
+                'draft_pages' => Page::where('status', 'draft')->count(),
+                'unavailable_products' => Product::whereIn('availability', ['waitlist', 'coming_soon'])->count(),
+                'pages' => Page::count(),
+                'articles' => Article::count(),
+                'administrators' => User::where('is_admin', true)->count(),
+            ];
+        };
+
+        return app()->environment('testing')
+            ? $load()
+            : Cache::remember('admin.dashboard.metrics.v1', now()->addSeconds(30), $load);
     }
 
     private function activityLabel(string $action): string

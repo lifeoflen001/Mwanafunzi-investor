@@ -2,7 +2,7 @@
 @php($media = \App\Support\PublicHero::candidate($image))
 <article class="mother-service-feature {{ $tone }}">
     <a class="mother-service-media" href="{{ $href }}" aria-label="Explore {{ $title }}">
-        @if($media)<img src="{{ $media['url'] }}" alt="" loading="lazy">@endif
+        @if($media)<img src="{{ $media['url'] }}" @if($media['srcset']) srcset="{{ $media['srcset'] }}" sizes="(max-width: 760px) 100vw, 50vw" @endif alt="" loading="lazy">@endif
         <span class="mother-service-media-arrow" aria-hidden="true">↗</span>
     </a>
     <div class="mother-service-copy">

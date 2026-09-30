@@ -8,6 +8,17 @@ use Illuminate\Support\Str;
 
 class PublicHero
 {
+    private static array $preloadedMedia = [];
+
+    public static function preloadMedia(iterable $paths): void
+    {
+        $paths = collect($paths)->filter()->map(fn ($path) => ltrim((string) $path, '/'))->unique()->values();
+        if ($paths->isEmpty()) return;
+
+        $found = Media::query()->whereIn('path', $paths->all())->get()->keyBy('path');
+        foreach ($paths as $path) static::$preloadedMedia[$path] = $found->get($path);
+    }
+
     public static function resolve(array $candidates): ?array
     {
         foreach (array_filter($candidates) as $candidate) {
@@ -32,7 +43,13 @@ class PublicHero
 
         if (! $exists) return null;
 
-        $media = $isPublicAsset ? null : Media::query()->where('path', $path)->first();
+        $media = null;
+        if (! $isPublicAsset) {
+            if (! array_key_exists($path, static::$preloadedMedia)) {
+                static::$preloadedMedia[$path] = Media::query()->where('path', $path)->first();
+            }
+            $media = static::$preloadedMedia[$path];
+        }
         $variants = $isPublicAsset
             ? collect([480, 768, 1200])->map(fn (int $width) => [
                 'width' => $width,
@@ -47,6 +64,8 @@ class PublicHero
             'url' => $isPublicAsset ? asset($path) : asset('storage/'.$path),
             'srcset' => $variants->isEmpty() ? null : $variants->map(fn (array $variant) => ($isPublicAsset ? asset($variant['path']) : asset('storage/'.$variant['path'])).' '.$variant['width'].'w')->implode(', '),
             'position' => 'center center',
+            'width' => $media?->width,
+            'height' => $media?->height,
         ];
     }
 }
