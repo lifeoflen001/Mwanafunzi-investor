@@ -55,11 +55,14 @@ class DatabaseSeeder extends Seeder
             BusinessUnit::updateOrCreate(['slug' => $businessUnit['slug']], $businessUnit);
         }
 
-        User::updateOrCreate(['email' => 'test@example.com'], [
-            'name' => 'Test User',
-            'password' => 'password',
-            'is_admin' => false,
-        ]);
+        // Never create the local demo account in a production database.
+        if (! app()->environment('production')) {
+            User::updateOrCreate(['email' => 'test@example.com'], [
+                'name' => 'Test User',
+                'password' => 'password',
+                'is_admin' => false,
+            ]);
+        }
 
         $topics = [
             ['title' => 'Forex Core Basics — No BS', 'slug' => 'forex-core-basics', 'icon' => '◒', 'short_description' => 'Understand the language of the market, from currency pairs to the forces that move them.', 'full_description' => 'Start with a grounded understanding of market structure, currency pairs, context and the habits of a careful student.', 'skill_level' => 'Foundation', 'study_time' => '2–4 weeks', 'sort_order' => 1],

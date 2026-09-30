@@ -37,6 +37,16 @@ class PlatformRoutesTest extends TestCase
         $this->get('/about')->assertDontSee('\\n\\n');
     }
 
+    public function test_health_endpoint_returns_only_public_status(): void
+    {
+        $this->get('/health')->assertOk()->assertExactJson(['status' => 'ok']);
+    }
+
+    public function test_robots_uses_the_application_sitemap_url(): void
+    {
+        $this->get('/robots.txt')->assertOk()->assertSee('Sitemap: '.route('sitemap'), false);
+    }
+
     public function test_business_module_content_propagates_from_pages_cms(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

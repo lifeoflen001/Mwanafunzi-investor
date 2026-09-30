@@ -27,6 +27,7 @@ use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\AdminServiceController;
 use App\Http\Controllers\AdminProjectController;
 use App\Http\Controllers\AdminTestimonialController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
@@ -56,6 +57,20 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
 });
+
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+
+        return response()->json(['status' => 'ok']);
+    } catch (Throwable) {
+        return response()->json(['status' => 'unavailable'], 503);
+    }
+})->name('health');
+
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nDisallow:\nSitemap: ".url('/sitemap.xml')."\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
 
 Route::get('/login', [CustomerAuthController::class, 'login'])->name('login');
 Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->middleware('throttle:5,1')->name('login.store');

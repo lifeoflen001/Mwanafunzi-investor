@@ -83,4 +83,8 @@ Create an authorised CMS user locally with `php artisan app:make-admin your@emai
 
 ### Verification
 
-Run `php artisan test`, `php artisan view:cache` and `npm run build` before pushing changes. The default local database is SQLite; the XAMPP MySQL service can be configured later through `.env` if the platform needs it.
+Run `php artisan test`, `php artisan view:cache` and `npm run build` before pushing changes. The test suite uses SQLite; local XAMPP and production deployments use MySQL/MariaDB configured through `.env`.
+
+### Deployment
+
+See [HOSTING.md](HOSTING.md) for the project-specific production, cPanel, storage, queue, cache, backup, rollback and post-deployment instructions.
