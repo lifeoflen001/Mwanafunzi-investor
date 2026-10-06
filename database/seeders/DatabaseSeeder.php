@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\LearningTopic;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Models\TeamMember;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -24,7 +25,7 @@ class DatabaseSeeder extends Seeder
         $businessUnits = [
             [
                 'slug' => 'forex',
-                'name' => 'Forex Academy',
+                'name' => 'Financial Academy',
                 'tagline' => 'Student of Money. Systems. Discipline.',
                 'description' => 'Structured financial education for systematic trading, probability, risk management and disciplined portfolio thinking.',
                 'accent_color' => '#c56c38',
@@ -53,6 +54,14 @@ class DatabaseSeeder extends Seeder
 
         foreach ($businessUnits as $businessUnit) {
             BusinessUnit::updateOrCreate(['slug' => $businessUnit['slug']], $businessUnit);
+        }
+
+        $teamMembers = [
+            ['name' => 'Lenkai Mollel', 'slug' => 'lenkai-mollel', 'role' => 'Software Developer & Video Editor', 'department' => 'Digital Systems & Creative Studio', 'short_intro' => 'Builds thoughtful digital systems and shapes clear visual stories through editing.', 'focus' => 'Turning complex ideas into reliable software and purposeful visual stories.', 'expertise' => ['Software development', 'Web applications and systems', 'Video editing and post-production'], 'bio' => 'Lenkai works across software development and post-production, bringing structure, care and a strong editorial eye to every project. He builds useful digital experiences and edits video that gives people and ideas room to be understood.', 'portrait' => '/images/team/lenkai-mollel.jpg', 'sort_order' => 2],
+            ['name' => 'David Lyengi', 'slug' => 'david-lyengi', 'role' => 'Senior Financial Advisor, Forex Trader & Photographer', 'department' => 'Financial Academy & Creative Studio', 'short_intro' => 'Guides disciplined market thinking while creating photographs with clarity and intent.', 'focus' => 'Helping people make better decisions in uncertain markets and meaningful images.', 'expertise' => ['Financial education and advisory', 'Forex trading and risk discipline', 'Photography and visual storytelling'], 'bio' => 'David brings together senior financial advisory, practical forex trading and photography. His work is grounded in disciplined decision-making: understand the context, respect the risk and communicate with clarity.', 'portrait' => '/images/team/david-lyengi.jpg', 'sort_order' => 1],
+        ];
+        foreach ($teamMembers as $teamMember) {
+            TeamMember::updateOrCreate(['slug' => $teamMember['slug']], array_merge($teamMember, ['is_active' => true, 'is_featured' => false, 'robots' => 'index,follow']));
         }
 
         // Never create the local demo account in a production database.

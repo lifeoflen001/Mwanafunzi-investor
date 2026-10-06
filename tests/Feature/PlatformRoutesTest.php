@@ -15,6 +15,12 @@ use App\Models\NavigationItem;
 use App\Models\LearningTopic;
 use App\Models\User;
 use App\Models\AdminAuditLog;
+use App\Models\TeamMember;
+use App\Models\SocialLink;
+use App\Models\ArticleSocialLink;
+use App\Models\Comment;
+use App\Models\Tag;
+use App\Support\PublicSiteData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -30,11 +36,40 @@ class PlatformRoutesTest extends TestCase
 
     public function test_public_platform_routes_render(): void
     {
-        foreach (['/', '/development', '/studio', '/learn', '/learn/forex-core-basics', '/courses', '/tools', '/journal', '/about', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
+        foreach (['/', '/development', '/studio', '/financial-academy', '/financial-academy/learn', '/financial-academy/learn/forex-core-basics', '/financial-academy/courses', '/financial-academy/tools', '/journal', '/about', '/about/team/lenkai-mollel', '/about/team/david-lyengi', '/contact', '/student-of-money', '/risk-disclosure', '/privacy-policy', '/terms', '/refund-policy', '/disclaimer', '/sitemap.xml'] as $route) {
             $this->get($route)->assertSuccessful();
         }
 
-        $this->get('/about')->assertDontSee('\\n\\n');
+        $this->get('/about')->assertDontSee('\\n\\n')->assertSee('Lenkai Mollel')->assertSee('David Lyengi');
+        $this->get('/about/team/lenkai-mollel')->assertSee('Lenkai Mollel')->assertSee('Meet the team')->assertDontSee('Meet more of the team.');
+        $this->get('/about/team/david-lyengi')->assertSee('David Lyengi')->assertSee('Meet the team');
+        $this->get('/courses')->assertRedirect('/financial-academy/courses');
+        $this->get('/forex-academy')->assertRedirect('/financial-academy');
+    }
+
+    public function test_client_login_surface_uses_accessible_auth_controls(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Client portal')
+            ->assertSee('Back to website')
+            ->assertSee('client-password', false)
+            ->assertSee('data-password-toggle', false)
+            ->assertSee('Create an account')
+            ->assertSee('site-footer', false)
+            ->assertDontSee('Forgot password');
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Create your account.')
+            ->assertSee('client-password-confirmation', false)
+            ->assertSee('data-password-toggle', false)
+            ->assertSee('I accept the')
+            ->assertSee('Back to website')
+            ->assertSee('site-footer', false);
+
+        $this->post(route('login.store'), ['email' => 'not-an-email', 'password' => ''])
+            ->assertSessionHasErrors(['email', 'password']);
     }
 
     public function test_health_endpoint_returns_only_public_status(): void
@@ -66,10 +101,93 @@ class PlatformRoutesTest extends TestCase
         $this->get('/development')->assertOk()->assertSee('Systems managed from the desk.')->assertSee('A CMS-managed service card.');
     }
 
+    public function test_about_story_and_mission_vision_are_editable_from_page_cms(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $page = Page::where('key', 'about')->firstOrFail();
+        $story = $page->sections()->where('key', 'philosophy')->firstOrFail();
+        $missionVision = $page->sections()->where('key', 'mission-vision')->firstOrFail();
+
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), [
+            'name' => $page->name, 'key' => $page->key, 'slug' => $page->slug, 'page_type' => $page->page_type,
+            'status' => 'published', 'is_visible' => 1, 'hero_overlay' => 'medium', 'hero_alignment' => 'left',
+            'sections' => [
+                $story->id => [
+                    'eyebrow' => 'Why this exists', 'heading' => 'A different kind of market education.', 'sort_order' => 10, 'is_enabled' => 1,
+                    'image' => 'images/hero-about.webp', 'image_alt' => 'A managed research desk.', 'image_focal_point' => 'center 35%',
+                    'who_heading' => 'Who we are', 'who_body' => 'CMS-managed Who We Are copy.', 'story_heading' => 'Our story', 'story_body' => 'CMS-managed story copy.',
+                    'quote_label' => 'Our philosophy', 'quote' => 'A managed philosophy quote.',
+                ],
+                $missionVision->id => [
+                    'heading' => $missionVision->heading, 'sort_order' => 15, 'is_enabled' => 1,
+                    'mission_label' => 'Our mission', 'mission_heading' => 'A managed mission heading.', 'mission_body' => 'A managed mission body.', 'mission_enabled' => 1,
+                    'vision_label' => 'Our vision', 'vision_heading' => 'A managed vision heading.', 'vision_body' => 'A managed vision body.', 'vision_enabled' => 1,
+                ],
+            ],
+        ])->assertRedirect();
+
+        $this->get(route('about'))->assertOk()->assertSee('CMS-managed Who We Are copy.')->assertSee('CMS-managed story copy.')->assertSee('A managed mission heading.')->assertSee('A managed vision heading.')->assertSee('hero-about.webp');
+    }
+
+    public function test_visible_social_links_render_as_accessible_footer_icons(): void
+    {
+        SocialLink::create(['label' => 'Instagram', 'url' => 'https://instagram.com/mwanafunziinvestor', 'sort_order' => 1, 'is_visible' => true]);
+        PublicSiteData::forgetCache();
+
+        $this->get(route('about'))->assertOk()->assertSee('aria-label="Instagram"', false)->assertSee('<svg viewBox="0 0 24 24"', false);
+    }
+
     public function test_published_and_coming_soon_content_resolves_by_slug(): void
     {
-        $this->get('/courses/forex-foundations')->assertSuccessful()->assertSee('Forex Foundations')->assertSee('application/ld+json')->assertSee('canonical');
-        $this->get('/tools/trading-journal-sheet')->assertSuccessful()->assertSee('Trading Journal Sheet')->assertSee('application/ld+json');
+        $this->get('/financial-academy/courses/forex-foundations')->assertSuccessful()->assertSee('Forex Foundations')->assertSee('application/ld+json')->assertSee('canonical');
+        $this->get('/financial-academy/tools/trading-journal-sheet')->assertSuccessful()->assertSee('Trading Journal Sheet')->assertSee('application/ld+json');
+    }
+
+    public function test_journal_discovery_social_links_and_feed_use_real_articles(): void
+    {
+        $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
+        $category = ArticleCategory::firstOrCreate(['slug' => 'risk-management'], ['name' => 'Risk Management']);
+        $article = Article::create([
+            'article_category_id' => $category->id,
+            'team_member_id' => $member->id,
+            'title' => 'Why risk belongs before entries',
+            'slug' => 'why-risk-belongs-before-entries',
+            'excerpt' => 'A practical note on process and risk.',
+            'content' => '<p>Risk is part of the process.</p>',
+            'content_type' => 'risk_management',
+            'status' => 'published',
+            'published_at' => now()->subHour(),
+            'is_featured' => true,
+        ]);
+        $tag = Tag::create(['name' => 'Position Sizing', 'slug' => 'position-sizing']);
+        $article->tags()->attach($tag);
+        ArticleSocialLink::create(['article_id' => $article->id, 'platform' => 'instagram', 'url' => 'https://instagram.com/p/example', 'label' => 'Watch the original update']);
+
+        $this->get(route('journal'))->assertOk()->assertSee('Why risk belongs before entries')->assertSee('Featured update')->assertSee('>Blog<', false);
+        $this->get(route('journal.category', $category))->assertOk()->assertSee('Why risk belongs before entries');
+        $this->get(route('journal.tag', $tag))->assertOk()->assertSee('Why risk belongs before entries');
+        $this->get(route('journal.author', $member))->assertOk()->assertSee('Why risk belongs before entries');
+        $this->get(route('journal.show', $article))->assertOk()->assertSee('Related social content')->assertSee('instagram.com/p/example');
+        $this->get(route('feed'))->assertOk()->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8')->assertSee('Why risk belongs before entries');
+    }
+
+    public function test_authenticated_reactions_and_comments_are_moderated_and_safe(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $article = Article::create(['title' => 'A considered note', 'slug' => 'a-considered-note', 'content' => '<p>Read carefully.</p>', 'status' => 'published', 'published_at' => now()->subMinute()]);
+
+        $this->actingAs($user)->post(route('journal.reaction', $article), ['type' => 'like'])->assertRedirect();
+        $this->assertDatabaseHas('article_reactions', ['article_id' => $article->id, 'user_id' => $user->id, 'type' => 'like']);
+        $this->actingAs($user)->post(route('journal.reaction', $article), ['type' => 'like'])->assertRedirect();
+        $this->assertDatabaseMissing('article_reactions', ['article_id' => $article->id, 'user_id' => $user->id, 'type' => 'like']);
+
+        $this->actingAs($user)->post(route('journal.comments.store', $article), ['body' => '<script>alert(1)</script> A useful thought'])->assertRedirect();
+        $comment = Comment::firstOrFail();
+        $this->assertSame('pending', $comment->status);
+        $this->assertDatabaseHas('comments', ['id' => $comment->id, 'body' => '<script>alert(1)</script> A useful thought']);
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->patch(route('admin.comments.update', $comment), ['status' => 'approved'])->assertRedirect();
+        $this->get(route('journal.show', $article))->assertOk()->assertSee('&lt;script&gt;alert(1)&lt;/script&gt; A useful thought', false)->assertDontSee('<script>alert(1)</script>', false);
     }
 
     public function test_admin_managed_open_graph_media_reaches_detail_metadata(): void
@@ -178,7 +296,25 @@ class PlatformRoutesTest extends TestCase
 
     public function test_sitemap_contains_public_content(): void
     {
-        $this->get('/sitemap.xml')->assertOk()->assertSee('/courses/forex-foundations')->assertSee('/tools/trading-journal-sheet')->assertSee('/student-of-money');
+        $this->get('/sitemap.xml')->assertOk()->assertSee('/financial-academy/courses/forex-foundations')->assertSee('/financial-academy/tools/trading-journal-sheet')->assertSee('/student-of-money')->assertSee('/about/team/lenkai-mollel')->assertSee('/about/team/david-lyengi');
+    }
+
+    public function test_team_members_are_cms_managed_and_inactive_profiles_stay_private(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.team'))->assertOk()->assertSee('Lenkai Mollel');
+        $this->actingAs($admin)->put(route('admin.team.update', $member), [
+            'name' => $member->name, 'slug' => $member->slug, 'short_intro' => 'A managed team introduction.',
+            'portrait' => $member->portrait, 'sort_order' => 1, 'is_active' => 1, 'is_featured' => 1,
+            'linkedin_url' => 'https://www.linkedin.com/in/lenkai-mollel',
+        ])->assertRedirect();
+
+        $this->get(route('team.show', $member->slug))->assertOk()->assertSee('A managed team introduction.')->assertSee('linkedin.com/in/lenkai-mollel')->assertSee('application/ld+json');
+        $member->update(['is_active' => false]);
+        $this->get(route('team.show', $member->slug))->assertNotFound();
+        $this->get('/sitemap.xml')->assertDontSee('/about/team/'.$member->slug);
     }
 
     public function test_contact_submission_is_saved(): void
@@ -344,7 +480,10 @@ class PlatformRoutesTest extends TestCase
     public function test_student_and_admin_portals_render_the_dashboard_shells(): void
     {
         $student = User::factory()->create(['email_verified_at' => now()]);
-        $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Course access');
+        $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Continue learning')->assertSee('Account controls');
+        foreach ([route('account.orders'), route('account.downloads'), route('account.courses'), route('account.profile'), route('account.security')] as $accountRoute) {
+            $this->get($accountRoute)->assertOk()->assertSee('Student portal');
+        }
 
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('Admin desk')->assertSee('Recent activity')->assertSee('Quick actions');

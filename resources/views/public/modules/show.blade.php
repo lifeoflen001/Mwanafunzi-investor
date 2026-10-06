@@ -13,7 +13,7 @@
                 <h2>{{ $module->name }} has its own place in the system.</h2>
             </div>
             <div>
-                <p>This module is now registered as part of the Mwanafunzi Investor platform. Its services, projects and media will be added here next without disturbing the Forex Academy experience.</p>
+                <p>This module is now registered as part of the Mwanafunzi Investor platform. Its services, projects and media will be added here next without disturbing the Financial Academy experience.</p>
                 <a class="button button-dark" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a>
             </div>
         </div>

@@ -22,13 +22,13 @@ return new class extends Migration
 
         $now = now();
         DB::table('pages')->where('key', 'home')->update([
-            'hero_eyebrow' => 'Financial education for the long game',
+            'hero_eyebrow' => 'Financial education for life',
             'hero_title' => 'Become a',
             'hero_highlight' => 'Student of Money.',
-            'hero_summary' => 'Systematic Trading. Probability. Risk. Discipline. Learn to understand markets, develop mechanical trading rules and protect your capital without the hype.',
+            'hero_summary' => 'Systematic Investments. Probability. Risks. Discipline. Learn to understand, develop mechanical rules and protect your capital without hype.',
             'hero_primary_label' => 'Start Learning',
             'hero_primary_url' => '#courses',
-            'hero_secondary_label' => 'Explore Trading Tools',
+            'hero_secondary_label' => 'Explore Tools',
             'hero_secondary_url' => '#tools',
             'hero_note' => 'Forex Education • Risk Management • Trading Systems • Portfolio Thinking',
             'hero_aside' => "For the person who wants\nto understand, not predict.",

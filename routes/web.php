@@ -27,12 +27,15 @@ use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\AdminServiceController;
 use App\Http\Controllers\AdminProjectController;
 use App\Http\Controllers\AdminTestimonialController;
+use App\Http\Controllers\AdminTeamMemberController;
+use App\Http\Controllers\AdminCommentController;
+use App\Http\Controllers\EditorialInteractionController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
-    Route::get('/forex-academy', 'academy')->name('forex-academy');
+    Route::get('/financial-academy', 'academy')->name('forex-academy');
     Route::get('/digital-systems', 'module')->defaults('slug', 'development')->name('digital-systems');
     Route::get('/creative-studio', 'module')->defaults('slug', 'studio')->name('creative-studio');
     Route::get('/development', 'module')->defaults('slug', 'development')->name('development');
@@ -41,22 +44,39 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/services/{service:slug}', 'service')->name('services.show');
     Route::get('/projects', 'projects')->name('projects');
     Route::get('/projects/{project:slug}', 'project')->name('projects.show');
-    Route::get('/learn', 'learn')->name('learn');
-    Route::get('/learn/{topic:slug}', 'topic')->name('learn.show');
-    Route::get('/courses', 'courses')->name('courses');
-    Route::get('/courses/{course:slug}', 'course')->name('courses.show');
-    Route::get('/tools', 'tools')->name('tools');
-    Route::get('/tools/{product:slug}', 'tool')->name('tools.show');
+    Route::get('/financial-academy/learn', 'learn')->name('learn');
+    Route::get('/financial-academy/learn/{topic:slug}', 'topic')->name('learn.show');
+    Route::get('/financial-academy/courses', 'courses')->name('courses');
+    Route::get('/financial-academy/courses/{course:slug}', 'course')->name('courses.show');
+    Route::get('/financial-academy/tools', 'tools')->name('tools');
+    Route::get('/financial-academy/tools/{product:slug}', 'tool')->name('tools.show');
     Route::get('/journal', 'journal')->name('journal');
+    Route::get('/journal/category/{category:slug}', 'journalCategory')->name('journal.category');
+    Route::get('/journal/tag/{tag:slug}', 'journalTag')->name('journal.tag');
+    Route::get('/journal/author/{member:slug}', 'journalAuthor')->name('journal.author');
     Route::get('/journal/{article:slug}', 'article')->name('journal.show');
+    Route::get('/feed', 'feed')->name('feed');
+    Route::get('/about/team/{member}', 'teamMember')->name('team.show');
     Route::get('/about', 'page')->defaults('page', 'about')->name('about');
     Route::get('/student-of-money', 'page')->defaults('page', 'student-of-money')->name('student-of-money');
     Route::get('/pages/{slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
+    Route::post('/journal/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('journal.reaction');
+    Route::post('/journal/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('journal.comments.store');
+    Route::post('/comments/{comment}/report', [EditorialInteractionController::class, 'report'])->middleware(['auth', 'throttle:10,10'])->name('comments.report');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
 });
+
+// Legacy public URLs redirect to the classified Financial Academy namespace.
+Route::redirect('/forex-academy', '/financial-academy', 301)->name('forex-academy.legacy');
+Route::redirect('/learn', '/financial-academy/learn', 301)->name('learn.legacy');
+Route::get('/learn/{topic:slug}', fn (\App\Models\LearningTopic $topic) => redirect()->route('learn.show', $topic, 301))->name('learn.legacy.show');
+Route::redirect('/courses', '/financial-academy/courses', 301)->name('courses.legacy');
+Route::get('/courses/{course:slug}', fn (\App\Models\Course $course) => redirect()->route('courses.show', $course, 301))->name('courses.legacy.show');
+Route::redirect('/tools', '/financial-academy/tools', 301)->name('tools.legacy');
+Route::get('/tools/{product:slug}', fn (\App\Models\Product $product) => redirect()->route('tools.show', $product, 301))->name('tools.legacy.show');
 
 Route::get('/health', function () {
     try {
@@ -95,7 +115,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/downloads/{asset}', DownloadController::class)->middleware('signed')->name('downloads.asset');
 });
 Route::post('/payments/flutterwave/webhook', [CommerceController::class, 'flutterwaveWebhook'])->name('payments.flutterwave.webhook');
-Route::post('/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist');
+Route::post('/financial-academy/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist');
+Route::post('/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist.legacy');
 
 Route::middleware(['auth'])->prefix('account')->name('account.')->group(function () {
     Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
@@ -107,6 +128,8 @@ Route::middleware(['auth'])->prefix('account')->name('account.')->group(function
     Route::get('/courses/{enrollment}', [CustomerAccountController::class, 'course'])->name('courses.show');
     Route::get('/profile', [CustomerAccountController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/avatar', [CustomerAccountController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [CustomerAccountController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::get('/security', [CustomerAccountController::class, 'security'])->name('security');
     Route::put('/security/password', [CustomerAccountController::class, 'updatePassword'])->name('security.password');
 });
@@ -158,6 +181,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/articles/{article}', [AdminController::class, 'articleUpdate'])->name('articles.update');
         Route::delete('/articles/{article}', [AdminController::class, 'articleDestroy'])->name('articles.destroy');
         Route::post('/articles/{article}/restore', [AdminController::class, 'articleRestore'])->name('articles.restore');
+        Route::get('/journal', [AdminController::class, 'articles'])->name('journal');
+        Route::get('/journal/create', [AdminController::class, 'articleCreate'])->name('journal.create');
+        Route::post('/journal', [AdminController::class, 'articleStore'])->name('journal.store');
+        Route::get('/journal/daily-updates/create', [AdminController::class, 'dailyUpdateCreate'])->name('journal.daily-updates.create');
+        Route::post('/journal/daily-updates', [AdminController::class, 'dailyUpdateStore'])->name('journal.daily-updates.store');
+        Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments');
+        Route::get('/comments/{comment}', [AdminCommentController::class, 'show'])->name('comments.show');
+        Route::patch('/comments/{comment}', [AdminCommentController::class, 'update'])->name('comments.update');
+        Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
         Route::get('/messages', [AdminController::class, 'messages'])->name('messages');
         Route::get('/messages/{message}', [AdminController::class, 'messageShow'])->name('messages.show');
         Route::patch('/messages/{message}', [AdminController::class, 'messageUpdate'])->name('messages.update');
@@ -214,10 +246,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/navigation/{navigationItem}', [AdminNavigationController::class, 'update'])->name('navigation.update');
         Route::delete('/navigation/{navigationItem}', [AdminNavigationController::class, 'destroy'])->name('navigation.destroy');
         Route::get('/categories', [AdminTaxonomyController::class, 'categories'])->name('categories');
+        Route::get('/categories/create', [AdminTaxonomyController::class, 'categoryCreate'])->name('categories.create');
         Route::post('/categories', [AdminTaxonomyController::class, 'categoryStore'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [AdminTaxonomyController::class, 'categoryEdit'])->name('categories.edit');
+        Route::put('/categories/{category}', [AdminTaxonomyController::class, 'categoryUpdate'])->name('categories.update');
         Route::delete('/categories/{category}', [AdminTaxonomyController::class, 'categoryDestroy'])->name('categories.destroy');
         Route::get('/tags', [AdminTaxonomyController::class, 'tags'])->name('tags');
+        Route::get('/tags/create', [AdminTaxonomyController::class, 'tagCreate'])->name('tags.create');
         Route::post('/tags', [AdminTaxonomyController::class, 'tagStore'])->name('tags.store');
+        Route::get('/tags/{tag}/edit', [AdminTaxonomyController::class, 'tagEdit'])->name('tags.edit');
+        Route::put('/tags/{tag}', [AdminTaxonomyController::class, 'tagUpdate'])->name('tags.update');
         Route::delete('/tags/{tag}', [AdminTaxonomyController::class, 'tagDestroy'])->name('tags.destroy');
         Route::get('/social-links', [AdminTaxonomyController::class, 'socialLinks'])->name('social-links');
         Route::post('/social-links', [AdminTaxonomyController::class, 'socialLinkStore'])->name('social-links.store');
@@ -241,6 +279,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/testimonials/{testimonial}/edit', [AdminTestimonialController::class, 'edit'])->name('testimonials.edit');
         Route::put('/testimonials/{testimonial}', [AdminTestimonialController::class, 'update'])->name('testimonials.update');
         Route::delete('/testimonials/{testimonial}', [AdminTestimonialController::class, 'destroy'])->name('testimonials.destroy');
+        Route::get('/team', [AdminTeamMemberController::class, 'index'])->name('team');
+        Route::get('/team/create', [AdminTeamMemberController::class, 'create'])->name('team.create');
+        Route::post('/team', [AdminTeamMemberController::class, 'store'])->name('team.store');
+        Route::get('/team/{teamMember}/edit', [AdminTeamMemberController::class, 'edit'])->name('team.edit');
+        Route::put('/team/{teamMember}', [AdminTeamMemberController::class, 'update'])->name('team.update');
+        Route::delete('/team/{teamMember}', [AdminTeamMemberController::class, 'destroy'])->name('team.destroy');
         Route::get('/commerce', [AdminCommerceController::class, 'dashboard'])->name('commerce.dashboard');
         Route::get('/commerce/orders', [AdminCommerceController::class, 'orders'])->name('commerce.orders');
         Route::get('/commerce/orders/{order}', [AdminCommerceController::class, 'order'])->name('commerce.orders.show');

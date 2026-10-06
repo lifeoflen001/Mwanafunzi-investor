@@ -63,6 +63,8 @@ class User extends Authenticatable implements MustVerifyEmail
     public function entitlements() { return $this->hasMany(Entitlement::class); }
     public function enrollments() { return $this->hasMany(Enrollment::class); }
     public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
+    public function articleReactions() { return $this->hasMany(ArticleReaction::class); }
+    public function comments() { return $this->hasMany(Comment::class); }
 
     public function getAvatarUrlAttribute(): ?string
     {

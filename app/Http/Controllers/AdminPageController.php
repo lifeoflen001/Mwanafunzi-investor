@@ -17,7 +17,8 @@ class AdminPageController extends Controller
     public function index()
     {
         return view('admin.pages.index', [
-            'pages' => Page::withTrashed()->withCount('sections')->orderBy('name')->paginate(20),
+            'homePage' => Page::withTrashed()->withCount('sections')->where('key', 'home')->first(),
+            'pages' => Page::withTrashed()->withCount('sections')->where('key', '!=', 'home')->orderBy('name')->paginate(20),
             'pageIndexTitle' => 'Pages',
             'pageIndexEyebrow' => 'Website / Pages',
             'pageIndexDescription' => 'Manage page identity, hero content, visibility and SEO without editing templates.',
@@ -143,6 +144,22 @@ class AdminPageController extends Controller
             'sections.*.empty_body' => ['nullable', 'string', 'max:1000'],
             'sections.*.empty_cta_label' => ['nullable', 'string', 'max:120'],
             'sections.*.empty_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'sections.*.image_alt' => ['nullable', 'string', 'max:190'],
+            'sections.*.image_focal_point' => ['nullable', 'string', 'max:80'],
+            'sections.*.who_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.who_body' => ['nullable', 'string', 'max:10000'],
+            'sections.*.story_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.story_body' => ['nullable', 'string', 'max:10000'],
+            'sections.*.quote_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.quote' => ['nullable', 'string', 'max:2000'],
+            'sections.*.mission_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.mission_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.mission_body' => ['nullable', 'string', 'max:5000'],
+            'sections.*.mission_enabled' => ['nullable', 'boolean'],
+            'sections.*.vision_label' => ['nullable', 'string', 'max:120'],
+            'sections.*.vision_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.vision_body' => ['nullable', 'string', 'max:5000'],
+            'sections.*.vision_enabled' => ['nullable', 'boolean'],
             'new_section_key' => ['nullable', 'string', 'max:80', 'alpha_dash'],
             'new_section_type' => ['nullable', 'in:rich_text,split_content,featured_topics,featured_courses,featured_products,latest_journal,framework,faq,quote,feature_grid,contact_block,cta'],
             'new_section_heading' => ['nullable', 'string', 'max:190'],
@@ -203,6 +220,15 @@ class AdminPageController extends Controller
                     ->filter(fn ($item) => $item['label'] !== '')
                     ->values()
                     ->all();
+            }
+            foreach (['image_alt', 'image_focal_point', 'who_heading', 'story_heading', 'quote_label', 'quote', 'mission_label', 'mission_heading', 'mission_body', 'vision_label', 'vision_heading', 'vision_body'] as $payloadKey) {
+                if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = trim((string) $input[$payloadKey]) ?: null;
+            }
+            foreach (['who_body', 'story_body', 'mission_body', 'vision_body'] as $payloadKey) {
+                if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = RichText::sanitize($input[$payloadKey]) ?: null;
+            }
+            foreach (['mission_enabled', 'vision_enabled'] as $payloadKey) {
+                if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = filter_var($input[$payloadKey], FILTER_VALIDATE_BOOLEAN);
             }
             $section->update([
                 'heading' => array_key_exists('heading', $input) ? $input['heading'] : $section->heading,

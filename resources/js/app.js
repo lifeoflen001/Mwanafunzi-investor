@@ -41,14 +41,15 @@ document.addEventListener('click', (event) => {
 const adminShell = document.querySelector('[data-admin-shell]');
 const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
 const adminSidebar = document.querySelector('[data-admin-sidebar]');
-const adminSidebarCollapseKey = 'mwanafunzi-admin-sidebar-collapsed';
+const adminSidebarCollapseKey = adminShell?.classList.contains('account-shell') ? 'mwanafunzi-account-sidebar-collapsed' : 'mwanafunzi-admin-sidebar-collapsed';
+const portalSidebarLabel = adminShell?.classList.contains('account-shell') ? 'student' : 'admin';
 const isAdminMobile = () => window.matchMedia('(max-width: 760px)').matches;
 const syncAdminSidebarToggle = () => {
     if (!adminShell || !adminSidebarToggle) return;
     const mobileOpen = adminShell.classList.contains('is-sidebar-open');
     const collapsed = adminShell.classList.contains('is-sidebar-collapsed');
     adminSidebarToggle.setAttribute('aria-expanded', String(isAdminMobile() ? mobileOpen : !collapsed));
-    adminSidebarToggle.setAttribute('aria-label', isAdminMobile() ? (mobileOpen ? 'Close admin navigation' : 'Open admin navigation') : (collapsed ? 'Expand admin navigation' : 'Collapse admin navigation'));
+    adminSidebarToggle.setAttribute('aria-label', isAdminMobile() ? (mobileOpen ? `Close ${portalSidebarLabel} navigation` : `Open ${portalSidebarLabel} navigation`) : (collapsed ? `Expand ${portalSidebarLabel} navigation` : `Collapse ${portalSidebarLabel} navigation`));
 };
 if (adminShell && !isAdminMobile() && window.localStorage.getItem(adminSidebarCollapseKey) === 'true') adminShell.classList.add('is-sidebar-collapsed');
 const closeAdminSidebar = (restoreFocus = true) => {
@@ -241,12 +242,23 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.querySelectorAll('[data-password-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const input = button.closest('.admin-password-field')?.querySelector('input');
+    const input = button.closest('.admin-password-field, .client-password-field')?.querySelector('input');
     if (!input) return;
     const visible = input.type === 'text';
     input.type = visible ? 'password' : 'text';
     button.textContent = visible ? 'Show' : 'Hide';
     button.setAttribute('aria-label', `${visible ? 'Show' : 'Hide'} password`);
+}));
+
+document.querySelectorAll('[data-auth-form]').forEach((form) => form.addEventListener('submit', () => {
+    const submit = form.querySelector('[data-auth-submit]');
+    const label = submit?.querySelector('[data-auth-submit-label]');
+    if (!submit || form.dataset.submitting === 'true') return;
+    form.dataset.submitting = 'true';
+    submit.disabled = true;
+    submit.classList.add('is-submitting');
+    submit.setAttribute('aria-busy', 'true');
+    if (label) label.textContent = form.querySelector('[name="password_confirmation"]') ? 'Creating account…' : 'Signing in…';
 }));
 
 const avatarForm = document.querySelector('[data-avatar-form]');
@@ -572,4 +584,58 @@ document.querySelectorAll('.admin-portal form.admin-form, .admin-portal form.adm
     submitter.setAttribute('aria-busy', 'true');
     submitter.dataset.originalContent = submitter.innerHTML;
     submitter.innerHTML = '<span class="admin-button-progress" aria-hidden="true"></span><span>Working…</span>';
+}));
+
+document.querySelectorAll('[data-social-repeater]').forEach((repeater) => {
+    const template = document.querySelector('[data-social-template]');
+    const add = document.querySelector('[data-add-social]');
+    const nextIndex = () => [...repeater.querySelectorAll('[data-social-row]')].reduce((max, row) => {
+        const field = row.querySelector('[name*="social_links["]');
+        const match = field?.name.match(/social_links\[(\d+)\]/);
+        return Math.max(max, match ? Number(match[1]) : -1);
+    }, -1) + 1;
+    const bindRemove = (row) => row.querySelector('[data-remove-social]')?.addEventListener('click', () => {
+        if (repeater.querySelectorAll('[data-social-row]').length > 1) row.remove();
+        else row.querySelectorAll('input').forEach((input) => { input.value = ''; });
+    });
+    repeater.querySelectorAll('[data-social-row]').forEach(bindRemove);
+    add?.addEventListener('click', () => {
+        if (!template) return;
+        const row = template.content.firstElementChild.cloneNode(true);
+        row.querySelectorAll('[name]').forEach((field) => { field.name = field.name.replace('__INDEX__', String(nextIndex())); });
+        repeater.append(row);
+        bindRemove(row);
+    });
+});
+
+document.querySelectorAll('[data-reaction-form]').forEach((form) => form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = form.querySelector('button');
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+        const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!response.ok) throw new Error('Reaction failed');
+        const payload = await response.json();
+        button.classList.toggle('is-active', payload.active);
+        button.setAttribute('aria-pressed', String(payload.active));
+        const count = button.querySelector('[data-reaction-count]');
+        if (count) count.textContent = payload.count;
+        const icon = button.querySelector('[aria-hidden="true"]');
+        if (icon) icon.textContent = payload.active ? '♥' : '♡';
+    } catch { form.submit(); }
+    finally { button.disabled = false; }
+}));
+
+document.querySelectorAll('[data-copy-link]').forEach((button) => button.addEventListener('click', async () => {
+    const container = button.closest('[data-share-url]');
+    const feedback = container?.querySelector('[data-share-feedback]');
+    const url = container?.dataset.shareUrl || window.location.href;
+    try {
+        await navigator.clipboard.writeText(url);
+        if (feedback) feedback.textContent = 'Link copied.';
+    } catch {
+        if (feedback) feedback.textContent = 'Copy unavailable. Select the page address instead.';
+    }
+    window.setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3500);
 }));

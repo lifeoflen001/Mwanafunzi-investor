@@ -27,7 +27,8 @@ class NavigationItem extends Model
     public function publicRouteName(): ?string
     {
         return match ($this->route_name) {
-            'home' => $this->label === 'Forex Academy' ? 'forex-academy' : 'home',
+            'home' => in_array($this->label, ['Forex Academy', 'Financial Academy'], true) ? 'forex-academy' : 'home',
+            'forex-academy' => 'forex-academy',
             'development' => 'digital-systems',
             'studio' => 'creative-studio',
             default => $this->route_name,

@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\ArticleReaction;
+use App\Models\Comment;
 use App\Models\ContactMessage;
 use App\Models\Course;
 use App\Models\CourseLesson;
 use App\Models\CourseModule;
 use App\Models\ArticleCategory;
+use App\Models\Tag;
+use App\Models\TeamMember;
 use App\Models\LearningTopic;
 use App\Models\Product;
 use App\Models\ProductFeature;
@@ -30,6 +34,7 @@ use App\Support\HeroFocalPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -113,6 +118,14 @@ class AdminController extends Controller
                 ['label' => 'Storage', 'value' => number_format($mediaStorage / 1048576, 1).' MB', 'url' => route('admin.media')],
                 ['label' => 'Administrators', 'value' => $metrics['administrators'], 'url' => route('admin.administrators')],
             ],
+            'editorialKpis' => [
+                ['label' => 'Published posts', 'value' => $metrics['published_articles'], 'description' => 'Live Journal content', 'url' => route('admin.articles', ['status' => 'published'])],
+                ['label' => 'Drafts', 'value' => $metrics['draft_articles'], 'description' => 'Needs editorial review', 'url' => route('admin.articles', ['status' => 'draft'])],
+                ['label' => 'Scheduled', 'value' => $metrics['scheduled_articles'], 'description' => 'Queued for publication', 'url' => route('admin.articles', ['status' => 'scheduled'])],
+                ['label' => 'Posts this month', 'value' => $metrics['posts_this_month'], 'description' => 'Publishing cadence', 'url' => route('admin.articles')],
+                ['label' => 'Pending comments', 'value' => $metrics['pending_comments'], 'description' => 'Awaiting moderation', 'url' => route('admin.comments', ['status' => 'pending'])],
+                ['label' => 'Total likes', 'value' => $metrics['total_likes'], 'description' => 'Real reader reactions', 'url' => route('admin.articles')],
+            ],
         ]);
     }
 
@@ -134,6 +147,12 @@ class AdminController extends Controller
                 'unavailable_products' => Product::whereIn('availability', ['waitlist', 'coming_soon'])->count(),
                 'pages' => Page::count(),
                 'articles' => Article::count(),
+                'published_articles' => Article::where('status', 'published')->count(),
+                'draft_articles' => Article::where('status', 'draft')->count(),
+                'scheduled_articles' => Article::where('status', 'scheduled')->count(),
+                'posts_this_month' => Article::where('created_at', '>=', now()->startOfMonth())->count(),
+                'pending_comments' => Comment::where('status', 'pending')->count(),
+                'total_likes' => ArticleReaction::where('type', 'like')->count(),
                 'administrators' => User::where('is_admin', true)->count(),
             ];
         };
@@ -292,13 +311,23 @@ class AdminController extends Controller
 
     public function articles(Request $request)
     {
-        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', 'in:draft,published']]);
-        $articles = Article::withTrashed()->with('category')->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('title', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))->latest()->paginate(20)->withQueryString();
-        return view('admin.articles.index', compact('articles'));
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', 'in:draft,published,scheduled,archived'], 'content_type' => ['nullable', Rule::in(array_keys(Article::CONTENT_TYPES))], 'category' => ['nullable', 'integer', 'exists:article_categories,id'], 'author' => ['nullable', 'integer', 'exists:team_members,id'], 'date_from' => ['nullable', 'date'], 'date_to' => ['nullable', 'date', 'after_or_equal:date_from']]);
+        $articles = Article::withTrashed()->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])
+            ->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('title', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')->orWhere('excerpt', 'like', '%'.$term.'%')))
+            ->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($data['content_type'] ?? null, fn ($query, $type) => $query->where('content_type', $type))
+            ->when($data['category'] ?? null, fn ($query, $category) => $query->where('article_category_id', $category))
+            ->when($data['author'] ?? null, fn ($query, $author) => $query->where('team_member_id', $author))
+            ->when($data['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($data['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
+            ->latest()->paginate(20)->withQueryString();
+        return view('admin.articles.index', ['articles' => $articles, 'categories' => ArticleCategory::orderBy('name')->get(), 'teamMembers' => TeamMember::active()->orderBy('name')->get(), 'contentTypes' => Article::CONTENT_TYPES]);
     }
-    public function articleCreate() { return view('admin.articles.form', ['article' => new Article(), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.store')]); }
+    public function articleCreate() { return view('admin.articles.form', ['article' => new Article(['content_type' => 'article']), 'categories' => ArticleCategory::orderBy('name')->get(), 'teamMembers' => TeamMember::active()->orderBy('name')->get(), 'learningTopics' => LearningTopic::orderBy('title')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.store'), 'contentTypes' => Article::CONTENT_TYPES]); }
+    public function dailyUpdateCreate() { return view('admin.articles.form', ['article' => new Article(['content_type' => 'daily_update']), 'categories' => ArticleCategory::orderBy('name')->get(), 'teamMembers' => TeamMember::active()->orderBy('name')->get(), 'learningTopics' => LearningTopic::orderBy('title')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.journal.daily-updates.store'), 'contentTypes' => Article::CONTENT_TYPES, 'dailyUpdate' => true]); }
     public function articleStore(Request $request) { return $this->saveArticle($request, new Article()); }
-    public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load('tags'), 'categories' => ArticleCategory::orderBy('name')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.update', $article)]); }
+    public function dailyUpdateStore(Request $request) { $request->merge(['content_type' => 'daily_update']); return $this->saveArticle($request, new Article()); }
+    public function articleEdit(Article $article) { return view('admin.articles.form', ['article' => $article->load(['tags', 'socialLinks', 'learningTopics']), 'categories' => ArticleCategory::orderBy('name')->get(), 'teamMembers' => TeamMember::active()->orderBy('name')->get(), 'learningTopics' => LearningTopic::orderBy('title')->get(), 'media' => Media::latest()->limit(60)->get(), 'action' => route('admin.articles.update', $article), 'contentTypes' => Article::CONTENT_TYPES]); }
     public function articleUpdate(Request $request, Article $article) { return $this->saveArticle($request, $article); }
     public function articleDestroy(Article $article) { $article->delete(); AdminAudit::record('article.archived', 'Archived article '.$article->title, $article); return back()->with('success', 'Article archived.'); }
     public function articleRestore(int $article) { $record = Article::withTrashed()->findOrFail($article); $record->restore(); AdminAudit::record('article.restored', 'Restored article '.$record->title, $record); return back()->with('success', 'Article restored.'); }
@@ -391,7 +420,7 @@ class AdminController extends Controller
 
     private function saveCourse(Request $request, Course $course)
     {
-        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
+        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'content_type' => $request->input('content_type', 'article'), 'hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
         $data = $request->validate(['title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('courses', 'slug')->ignore($course->id)], 'featured_image' => ['nullable', 'string', 'max:255'], 'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())], 'level' => ['nullable', 'string', 'max:80'], 'duration' => ['nullable', 'string', 'max:80'], 'expected_availability' => ['nullable', 'string', 'max:120'], 'price' => ['nullable', 'numeric', 'min:0'], 'currency' => ['nullable', 'string', 'size:3'], 'instructor' => ['nullable', 'string', 'max:120'], 'status' => ['required', 'in:draft,published,open,closed,coming_soon,archived'], 'short_description' => ['required', 'string'], 'full_description' => ['nullable', 'string'], 'cta_label' => ['nullable', 'string', 'max:120'], 'enrollment_available' => ['nullable', 'boolean'], 'is_featured' => ['nullable', 'boolean'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255']]);
         $data['slug'] = Str::slug($data['slug'] ?? '') ?: Str::slug($data['title']);
         $data['enrollment_available'] = $request->boolean('enrollment_available');
@@ -418,19 +447,36 @@ class AdminController extends Controller
 
     private function saveArticle(Request $request, Article $article)
     {
-        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
-        $data = $request->validate(['article_category_id' => ['nullable', 'exists:article_categories,id'], 'featured_image' => ['nullable', 'string', 'max:255'], 'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())], 'title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('articles', 'slug')->ignore($article->id)], 'excerpt' => ['nullable', 'string'], 'content' => ['required', 'string'], 'author' => ['nullable', 'string', 'max:120'], 'reading_time' => ['nullable', 'integer', 'min:1', 'max:240'], 'status' => ['required', 'in:draft,published,scheduled,archived'], 'published_at' => ['nullable', 'date'], 'is_featured' => ['nullable', 'boolean'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'tags' => ['nullable', 'string', 'max:500']]);
+        $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'content_type' => $request->input('content_type', 'article'), 'hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
+        $data = $request->validate(['article_category_id' => ['nullable', 'exists:article_categories,id'], 'team_member_id' => ['nullable', 'exists:team_members,id'], 'content_type' => ['required', Rule::in(array_keys(Article::CONTENT_TYPES))], 'featured_image' => ['nullable', 'string', 'max:255'], 'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())], 'title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('articles', 'slug')->ignore($article->id)], 'excerpt' => ['nullable', 'string'], 'content' => ['required', 'string'], 'author' => ['nullable', 'string', 'max:120'], 'reading_time' => ['nullable', 'integer', 'min:1', 'max:240'], 'status' => ['required', 'in:draft,published,scheduled,archived'], 'published_at' => [Rule::requiredIf($request->input('status') === 'scheduled'), 'nullable', 'date'], 'is_featured' => ['nullable', 'boolean'], 'feature_priority' => ['nullable', 'integer', 'min:0', 'max:999'], 'feature_start_at' => ['nullable', 'date'], 'feature_end_at' => ['nullable', 'date', 'after_or_equal:feature_start_at'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'tags' => ['nullable', 'string', 'max:500'], 'learning_topic_ids' => ['nullable', 'array'], 'learning_topic_ids.*' => ['integer', 'exists:learning_topics,id'], 'social_links' => ['nullable', 'array', 'max:12'], 'social_links.*.platform' => ['required_with:social_links.*.url', 'string', 'in:instagram,facebook,tiktok,youtube,x,linkedin'], 'social_links.*.url' => ['required_with:social_links.*.platform', 'url', 'max:500'], 'social_links.*.label' => ['nullable', 'string', 'max:190']]);
         $data['slug'] = Str::slug($data['slug'] ?? '') ?: Str::slug($data['title']);
         $data['is_featured'] = $request->boolean('is_featured');
+        $data['feature_priority'] = (int) ($data['feature_priority'] ?? 0);
         if ($data['status'] === 'published' && empty($data['published_at'])) $data['published_at'] = now();
         if (empty($data['reading_time'])) $data['reading_time'] = max(1, (int) ceil(str_word_count(strip_tags($data['content'])) / 200));
         $data['content'] = RichText::sanitize($data['content']);
         $tagNames = collect(explode(',', (string) ($data['tags'] ?? '')))->map(fn ($tag) => trim($tag))->filter()->unique()->values();
+        $learningTopicIds = $data['learning_topic_ids'] ?? [];
+        $socialLinks = collect($data['social_links'] ?? [])->values();
+        $allowedSocialHosts = ['instagram.com', 'facebook.com', 'tiktok.com', 'youtube.com', 'youtu.be', 'x.com', 'twitter.com', 'linkedin.com'];
+        foreach ($socialLinks as $socialLink) {
+            $parsed = parse_url($socialLink['url'] ?? '');
+            $host = strtolower((string) ($parsed['host'] ?? ''));
+            $safeHost = collect($allowedSocialHosts)->contains(fn ($allowed) => $host === $allowed || Str::endsWith($host, '.'.$allowed));
+            if (($parsed['scheme'] ?? '') !== 'https' || ! $safeHost) {
+                throw ValidationException::withMessages(['social_links' => 'Use a secure URL from the selected social platform.']);
+            }
+        }
         unset($data['tags']);
+        unset($data['learning_topic_ids']);
+        unset($data['social_links']);
         $wasExisting = $article->exists;
         $article->fill($data)->save();
         $tagIds = $tagNames->map(fn ($name) => \App\Models\Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name])->id);
         $article->tags()->sync($tagIds);
+        $article->learningTopics()->sync($learningTopicIds);
+        $article->socialLinks()->delete();
+        $socialLinks->each(fn ($link, $index) => $article->socialLinks()->create(['platform' => $link['platform'], 'url' => $link['url'], 'label' => $link['label'] ?? null, 'sort_order' => $index]));
         AdminAudit::record($wasExisting ? 'article.updated' : 'article.created', ($wasExisting ? 'Updated article ' : 'Created article ').$article->title, $article);
         return to_route('admin.articles')->with('success', 'Article saved.');
     }

@@ -16,6 +16,11 @@
         </div>
     </section>
 
+    <section class="admin-dashboard-section" aria-labelledby="editorial-overview-title">
+        <div class="admin-dashboard-section-heading"><div><p class="admin-eyebrow">Journal / Blog</p><h2 id="editorial-overview-title">Editorial overview</h2></div><a class="admin-card-link" href="{{ route('admin.journal') }}">Open all posts →</a></div>
+        <div class="admin-stats admin-operational-stats">@foreach($editorialKpis as $kpi)<x-admin.stat-card :label="$kpi['label']" :value="$kpi['value']" :description="$kpi['description']" :url="$kpi['url']" />@endforeach</div>
+    </section>
+
     <section class="admin-card admin-attention-panel" aria-labelledby="needs-attention-title">
         <header class="admin-card-header">
             <div><p class="admin-eyebrow">Action queue</p><h2 id="needs-attention-title">Needs attention</h2><p>Open work gathered from live enquiries, commerce and publishing records.</p></div>

@@ -171,8 +171,11 @@
                             </label>
                         </div>
 
-                        @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][body]', 'label' => 'Body', 'value' => old('sections.'.$section->id.'.body', $section->body), 'help' => 'Use headings, emphasis, lists, links and quotes. Unsafe HTML is sanitized before display.'])
+                        @if(!($page->key === 'about' && $section->key === 'philosophy') && $section->key !== 'mission-vision')
+                            @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][body]', 'label' => 'Body', 'value' => old('sections.'.$section->id.'.body', $section->body), 'help' => 'Use headings, emphasis, lists, links and quotes. Unsafe HTML is sanitized before display.'])
+                        @endif
 
+                        @if($section->key !== 'mission-vision')
                         @include('admin.components.media-field', [
                             'name' => 'sections['.$section->id.'][image]',
                             'oldName' => 'sections.'.$section->id.'.image',
@@ -180,6 +183,35 @@
                             'value' => $section->image,
                             'media' => $media,
                         ])
+                        @endif
+
+                        @if($page->key === 'about' && $section->key === 'philosophy')
+                            <fieldset class="form-section cms-about-story-fields">
+                                <legend>Who we are / Our story</legend>
+                                <label>Image alt text
+                                    <input name="sections[{{ $section->id }}][image_alt]" value="{{ old('sections.'.$section->id.'.image_alt', $sectionPayload['image_alt'] ?? '') }}" placeholder="Describe the meaningful image">
+                                </label>
+                                <label>Image focal point <span>(optional)</span>
+                                    <input name="sections[{{ $section->id }}][image_focal_point]" value="{{ old('sections.'.$section->id.'.image_focal_point', $sectionPayload['image_focal_point'] ?? 'center center') }}" placeholder="e.g. center 40%">
+                                </label>
+                                <div class="form-row"><label>Who we are heading<input name="sections[{{ $section->id }}][who_heading]" value="{{ old('sections.'.$section->id.'.who_heading', $sectionPayload['who_heading'] ?? '') }}"></label><label>Our story heading<input name="sections[{{ $section->id }}][story_heading]" value="{{ old('sections.'.$section->id.'.story_heading', $sectionPayload['story_heading'] ?? '') }}"></label></div>
+                                @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][who_body]', 'label' => 'Who we are body', 'value' => old('sections.'.$section->id.'.who_body', $sectionPayload['who_body'] ?? ''), 'help' => 'Keep this concise and factual.'])
+                                @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][story_body]', 'label' => 'Our story body', 'value' => old('sections.'.$section->id.'.story_body', $sectionPayload['story_body'] ?? ''), 'help' => 'Describe the origin and philosophy without unsupported claims.'])
+                                <div class="form-row"><label>Quote label<input name="sections[{{ $section->id }}][quote_label]" value="{{ old('sections.'.$section->id.'.quote_label', $sectionPayload['quote_label'] ?? '') }}"></label><label>Quote<textarea name="sections[{{ $section->id }}][quote]" rows="3">{{ old('sections.'.$section->id.'.quote', $sectionPayload['quote'] ?? '') }}</textarea></label></div>
+                            </fieldset>
+                        @endif
+
+                        @if($page->key === 'about' && $section->key === 'mission-vision')
+                            <fieldset class="form-section cms-mission-vision-fields">
+                                <legend>Mission and vision</legend>
+                                <div class="form-row"><label>Mission label<input name="sections[{{ $section->id }}][mission_label]" value="{{ old('sections.'.$section->id.'.mission_label', $sectionPayload['mission_label'] ?? '') }}"></label><label>Mission heading<input name="sections[{{ $section->id }}][mission_heading]" value="{{ old('sections.'.$section->id.'.mission_heading', $sectionPayload['mission_heading'] ?? '') }}"></label></div>
+                                @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][mission_body]', 'label' => 'Mission body', 'value' => old('sections.'.$section->id.'.mission_body', $sectionPayload['mission_body'] ?? '')])
+                                <label class="checkbox-field"><input type="hidden" name="sections[{{ $section->id }}][mission_enabled]" value="0"><input type="checkbox" name="sections[{{ $section->id }}][mission_enabled]" value="1" @checked(old('sections.'.$section->id.'.mission_enabled', $sectionPayload['mission_enabled'] ?? true))> Mission visible</label>
+                                <div class="form-row"><label>Vision label<input name="sections[{{ $section->id }}][vision_label]" value="{{ old('sections.'.$section->id.'.vision_label', $sectionPayload['vision_label'] ?? '') }}"></label><label>Vision heading<input name="sections[{{ $section->id }}][vision_heading]" value="{{ old('sections.'.$section->id.'.vision_heading', $sectionPayload['vision_heading'] ?? '') }}"></label></div>
+                                @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][vision_body]', 'label' => 'Vision body', 'value' => old('sections.'.$section->id.'.vision_body', $sectionPayload['vision_body'] ?? '')])
+                                <label class="checkbox-field"><input type="hidden" name="sections[{{ $section->id }}][vision_enabled]" value="0"><input type="checkbox" name="sections[{{ $section->id }}][vision_enabled]" value="1" @checked(old('sections.'.$section->id.'.vision_enabled', $sectionPayload['vision_enabled'] ?? true))> Vision visible</label>
+                            </fieldset>
+                        @endif
 
                         <div class="form-row">
                             <label>CTA label

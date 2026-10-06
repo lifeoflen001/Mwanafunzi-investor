@@ -3,6 +3,14 @@
 @section('portal-heading', 'Pages')
 @section('content')
 <x-admin.page-header eyebrow="{{ $pageIndexEyebrow ?? 'Website / Pages' }}" title="{{ $pageIndexTitle ?? 'Pages' }}" description="{{ $pageIndexDescription ?? 'Manage page identity, hero content, visibility and SEO without editing templates.' }}" action-url="{{ route('admin.pages.create', !empty($pageIndexCreateType) ? ['page_type' => $pageIndexCreateType] : []) }}" action-label="{{ $pageIndexCreateLabel ?? 'Add page' }}" />
+@if(isset($homePage) && $homePage)
+    <x-admin.card class="admin-homepage-card" title="Homepage / main landing page" subtitle="This controls the public website homepage at /. Edit its hero, structured sections and SEO here.">
+        <div class="admin-homepage-card-body">
+            <div><strong>{{ $homePage->name }}</strong><small>{{ $homePage->sections_count }} editable sections · {{ $homePage->status }}</small></div>
+            <div class="admin-actions"><a class="button button-primary button-small" href="{{ route('admin.pages.edit', $homePage) }}">Edit homepage <span aria-hidden="true">↗</span></a><a class="text-link" href="{{ route('home') }}" target="_blank" rel="noopener">View live page</a></div>
+        </div>
+    </x-admin.card>
+@endif
 <x-admin.card class="admin-table-card"><div class="admin-table"><div class="admin-table-head"><span>Page</span><span>Type</span><span>Status</span><span>Sections</span><span>Updated</span><span></span></div>@forelse($pages as $page)<div class="admin-table-row"><span><strong>{{ $page->name }}</strong><small>{{ $page->slug ?: 'Homepage registry key' }}</small></span><span>{{ $page->page_type }}</span><x-admin.status-badge :status="$page->status" /><span>{{ $page->sections_count }}</span><span>{{ $page->updated_at?->format('M j, Y') }}</span><x-admin.action-menu><a href="{{ route('admin.pages.edit', $page) }}">Edit page</a></x-admin.action-menu></div>@empty<x-admin.empty-state title="No pages registered." />@endforelse</div></x-admin.card>
 {{ $pages->links() }}
 @endsection

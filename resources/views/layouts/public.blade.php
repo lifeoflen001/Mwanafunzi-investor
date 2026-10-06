@@ -2,6 +2,8 @@
     $brandName = \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
     $brandLogo = \App\Models\SiteSetting::getValue('logo');
     $brandLogoData = $brandLogo ? \App\Support\PublicHero::candidate($brandLogo) : null;
+    $brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.png');
+    $brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.png');
     $email = \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
     $phone = \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
     $whatsapp = \App\Models\SiteSetting::getValue('contact_whatsapp');
@@ -26,9 +28,8 @@
     $headRobots = trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: 'index,follow');
     $headOgTitle = trim($__env->yieldContent('og_title')) ?: ($seoPage?->og_title ?: $headTitle);
     $headOgDescription = trim($__env->yieldContent('og_description')) ?: ($seoPage?->og_description ?: $headDescription);
-    $favicon = \App\Models\SiteSetting::getValue('favicon', 'favicon.svg') ?: 'favicon.svg';
     $appleTouchIcon = \App\Models\SiteSetting::getValue('apple_touch_icon');
-    $faviconUrl = str_starts_with($favicon, 'http') || str_starts_with($favicon, '/') || $favicon === 'favicon.svg' ? asset($favicon) : asset('storage/'.$favicon);
+    $faviconUrl = asset('favicon.svg');
     $socialImage = $seoPage?->og_image ?: \App\Models\SiteSetting::getValue('default_social_image') ?: (request()->routeIs('legal') ? config('public.hero_defaults.legal') : config('public.hero_defaults.default'));
     $socialImageData = \App\Support\PublicHero::candidate($socialImage);
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
@@ -36,6 +37,11 @@
     $businessUnits = \App\Support\PublicSiteData::businessUnits();
     $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
     $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
+    $hasJournalNavigation = $headerNavigation->contains(function ($item) {
+        return in_array(strtolower(trim((string) $item->label)), ['blog', 'journal'], true)
+            || (string) $item->route_name === 'journal'
+            || rtrim((string) $item->url, '/') === '/journal';
+    });
     $footerNavigation = \App\Support\PublicSiteData::footerNavigation();
     $socialLinks = \App\Support\PublicSiteData::socialLinks();
 @endphp
@@ -50,38 +56,56 @@
     <meta property="og:title" content="{{ $headOgTitle }}">
     <meta property="og:description" content="{{ $headOgDescription }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:url" content="{{ $headCanonical }}">
     <meta property="og:image" content="{{ $headOgImage }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $headOgTitle }}">
     <meta name="twitter:description" content="{{ $headOgDescription }}">
     <meta name="twitter:image" content="{{ $headOgImage }}">
     <link rel="icon" href="{{ $faviconUrl }}">
+    <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Journal" href="{{ route('feed') }}">
     @if($appleTouchIcon)<link rel="apple-touch-icon" href="{{ asset('storage/'.$appleTouchIcon) }}">@endif
     <title>{{ $headTitle }}</title>
-    <script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
+    @yield('article_meta')
+    @php($schemaContext = chr(64).'context')
+    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
     @yield('structured_data')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
 </head>
-<body class="internal-page">
+<body class="internal-page @yield('body_class')">
     @if(!empty($preview))<div class="preview-banner" role="status">Private draft preview · This link expires automatically and is not publicly discoverable.</div>@endif
     <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header internal-header" data-header>
         <div class="header-inner container">
-            <a class="brand" href="{{ route('home') }}" aria-label="{{ $brandName }} home">@if($brandLogoData)<img class="brand-image" src="{{ $brandLogoData['url'] }}" alt="{{ $brandName }}">@else<img class="brand-icon" src="{{ asset('favicon.svg') }}" alt=""><span class="brand-copy"><strong>MWANAFUNZI</strong><small>INVESTOR</small></span>@endif</a>
-            <nav class="desktop-nav" aria-label="Primary navigation">
-                @forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>@endforelse
-            </nav>
-            <div class="header-actions"><a class="header-contact" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Account' : 'Sign in' }}</a><a class="button button-small button-light" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
+            <a class="brand" href="{{ route('home') }}" aria-label="{{ $brandName }} home"><img class="brand-image brand-logo-dark" src="{{ $brandLogoDarkUrl }}" alt="{{ $brandName }}"><img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt=""></a>
+            @if(request()->routeIs('login', 'register'))
+                <div class="header-actions"><a class="header-contact auth-back-link" href="{{ route('home') }}">Back to website <span aria-hidden="true">↗</span></a></div>
+            @else
+                <nav class="desktop-nav" aria-label="Primary navigation">
+                    @if($headerNavigation->isNotEmpty())
+                        @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
+                    @else
+                        @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>
+                    @endif
+                    @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog</a>@endunless
+                </nav>
+                <div class="header-actions"><a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
+            @endif
         </div>
-        <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="Mobile navigation">
-            @forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a>@endforelse
-        </nav><a class="button button-dark" href="{{ route('contact') }}">Contact the desk <span aria-hidden="true">↗</span></a></div>
+        @if(!request()->routeIs('login', 'register'))
+            <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="Mobile navigation">
+                @if($headerNavigation->isNotEmpty())
+                    @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
+                @else
+                    @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
+                @endif
+                @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
+                <a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a>
+            </nav><a class="button button-dark" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a></div>
+        @endif
     </header>
     <main id="main-content">@yield('content')</main>
-    <footer class="site-footer"><div class="container"><div class="footer-top"><div class="footer-brand"><a class="brand" href="{{ route('home') }}">@if($brandLogoData)<img class="brand-image" src="{{ $brandLogoData['url'] }}" alt="{{ $brandName }}">@else<span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span><span class="brand-copy"><strong>MWANAFUNZI</strong><small>INVESTOR</small></span>@endif</a><p>{!! nl2br(e($footerCopy)) !!}</p></div><div class="footer-nav">
-        @forelse($footerNavigation as $group => $items)<div><span>{{ ucfirst($group) }}</span>@foreach($items as $item)<a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->label }}</a>@foreach($item->children->where('is_visible', true)->sortBy('sort_order') as $child)<a class="footer-sub-link" href="{{ $child->href() }}" target="{{ $child->target }}">{{ $child->label }}</a>@endforeach @endforeach</div>@empty<div><span>Explore</span><a href="{{ route('learn') }}">Learn</a><a href="{{ route('courses') }}">Courses</a><a href="{{ route('tools') }}">Tools</a></div><div><span>Company</span><a href="{{ route('journal') }}">Journal</a><a href="{{ route('about') }}">About</a><a href="{{ route('contact') }}">Contact</a></div>@endforelse
-        <div class="footer-contact"><span>Contact</span><a href="mailto:{{ $email }}">{{ $email }}</a><a href="tel:{{ preg_replace('/\D+/', '', $phone) }}">{{ $phone }}</a>@if($whatsapp)<a href="https://wa.me/{{ preg_replace('/\D+/', '', $whatsapp) }}" target="_blank" rel="noopener">WhatsApp {{ $whatsapp }}</a>@endif<p>{{ $location }}</p>@if($socialLinks->isNotEmpty())<div class="footer-social"><span>Follow</span>@foreach($socialLinks as $social)<a href="{{ $social->url }}" target="_blank" rel="noopener noreferrer">{{ $social->label }} <span aria-hidden="true">↗</span></a>@endforeach</div>@endif</div></div></div><div class="footer-bottom"><span>{{ $footerCopyright }}</span><div>@if(isset($footerNavigation['legal'])) @foreach($footerNavigation['legal'] as $item)<a href="{{ $item->href() }}">{{ $item->label }}</a>@endforeach @else<a href="{{ route('legal', 'privacy-policy') }}">Privacy</a><a href="{{ route('legal', 'terms') }}">Terms</a><a href="{{ route('legal', 'risk-disclosure') }}">Risk disclosure</a>@endif</div><strong>{{ $footerBottomStatement }}</strong></div><p class="site-disclaimer">{{ $disclaimer }}</p></div></footer>
+    @include('partials.public-footer')
 </body>
 </html>

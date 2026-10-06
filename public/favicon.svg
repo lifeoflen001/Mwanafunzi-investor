@@ -1,5 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Mwanafunzi Investor mark">
-    <path d="M8 54 17 31h14L22 54H8Z" fill="#c56c38"/>
-    <path d="M25 54 36 19h14L39 54H25Z" fill="#c56c38"/>
-    <path d="M42 54 53 7h14L56 54H42Z" fill="#c56c38"/>
+    <defs>
+        <linearGradient id="mwanafunzi-orange" x1="0" y1="0" x2="0.9" y2="1">
+            <stop offset="0" stop-color="#ff9f00"/>
+            <stop offset="1" stop-color="#ff5600"/>
+        </linearGradient>
+    </defs>
+    <path d="M5 56 15 32h14L22 56H5Z" fill="url(#mwanafunzi-orange)"/>
+    <path d="M23 56 35 18h14L40 56H23Z" fill="url(#mwanafunzi-orange)"/>
+    <path d="M40 56 51 5h13L55 56H40Z" fill="url(#mwanafunzi-orange)"/>
 </svg>
