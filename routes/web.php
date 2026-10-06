@@ -36,8 +36,15 @@ use Illuminate\Support\Facades\Route;
 Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('/financial-academy', 'academy')->name('forex-academy');
-    Route::get('/digital-systems', 'module')->defaults('slug', 'development')->name('digital-systems');
+    Route::get('/digital-software', 'module')->defaults('slug', 'development')->name('digital-systems');
+    Route::get('/digital-software/products', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'products')->name('digital-software.products');
+    Route::get('/digital-software/projects', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'projects')->name('digital-software.projects');
+    Route::get('/digital-software/testimonials', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'testimonials')->name('digital-software.testimonials');
+    Route::redirect('/digital-systems', '/digital-software', 301)->name('digital-systems.legacy');
     Route::get('/creative-studio', 'module')->defaults('slug', 'studio')->name('creative-studio');
+    Route::get('/creative-studio/services', 'moduleCollection')->defaults('slug', 'studio')->defaults('collection', 'services')->name('creative-studio.services');
+    Route::get('/creative-studio/projects', 'moduleCollection')->defaults('slug', 'studio')->defaults('collection', 'projects')->name('creative-studio.projects');
+    Route::get('/creative-studio/testimonials', 'moduleCollection')->defaults('slug', 'studio')->defaults('collection', 'testimonials')->name('creative-studio.testimonials');
     Route::get('/development', 'module')->defaults('slug', 'development')->name('development');
     Route::get('/studio', 'module')->defaults('slug', 'studio')->name('studio');
     Route::get('/services', 'services')->name('services');

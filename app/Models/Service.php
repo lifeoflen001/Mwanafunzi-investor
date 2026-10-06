@@ -10,7 +10,7 @@ class Service extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'short_description', 'detailed_description', 'icon', 'featured_image', 'starting_price', 'pricing_label', 'currency', 'pricing_type', 'delivery_estimate', 'included_features', 'cta_label', 'cta_url', 'sort_order', 'is_featured', 'is_active', 'seo_title', 'seo_description', 'canonical_url', 'robots', 'og_image'];
+    protected $fillable = ['title', 'slug', 'business_unit_id', 'short_description', 'detailed_description', 'icon', 'featured_image', 'starting_price', 'pricing_label', 'currency', 'pricing_type', 'delivery_estimate', 'included_features', 'cta_label', 'cta_url', 'sort_order', 'is_featured', 'is_active', 'seo_title', 'seo_description', 'canonical_url', 'robots', 'og_image'];
 
     protected function casts(): array
     {
@@ -18,6 +18,8 @@ class Service extends Model
     }
 
     public function projects() { return $this->belongsToMany(Project::class)->orderBy('display_order'); }
+
+    public function businessUnit() { return $this->belongsTo(BusinessUnit::class); }
 
     public function scopeActive(Builder $query): Builder { return $query->where('is_active', true); }
 

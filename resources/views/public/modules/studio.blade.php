@@ -1,8 +1,12 @@
 @extends('layouts.public')
 
+@section('service_context', 'studio')
+
 @php
     $sections = $page->sections->where('is_enabled', true)->keyBy('key');
     $services = $sections->get('services');
+    $formats = $sections->get('formats');
+    $testimonials = $sections->get('testimonials');
     $approach = $sections->get('approach');
     $process = $sections->get('process');
     $cta = $sections->get('final_cta');
@@ -38,6 +42,24 @@
                     @endforeach
                 </div>
             </div>
+        </section>
+    @endif
+
+    @if($formats)
+        <section class="platform-muted platform-section studio-formats" id="formats">
+            <div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ $formats->payload['eyebrow'] ?? 'Formats' }}</p><h2>{{ $formats->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($formats->body) !!}</div></div><div class="service-card-grid">@foreach($formats->payload['cards'] ?? [] as $card)<article class="service-card service-card-muted"><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div></div>
+        </section>
+    @endif
+
+    @if($featuredProjects->isNotEmpty())
+        <section class="platform-section studio-projects" id="projects">
+            <div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p><h2>Stories worth keeping.</h2></div><a class="text-link" href="{{ route('creative-studio.projects') }}">View studio projects <span aria-hidden="true">↗</span></a></div><div class="service-project-grid">@foreach($featuredProjects->take(3) as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="service-project-card" href="{{ route('creative-studio.projects') }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Creative project' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div>
+        </section>
+    @endif
+
+    @if($testimonials)
+        <section class="platform-dark platform-section service-testimonials" id="testimonials">
+            <div class="container"><div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $testimonials->payload['eyebrow'] ?? 'Client perspective' }}</p><h2>{{ $testimonials->heading }}</h2></div><div class="rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div>@if($featuredTestimonials->isNotEmpty())<div class="service-testimonial-grid">@foreach($featuredTestimonials->take(3) as $testimonial)<blockquote>“{{ $testimonial->testimonial }}”<footer><strong>{{ $testimonial->displayName() }}</strong>@if($testimonial->client_role){{ $testimonial->client_role }}@endif</footer></blockquote>@endforeach</div>@else<div class="service-empty-note">Published client perspectives will appear here as they are approved in the admin desk.</div>@endif<a class="text-link text-link-light" href="{{ route('creative-studio.testimonials') }}">Explore studio testimonials <span aria-hidden="true">↗</span></a></div>
         </section>
     @endif
 

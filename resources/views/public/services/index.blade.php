@@ -2,11 +2,11 @@
 
 @php($pageSections = $page?->sections?->where('is_enabled', true)->keyBy('key') ?? collect())
 @section('title', $page?->seo_title ?: 'Services — Mwanafunzi Investor')
-@section('description', $page?->seo_description ?: 'Digital systems, web applications and operational tools shaped around real business needs.')
+@section('description', $page?->seo_description ?: 'Digital software, websites and operational tools shaped around real business needs.')
 @section('canonical', $page?->canonical_url ?: route('services'))
 
 @section('content')
-    <x-public-hero class="public-page-hero services-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Services'" :title="$page?->hero_title ?: 'Services built around real business needs'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Services').'<br><em>'.e($page->hero_highlight).'</em>' : null" :summary="$page?->hero_summary ?: 'Digital systems, web applications and operational tools shaped around the way your business actually works.'" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
+    <x-public-hero class="public-page-hero services-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Services'" :title="$page?->hero_title ?: 'Services built around real business needs'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Services').'<br><em>'.e($page->hero_highlight).'</em>' : null" :summary="$page?->hero_summary ?: 'Digital software, websites and operational tools shaped around the way your business actually works.'" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
         <a class="button button-accent" href="{{ $page?->hero_primary_url ?: route('contact', ['module' => 'development']) }}">{{ $page?->hero_primary_label ?: 'Start a project' }} <span aria-hidden="true">↗</span></a>
     </x-public-hero>
 

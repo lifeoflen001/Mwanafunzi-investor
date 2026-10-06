@@ -9,7 +9,7 @@ return new class extends Migration
     {
         DB::table('team_members')->where('slug', 'lenkai-mollel')->update([
             'role' => 'Software Developer & Video Editor',
-            'department' => 'Digital Systems & Creative Studio',
+            'department' => 'Digital Software & Creative Studio',
             'short_intro' => 'Builds thoughtful digital systems and shapes clear visual stories through editing.',
             'focus' => 'Turning complex ideas into reliable software and purposeful visual stories.',
             'expertise' => json_encode(['Software development', 'Web applications and systems', 'Video editing and post-production']),

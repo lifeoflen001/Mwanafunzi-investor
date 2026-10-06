@@ -47,6 +47,16 @@ class PlatformRoutesTest extends TestCase
         $this->get('/forex-academy')->assertRedirect('/financial-academy');
     }
 
+    public function test_service_sites_keep_scoped_navigation_and_shared_footer(): void
+    {
+        foreach (['/digital-software', '/digital-software/products', '/digital-software/projects', '/digital-software/testimonials', '/creative-studio', '/creative-studio/services', '/creative-studio/projects', '/creative-studio/testimonials'] as $route) {
+            $this->get($route)->assertOk()->assertSee('site-footer', false);
+        }
+
+        $this->get('/digital-software')->assertSee('/digital-software/products')->assertSee('Digital Software');
+        $this->get('/creative-studio')->assertSee('/creative-studio/projects')->assertSee('Creative Studio');
+    }
+
     public function test_client_login_surface_uses_accessible_auth_controls(): void
     {
         $this->get(route('login'))

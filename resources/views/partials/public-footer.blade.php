@@ -9,7 +9,7 @@
                     <img class="brand-image brand-logo-light" src="{{ asset('images/brand/mwanafunzi-logo-light.png') }}" alt="{{ $brandName }}">
                 </a>
                 <p class="footer-tagline">{!! nl2br(e($footerCopy)) !!}</p>
-                <p class="footer-brand-context">Learn carefully, build useful systems and create work with a point of view.</p>
+                <p class="footer-brand-context">Learn, build and create works with a point of view.</p>
                 @if($socialLinks->isNotEmpty())
                     <div class="footer-social" aria-label="Social links">
                         <span>Follow</span>
@@ -55,7 +55,7 @@
                 @empty
                     <div><span>Explore</span><a href="{{ route('learn') }}">Learn</a><a href="{{ route('courses') }}">Courses</a><a href="{{ route('tools') }}">Tools</a></div>
                     <div><span>Company</span><a href="{{ route('journal') }}">Blog</a><a href="{{ route('about') }}">About us</a><a href="{{ route('contact') }}">Contact us</a></div>
-                    <div><span>Legal</span><a href="{{ route('legal', 'privacy-policy') }}">Privacy</a><a href="{{ route('legal', 'terms') }}">Terms</a><a href="{{ route('legal', 'risk-disclosure') }}">Risk disclosure</a></div>
+                    <div><span>Legal</span><a href="{{ route('legal', 'privacy-policy') }}">Privacy policy</a><a href="{{ route('legal', 'terms') }}">Terms of services</a><a href="{{ route('legal', 'risk-disclosure') }}">Risk disclosure</a></div>
                 @endforelse
 
                 <div class="footer-contact">

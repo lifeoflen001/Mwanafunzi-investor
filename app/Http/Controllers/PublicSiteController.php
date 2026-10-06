@@ -28,20 +28,45 @@ class PublicSiteController extends Controller
     {
         $module = BusinessUnit::query()->active()->where('slug', $slug)->firstOrFail();
         $page = $this->cmsPage($slug);
+        $serviceScope = fn ($query) => $query->where('business_unit_id', $module->id);
+        $featuredProjects = Project::published()->whereHas('services', $serviceScope)->with(['services', 'gallery'])->orderBy('display_order')->orderByDesc('project_date')->limit(6)->get();
+        $featuredTestimonials = Testimonial::published()->whereHas('project.services', $serviceScope)->with('project')->orderBy('sort_order')->limit(6)->get();
+        PublicHero::preloadMedia($featuredProjects->pluck('featured_image'));
 
         if ($module->route_name === 'home') {
             return to_route('home');
         }
 
         if ($module->slug === 'development') {
-            return view('public.modules.development', compact('module', 'page'));
+            return view('public.modules.development', compact('module', 'page', 'featuredProjects', 'featuredTestimonials'));
         }
 
         if ($module->slug === 'studio') {
-            return view('public.modules.studio', compact('module', 'page'));
+            return view('public.modules.studio', compact('module', 'page', 'featuredProjects', 'featuredTestimonials'));
         }
 
         return view('public.modules.show', compact('module', 'page'));
+    }
+
+    public function moduleCollection(string $slug, string $collection)
+    {
+        abort_unless(in_array($collection, ['products', 'services', 'projects', 'testimonials'], true), 404);
+
+        $module = BusinessUnit::query()->active()->where('slug', $slug)->firstOrFail();
+        $page = $this->cmsPage($slug);
+        $projects = collect();
+        $testimonials = collect();
+
+        if ($collection === 'projects') {
+            $projects = Project::published()->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12);
+            PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
+        }
+
+        if ($collection === 'testimonials') {
+            $testimonials = Testimonial::published()->whereHas('project.services', fn ($query) => $query->where('business_unit_id', $module->id))->with('project')->orderBy('sort_order')->paginate(12);
+        }
+
+        return view('public.modules.collection', compact('module', 'page', 'collection', 'projects', 'testimonials'));
     }
 
     public function home()
@@ -279,7 +304,7 @@ class PublicSiteController extends Controller
     public function sitemap()
     {
         $urls = collect([
-            route('home'), route('forex-academy'), route('digital-systems'), route('creative-studio'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('journal'), route('feed'), route('about'), route('contact'), route('student-of-money'),
+            route('home'), route('forex-academy'), route('digital-systems'), route('digital-software.products'), route('digital-software.projects'), route('digital-software.testimonials'), route('creative-studio'), route('creative-studio.services'), route('creative-studio.projects'), route('creative-studio.testimonials'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('journal'), route('feed'), route('about'), route('contact'), route('student-of-money'),
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
         $urls = $urls->merge(TeamMember::active()->get()->map(fn ($member) => route('team.show', $member->slug)));

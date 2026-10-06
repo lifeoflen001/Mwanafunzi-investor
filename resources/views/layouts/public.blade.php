@@ -15,8 +15,8 @@
     $seoPageKey = match (request()->route()?->getName()) {
         'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
         'forex-academy' => 'learn',
-        'digital-systems' => 'development',
-        'creative-studio' => 'studio',
+        'digital-software', 'digital-software.products', 'digital-software.projects', 'digital-software.testimonials', 'digital-systems' => 'development',
+        'creative-studio', 'creative-studio.services', 'creative-studio.projects', 'creative-studio.testimonials' => 'studio',
         'legal' => request()->route('page'),
         default => null,
     };
@@ -36,6 +36,12 @@
     $headOgImage = trim($__env->yieldContent('og_image')) ?: $socialImageUrl;
     $businessUnits = \App\Support\PublicSiteData::businessUnits();
     $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
+    $serviceContext = trim($__env->yieldContent('service_context'));
+    if ($serviceContext === '') {
+        $serviceContext = request()->is('financial-academy*') ? 'forex' : (request()->is('digital-software*', 'development*') ? 'development' : (request()->is('creative-studio*', 'studio*') ? 'studio' : ''));
+    }
+    $serviceHomeUrl = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')][$serviceContext] ?? route('home');
+    $serviceContactUrl = $serviceContext ? route('contact', ['module' => $serviceContext]) : route('contact');
     $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
     $hasJournalNavigation = $headerNavigation->contains(function ($item) {
         return in_array(strtolower(trim((string) $item->label)), ['blog', 'journal'], true)
@@ -73,36 +79,40 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
 </head>
-<body class="internal-page @yield('body_class')">
+<body class="internal-page @yield('body_class'){{ $serviceContext ? ' service-context-'.$serviceContext : '' }}">
     @if(!empty($preview))<div class="preview-banner" role="status">Private draft preview · This link expires automatically and is not publicly discoverable.</div>@endif
     <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header internal-header" data-header>
         <div class="header-inner container">
-            <a class="brand" href="{{ route('home') }}" aria-label="{{ $brandName }} home"><img class="brand-image brand-logo-dark" src="{{ $brandLogoDarkUrl }}" alt="{{ $brandName }}"><img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt=""></a>
+            <a class="brand" href="{{ $serviceHomeUrl }}" aria-label="{{ $serviceContext ? ucfirst($serviceContext).' home' : $brandName.' home' }}"><img class="brand-image brand-logo-dark" src="{{ $brandLogoDarkUrl }}" alt="{{ $brandName }}"><img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt=""></a>
             @if(request()->routeIs('login', 'register'))
                 <div class="header-actions"><a class="header-contact auth-back-link" href="{{ route('home') }}">Back to website <span aria-hidden="true">↗</span></a></div>
             @else
-                <nav class="desktop-nav" aria-label="Primary navigation">
-                    @if($headerNavigation->isNotEmpty())
+                <nav class="desktop-nav {{ $serviceContext ? 'service-desktop-nav' : '' }}" aria-label="{{ $serviceContext ? 'Service navigation' : 'Primary navigation' }}">
+                    @if($serviceContext)
+                        @include('partials.service-navigation', ['serviceContext' => $serviceContext])
+                    @elseif($headerNavigation->isNotEmpty())
                         @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
                     @else
                         @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>
                     @endif
                     @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog</a>@endunless
                 </nav>
-                <div class="header-actions"><a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
+                <div class="header-actions"><a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
             @endif
         </div>
         @if(!request()->routeIs('login', 'register'))
-            <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="Mobile navigation">
-                @if($headerNavigation->isNotEmpty())
+            <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="{{ $serviceContext ? 'Service navigation' : 'Mobile navigation' }}">
+                @if($serviceContext)
+                    @include('partials.service-navigation', ['serviceContext' => $serviceContext])
+                @elseif($headerNavigation->isNotEmpty())
                     @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
                 @else
                     @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
                 @endif
                 @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
                 <a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a>
-            </nav><a class="button button-dark" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a></div>
+            </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a></div>
         @endif
     </header>
     <main id="main-content">@yield('content')</main>

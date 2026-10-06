@@ -34,11 +34,11 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'slug' => 'development',
-                'name' => 'Digital Systems',
+                'name' => 'Digital Software',
                 'tagline' => 'Websites and software built for real work.',
                 'description' => 'Websites, Laravel systems, dashboards and integrations for organisations that need dependable digital tools.',
                 'accent_color' => '#56736d',
-                'route_name' => 'development',
+                'route_name' => 'digital-systems',
                 'sort_order' => 2,
             ],
             [
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $teamMembers = [
-            ['name' => 'Lenkai Mollel', 'slug' => 'lenkai-mollel', 'role' => 'Software Developer & Video Editor', 'department' => 'Digital Systems & Creative Studio', 'short_intro' => 'Builds thoughtful digital systems and shapes clear visual stories through editing.', 'focus' => 'Turning complex ideas into reliable software and purposeful visual stories.', 'expertise' => ['Software development', 'Web applications and systems', 'Video editing and post-production'], 'bio' => 'Lenkai works across software development and post-production, bringing structure, care and a strong editorial eye to every project. He builds useful digital experiences and edits video that gives people and ideas room to be understood.', 'portrait' => '/images/team/lenkai-mollel.jpg', 'sort_order' => 2],
+            ['name' => 'Lenkai Mollel', 'slug' => 'lenkai-mollel', 'role' => 'Software Developer & Video Editor', 'department' => 'Digital Software & Creative Studio', 'short_intro' => 'Builds thoughtful digital software and shapes clear visual stories through editing.', 'focus' => 'Turning complex ideas into reliable software and purposeful visual stories.', 'expertise' => ['Software development', 'Web applications and systems', 'Video editing and post-production'], 'bio' => 'Lenkai works across software development and post-production, bringing structure, care and a strong editorial eye to every project. He builds useful digital experiences and edits video that gives people and ideas room to be understood.', 'portrait' => '/images/team/lenkai-mollel.jpg', 'sort_order' => 2],
             ['name' => 'David Lyengi', 'slug' => 'david-lyengi', 'role' => 'Senior Financial Advisor, Forex Trader & Photographer', 'department' => 'Financial Academy & Creative Studio', 'short_intro' => 'Guides disciplined market thinking while creating photographs with clarity and intent.', 'focus' => 'Helping people make better decisions in uncertain markets and meaningful images.', 'expertise' => ['Financial education and advisory', 'Forex trading and risk discipline', 'Photography and visual storytelling'], 'bio' => 'David brings together senior financial advisory, practical forex trading and photography. His work is grounded in disciplined decision-making: understand the context, respect the risk and communicate with clarity.', 'portrait' => '/images/team/david-lyengi.jpg', 'sort_order' => 1],
         ];
         foreach ($teamMembers as $teamMember) {
