@@ -110,7 +110,6 @@
             </header>
             <main class="portal-content" id="admin-main-content">
                 <x-admin.flash />
-                @if($validationErrors->any())<div class="form-errors" role="alert"><strong>Please correct the highlighted fields.</strong><ul>@foreach($validationErrors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
                 @yield('content')
             </main>
         </div>

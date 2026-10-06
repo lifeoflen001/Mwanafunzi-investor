@@ -48,8 +48,7 @@
 
             <form class="contact-form" method="post" action="{{ route('contact.submit') }}">
                 @csrf
-                @if(session('success'))<div class="form-success" role="status">{{ session('success') }}</div>@endif
-                @if($errors->any())<div class="form-errors" role="alert">Please check the highlighted fields and try again.</div>@endif
+                @include('partials.form-feedback')
                 <p class="contact-form-intro">A few details help us send your enquiry to the right part of the platform.</p>
                 <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" name="website"></label>
                 <div class="form-row">

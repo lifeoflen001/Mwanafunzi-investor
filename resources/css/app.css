@@ -2321,3 +2321,41 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
     .admin-portal .portal-content { padding-right:14px; padding-left:14px; }
     .admin-portal .admin-stats { grid-template-columns:1fr; }
 }
+
+/* Production feedback primitives: one restrained language across public, admin and client forms. */
+.feedback-stack { display:grid; gap:8px; margin:0 0 18px; }
+.feedback { display:grid; grid-template-columns:24px minmax(0,1fr) 24px; gap:10px; align-items:start; padding:12px 13px; border:1px solid var(--line); border-left:3px solid var(--copper); border-radius:3px; background:var(--white); color:var(--ink); font-size:13px; line-height:1.45; }
+.feedback-success { border-color:#cbdccc; border-left-color:#5f8c68; background:#f1f7f1; }
+.feedback-info { border-color:#d5dadd; border-left-color:#5e789a; background:#f3f6f7; }
+.feedback-warning { border-color:#ead8b5; border-left-color:#b28232; background:#fff8e9; }
+.feedback-error { border-color:#e6c6bf; border-left-color:#a34b3b; background:#fff3f0; }
+.feedback-icon { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:rgba(197,108,56,.12); color:var(--copper-dark); font-weight:700; }
+.feedback-success .feedback-icon { background:#deeddf; color:#3c6b49; }
+.feedback-info .feedback-icon { background:#e3ebf2; color:#506d91; }
+.feedback-warning .feedback-icon { background:#ffedc8; color:#8a5b18; }
+.feedback-error .feedback-icon { background:#f5dcd7; color:#9b4639; }
+.feedback-copy { display:grid; gap:2px; min-width:0; }
+.feedback-copy strong { color:var(--ink); font-size:12px; }
+.feedback-copy>span { color:var(--muted); }
+.feedback-copy a { color:var(--copper-dark); text-decoration:underline; text-underline-offset:2px; }
+.feedback-copy ul { display:grid; gap:3px; margin:6px 0 0 16px; padding:0; color:var(--muted); }
+.feedback-close { width:24px; height:24px; padding:0; border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:18px; line-height:1; }
+.feedback-close:hover { color:var(--ink); }
+.feedback-validation-summary { margin-bottom:18px; }
+.feedback-validation-summary:target { outline:2px solid rgba(255,106,0,.3); outline-offset:3px; }
+.field-error,.client-field-error { display:block; color:#9b4639; font:12px/1.45 var(--sans); letter-spacing:normal; text-transform:none; }
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"] { border-color:#a34b3b!important; outline:2px solid rgba(163,75,59,.12); }
+.password-match-error { margin-top:6px; }
+.admin-password-field,.client-password-field,.student-password-field,.workspace-password-field { position:relative; }
+.admin-password-field input,.client-password-field input,.student-password-field input,.workspace-password-field input { padding-right:70px; }
+.admin-password-toggle,.client-password-toggle,.student-password-field button,.workspace-password-field button { position:absolute; top:50%; right:8px; display:inline-flex; align-items:center; justify-content:center; min-width:46px; min-height:32px; padding:0 6px; transform:translateY(-50%); border:0; background:transparent; color:var(--copper-dark); cursor:pointer; font:600 11px var(--sans); }
+.admin-password-toggle:hover,.client-password-toggle:hover,.student-password-field button:hover,.workspace-password-field button:hover { color:var(--ink); }
+.admin-password-toggle:focus-visible,.student-password-field button:focus-visible,.workspace-password-field button:focus-visible { outline:2px solid var(--copper); outline-offset:2px; }
+.admin-portal .feedback-stack { position:fixed; z-index:var(--admin-z-toast,100); top:calc(var(--admin-topbar-height,72px) + 16px); right:20px; width:min(390px,calc(100vw - 40px)); margin:0; pointer-events:none; }
+.admin-portal .feedback { pointer-events:auto; box-shadow:var(--admin-shadow-popover); }
+.admin-portal .feedback-validation-summary { position:static; width:auto; margin:0 0 18px; box-shadow:none; }
+.admin-portal .portal-content>.feedback-validation-summary { position:static; }
+@media (max-width:760px) {
+    .admin-portal .feedback-stack { top:74px; right:12px; width:min(390px,calc(100vw - 24px)); }
+    .admin-portal .feedback-stack .feedback-validation-summary { right:auto; width:auto; }
+}

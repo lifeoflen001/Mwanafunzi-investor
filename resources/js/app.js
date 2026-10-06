@@ -242,13 +242,40 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.querySelectorAll('[data-password-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const input = button.closest('.admin-password-field, .client-password-field')?.querySelector('input');
+    const input = button.closest('.admin-password-field, .client-password-field, .student-password-field, .workspace-password-field')?.querySelector('input');
     if (!input) return;
     const visible = input.type === 'text';
     input.type = visible ? 'password' : 'text';
     button.textContent = visible ? 'Show' : 'Hide';
     button.setAttribute('aria-label', `${visible ? 'Show' : 'Hide'} password`);
+    button.setAttribute('aria-pressed', String(!visible));
 }));
+
+document.querySelectorAll('input[name="password_confirmation"]').forEach((confirmation) => {
+    const form = confirmation.form;
+    const password = form?.querySelector('input[name="password"]');
+    if (!form || !password) return;
+    const errorId = `${confirmation.id || 'password-confirmation'}-match-error`;
+    const syncPasswordMatch = () => {
+        const mismatch = confirmation.value.length > 0 && password.value !== confirmation.value;
+        confirmation.setAttribute('aria-invalid', mismatch ? 'true' : 'false');
+        let error = document.getElementById(errorId);
+        if (mismatch && !error) {
+            error = document.createElement('small');
+            error.id = errorId;
+            error.className = 'field-error password-match-error';
+            error.textContent = 'Passwords do not match.';
+            confirmation.closest('label')?.append(error);
+        }
+        if (error) error.hidden = !mismatch;
+    };
+    password.addEventListener('input', syncPasswordMatch);
+    confirmation.addEventListener('input', syncPasswordMatch);
+    form.addEventListener('submit', (event) => {
+        syncPasswordMatch();
+        if (confirmation.getAttribute('aria-invalid') === 'true') { event.preventDefault(); confirmation.focus(); }
+    });
+});
 
 document.querySelectorAll('[data-auth-form]').forEach((form) => form.addEventListener('submit', () => {
     const submit = form.querySelector('[data-auth-submit]');
@@ -560,7 +587,7 @@ document.querySelectorAll('form').forEach((form) => form.addEventListener('submi
     if (form.dataset.confirmed === 'true') { delete form.dataset.confirmed; return; }
     const method = form.querySelector('input[name="_method"]')?.value?.toLowerCase();
     const button = form.querySelector('button[type="submit"]')?.textContent?.trim().toLowerCase() || '';
-    if (method === 'delete' || /archive|remove|permanently delete/.test(button)) {
+    if (form.dataset.confirm || method === 'delete' || /archive|remove|permanently delete|revoke|refund|unpublish/.test(button)) {
         event.preventDefault();
         pendingConfirmForm = form;
         if (confirmMessage) confirmMessage.textContent = form.dataset.confirm || 'Please confirm this destructive action.';
@@ -573,6 +600,10 @@ document.querySelectorAll('[data-admin-toast-close]').forEach((button) => button
 }));
 document.querySelectorAll('[data-admin-toast]').forEach((toast) => {
     window.setTimeout(() => toast.remove(), 6500);
+});
+document.querySelectorAll('[data-feedback-dismiss]').forEach((button) => button.addEventListener('click', () => button.closest('[data-feedback]')?.remove()));
+document.querySelectorAll('[data-feedback]').forEach((feedback) => {
+    if (!feedback.classList.contains('feedback-error')) window.setTimeout(() => feedback.remove(), 6500);
 });
 
 document.querySelectorAll('.admin-portal form.admin-form, .admin-portal form.admin-filter-toolbar, .admin-portal form.admin-inline-form').forEach((form) => form.addEventListener('submit', (event) => {

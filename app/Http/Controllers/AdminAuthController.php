@@ -17,7 +17,7 @@ class AdminAuthController extends Controller
             $request->user()->forceFill(['last_login_at' => now()])->saveQuietly();
             return to_route('admin.dashboard');
         }
-        return back()->withErrors(['email' => 'Those admin credentials were not recognised.'])->onlyInput('email');
+        return back()->withErrors(['email' => 'The email or password is incorrect.'])->onlyInput('email');
     }
 
     public function destroy(Request $request)
