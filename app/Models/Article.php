@@ -44,7 +44,7 @@ class Article extends Model
 
     public function canonicalUrl(): string
     {
-        return $this->canonical_url ?: route('journal.show', $this);
+        return $this->canonical_url ?: route('blog.show', $this);
     }
 
     public function displayAuthor(): string

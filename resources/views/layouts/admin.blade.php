@@ -9,7 +9,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101c24">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-96x96.png') }}?v=favicon4" type="image/png" sizes="96x96">
+    <link rel="icon" href="{{ asset('favicon.svg') }}?v=favicon4" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}?v=favicon4" sizes="180x180">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     <title>@yield('title', 'Admin') — Mwanafunzi Investor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
@@ -20,8 +23,8 @@
         <aside class="portal-sidebar admin-sidebar" aria-label="Admin navigation" id="admin-sidebar" data-admin-sidebar>
             <div class="admin-sidebar-head">
                 <a class="portal-brand" href="{{ route('admin.dashboard') }}" aria-label="Mwanafunzi Investor admin portal">
-                    <img class="portal-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.png') }}" alt="Mwanafunzi Investor">
-                    <img class="portal-brand-mark" src="{{ asset('favicon.svg') }}" alt="">
+                    <img class="portal-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="Mwanafunzi Investor">
+                    <img class="portal-brand-mark" src="{{ asset('web-app-manifest-512x512.png') }}" alt="">
                     <span><small>ADMIN DESK</small></span>
                 </a>
                 <button class="admin-sidebar-close" type="button" aria-label="Close admin navigation" data-admin-sidebar-close>×</button>
@@ -72,6 +75,7 @@
                     <a class="{{ request()->routeIs('admin.business-units*') ? 'is-active' : '' }}" href="{{ route('admin.business-units') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Business modules</a>
                     <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
                     <a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span>Settings</a>
+                    <a class="{{ request()->routeIs('admin.settings.security*') ? 'is-active' : '' }}" href="{{ route('admin.settings.security') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Security</a>
                     <a class="{{ request()->routeIs('admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.social-links') }}"><span class="portal-nav-icon" aria-hidden="true">↗</span>Social links</a>
                     <a class="{{ request()->routeIs('admin.audit*') ? 'is-active' : '' }}" href="{{ route('admin.audit') }}"><span class="portal-nav-icon" aria-hidden="true">◷</span>Activity log</a>
                     <a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Administrators</a>
@@ -114,6 +118,7 @@
             </main>
         </div>
     </div>
+    @include('partials.public-footer')
     <div class="admin-confirm-modal" data-confirm-modal hidden role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
         <div class="admin-confirm-card">
             <span class="admin-confirm-icon" aria-hidden="true">!</span>

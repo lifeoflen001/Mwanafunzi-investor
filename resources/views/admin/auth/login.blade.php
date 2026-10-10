@@ -5,8 +5,9 @@
     <div class="admin-auth-title"><h2>Sign in to the desk.</h2><p>Use your authorised Mwanafunzi Investor administrator account.</p></div>
     <form class="admin-form admin-auth-form" method="post" action="{{ route('admin.login.store') }}">
         @csrf
+        @include('components.recaptcha', ['action' => 'admin_login'])
         <label for="admin-email">Email address<input id="admin-email" type="email" name="email" required autofocus value="{{ old('email') }}" autocomplete="username"></label>
-        <label for="admin-password">Password<div class="admin-password-field"><input id="admin-password" type="password" name="password" required autocomplete="current-password"><button type="button" class="admin-password-toggle" aria-label="Show password" data-password-toggle>Show</button></div></label>
+        <label for="admin-password">Password<div class="admin-password-field"><input id="admin-password" type="password" name="password" required autocomplete="current-password"><x-password-toggle class="admin-password-toggle" /></div></label>
         <label class="admin-check"><input type="checkbox" name="remember" value="1"> <span>Keep me signed in</span></label>
         <button class="button button-primary button-wide" type="submit">Sign in <span aria-hidden="true">↗</span></button>
     </form>

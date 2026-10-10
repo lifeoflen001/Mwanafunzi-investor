@@ -6,13 +6,15 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +34,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar_path',
         'status',
         'last_login_at',
+        'admin_mfa_secret',
+        'admin_mfa_enabled',
+        'admin_mfa_recovery_codes',
+        'admin_mfa_confirmed_at',
     ];
 
     /**
@@ -42,6 +48,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'admin_mfa_secret',
+        'admin_mfa_recovery_codes',
     ];
 
     /**
@@ -56,6 +64,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'admin_mfa_secret' => 'encrypted',
+            'admin_mfa_enabled' => 'boolean',
+            'admin_mfa_recovery_codes' => 'encrypted:array',
+            'admin_mfa_confirmed_at' => 'datetime',
         ];
     }
 

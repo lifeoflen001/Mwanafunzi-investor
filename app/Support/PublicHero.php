@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class PublicHero
 {
     private static array $preloadedMedia = [];
+    private static array $publicDimensions = [];
 
     public static function preloadMedia(iterable $paths): void
     {
@@ -53,19 +54,31 @@ class PublicHero
         $variants = $isPublicAsset
             ? collect([480, 768, 1200])->map(fn (int $width) => [
                 'width' => $width,
-                'path' => preg_replace('/\.webp$/', '-'.$width.'.webp', $path),
+                'path' => preg_replace('/\.(?:avif|webp|jpe?g|png)$/i', '-'.$width.'.webp', $path),
             ])->filter(fn (array $variant) => is_file(public_path($variant['path'])))
             : collect($media?->variants ?? []);
         $variants = $variants
             ->filter(fn (array $variant) => ! empty($variant['path']) && ! empty($variant['width']))
             ->sortBy('width');
+        $dimensions = $media ? [$media->width, $media->height] : static::dimensions($isPublicAsset ? $path : null);
 
         return [
             'url' => $isPublicAsset ? asset($path) : asset('storage/'.$path),
             'srcset' => $variants->isEmpty() ? null : $variants->map(fn (array $variant) => ($isPublicAsset ? asset($variant['path']) : asset('storage/'.$variant['path'])).' '.$variant['width'].'w')->implode(', '),
             'position' => 'center center',
-            'width' => $media?->width,
-            'height' => $media?->height,
+            'width' => $dimensions[0],
+            'height' => $dimensions[1],
         ];
+    }
+
+    private static function dimensions(?string $path): array
+    {
+        if (! $path) return [null, null];
+        if (! array_key_exists($path, static::$publicDimensions)) {
+            $info = @getimagesize(public_path($path));
+            static::$publicDimensions[$path] = [$info[0] ?? null, $info[1] ?? null];
+        }
+
+        return static::$publicDimensions[$path];
     }
 }

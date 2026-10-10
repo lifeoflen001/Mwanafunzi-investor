@@ -1,11 +1,11 @@
 @extends('layouts.public')
 @php
-    $memberImage = $member->portrait ? (str_starts_with($member->portrait, 'http') ? $member->portrait : asset(ltrim($member->portrait, '/'))) : null;
+    $memberImage = $member->portrait ? \App\Support\PublicHero::candidate($member->portrait) : null;
     $memberTitle = $member->seo_title ?: $member->name.' — Mwanafunzi Investor';
     $memberDescription = $member->seo_description ?: ($member->short_intro ?: $member->name.' at Mwanafunzi Investor.');
     $schema = [
         '@context' => 'https://schema.org', '@type' => 'Person', 'name' => $member->name,
-        'url' => $member->canonical_url ?: route('team.show', $member->slug), 'image' => $memberImage,
+        'url' => $member->canonical_url ?: route('team.show', $member->slug), 'image' => $memberImage['url'] ?? null,
         'jobTitle' => $member->role ?: null, 'worksFor' => ['@type' => 'Organization', 'name' => 'Mwanafunzi Investor', 'url' => url('/')],
         'sameAs' => collect($member->socialLinks())->pluck('url')->reject(fn ($url) => str_starts_with($url, 'mailto:'))->values()->all(),
         'email' => $member->public_email ?: null,
@@ -26,7 +26,7 @@
         <div class="container">
             <a class="team-member-back text-link" href="{{ route('about') }}"><span aria-hidden="true">←</span> Meet the team</a>
             <div class="team-member-grid">
-                <div class="team-member-media">@if($memberImage)<img src="{{ $memberImage }}" alt="{{ $member->name }}" style="object-position:{{ $member->portrait_focal_point ?: 'center 25%' }}">@else<div class="team-member-placeholder" aria-hidden="true">{{ collect(explode(' ', $member->name))->map(fn ($part) => mb_substr($part, 0, 1))->take(2)->implode('') }}</div>@endif</div>
+                <div class="team-member-media">@if($memberImage)<img src="{{ $memberImage['url'] }}" @if($memberImage['srcset']) srcset="{{ $memberImage['srcset'] }}" sizes="(max-width: 760px) 100vw, 52vw" @endif @if($memberImage['width']) width="{{ $memberImage['width'] }}" height="{{ $memberImage['height'] }}" @endif alt="{{ $member->name }}" loading="eager" fetchpriority="high" style="object-position:{{ $member->portrait_focal_point ?: 'center 25%' }}">@else<div class="team-member-placeholder" aria-hidden="true">{{ collect(explode(' ', $member->name))->map(fn ($part) => mb_substr($part, 0, 1))->take(2)->implode('') }}</div>@endif</div>
                 <div class="team-member-copy">
                     <p class="eyebrow"><span class="eyebrow-line"></span> {{ $member->department ?: 'Mwanafunzi Investor team' }}</p>
                     <h1>{{ $member->name }}</h1>

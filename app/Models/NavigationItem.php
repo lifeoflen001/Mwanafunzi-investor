@@ -31,7 +31,13 @@ class NavigationItem extends Model
             'forex-academy' => 'forex-academy',
             'development' => 'digital-systems',
             'studio' => 'creative-studio',
+            'journal', 'blog' => 'blog',
             default => $this->route_name,
         };
+    }
+
+    public function publicLabel(): string
+    {
+        return in_array($this->route_name, ['journal', 'blog'], true) ? 'Blog' : $this->label;
     }
 }

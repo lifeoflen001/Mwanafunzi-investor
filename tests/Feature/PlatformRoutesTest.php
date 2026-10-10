@@ -67,7 +67,7 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('data-password-toggle', false)
             ->assertSee('Create an account')
             ->assertSee('site-footer', false)
-            ->assertDontSee('Forgot password');
+            ->assertSee('Forgot password');
 
         $this->get(route('register'))
             ->assertOk()

@@ -2,8 +2,8 @@
     $brandName = \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
     $brandLogo = \App\Models\SiteSetting::getValue('logo');
     $brandLogoData = $brandLogo ? \App\Support\PublicHero::candidate($brandLogo) : null;
-    $brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.png');
-    $brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.png');
+    $brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.webp');
+    $brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.webp');
     $email = \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
     $phone = \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
     $whatsapp = \App\Models\SiteSetting::getValue('contact_whatsapp');
@@ -28,8 +28,9 @@
     $headRobots = trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: 'index,follow');
     $headOgTitle = trim($__env->yieldContent('og_title')) ?: ($seoPage?->og_title ?: $headTitle);
     $headOgDescription = trim($__env->yieldContent('og_description')) ?: ($seoPage?->og_description ?: $headDescription);
-    $appleTouchIcon = \App\Models\SiteSetting::getValue('apple_touch_icon');
-    $faviconUrl = asset('favicon.svg');
+    $faviconUrl = asset('favicon.svg').'?v=favicon4';
+    $faviconPngUrl = asset('favicon-96x96.png').'?v=favicon4';
+    $appleTouchIconUrl = asset('apple-touch-icon.png').'?v=favicon4';
     $socialImage = $seoPage?->og_image ?: \App\Models\SiteSetting::getValue('default_social_image') ?: (request()->routeIs('legal') ? config('public.hero_defaults.legal') : config('public.hero_defaults.default'));
     $socialImageData = \App\Support\PublicHero::candidate($socialImage);
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
@@ -45,8 +46,8 @@
     $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
     $hasJournalNavigation = $headerNavigation->contains(function ($item) {
         return in_array(strtolower(trim((string) $item->label)), ['blog', 'journal'], true)
-            || (string) $item->route_name === 'journal'
-            || rtrim((string) $item->url, '/') === '/journal';
+            || in_array((string) $item->route_name, ['blog', 'journal'], true)
+            || in_array(rtrim((string) $item->url, '/'), ['/blog', '/journal'], true);
     });
     $footerNavigation = \App\Support\PublicSiteData::footerNavigation();
     $socialLinks = \App\Support\PublicSiteData::socialLinks();
@@ -68,15 +69,22 @@
     <meta name="twitter:title" content="{{ $headOgTitle }}">
     <meta name="twitter:description" content="{{ $headOgDescription }}">
     <meta name="twitter:image" content="{{ $headOgImage }}">
-    <link rel="icon" href="{{ $faviconUrl }}">
-    <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Journal" href="{{ route('feed') }}">
-    @if($appleTouchIcon)<link rel="apple-touch-icon" href="{{ asset('storage/'.$appleTouchIcon) }}">@endif
+    <link rel="icon" href="{{ $faviconPngUrl }}" type="image/png" sizes="96x96">
+    <link rel="icon" href="{{ $faviconUrl }}" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl }}" sizes="180x180">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
+    <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Blog" href="{{ route('feed') }}">
     <title>{{ $headTitle }}</title>
     @yield('article_meta')
     @php($schemaContext = chr(64).'context')
     <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
     @yield('structured_data')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php($recaptcha = app(\App\Services\RecaptchaService::class))
+    @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
+        <script>window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
+        <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode($recaptcha->siteKey()) }}" async defer></script>
+    @endif
     @include('components.design-tokens')
 </head>
 <body class="internal-page @yield('body_class'){{ $serviceContext ? ' service-context-'.$serviceContext : '' }}">
@@ -96,7 +104,7 @@
                     @else
                         @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>
                     @endif
-                    @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog</a>@endunless
+                    @unless($hasJournalNavigation)<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>@endunless
                 </nav>
                 <div class="header-actions"><a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
             @endif
@@ -110,7 +118,7 @@
                 @else
                     @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
                 @endif
-                @unless($hasJournalNavigation)<a class="{{ request()->routeIs('journal*') ? 'active' : '' }}" href="{{ route('journal') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
+                @unless($hasJournalNavigation)<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
                 <a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a>
             </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a></div>
         @endif

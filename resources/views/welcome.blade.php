@@ -2,8 +2,8 @@
 $brandName = \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
 $brandLogo = \App\Models\SiteSetting::getValue('logo');
 $brandLogoData = $brandLogo ? \App\Support\PublicHero::candidate($brandLogo) : null;
-$brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.png');
-$brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.png');
+$brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.webp');
+$brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.webp');
 $email = \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
 $phone = \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
 $whatsapp = \App\Models\SiteSetting::getValue('contact_whatsapp');
@@ -11,8 +11,9 @@ $location = \App\Models\SiteSetting::getValue('contact_location', 'Tanzania');
 $footerCopy = \App\Models\SiteSetting::getValue('footer_copy', 'Student of Money.\nProbability. Systems. Discipline.');
 $footerCopyright = \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
 $footerBottomStatement = \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
-$faviconUrl = asset('favicon.svg');
-$appleTouchIcon = \App\Models\SiteSetting::getValue('apple_touch_icon');
+$faviconUrl = asset('favicon.svg').'?v=favicon4';
+$faviconPngUrl = asset('favicon-96x96.png').'?v=favicon4';
+$appleTouchIconUrl = asset('apple-touch-icon.png').'?v=favicon4';
 $socialImage = \App\Models\SiteSetting::getValue('default_social_image') ?: config('public.hero_defaults.home');
 $socialImageData = \App\Support\PublicHero::candidate($socialImage);
 $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.home'));
@@ -26,6 +27,8 @@ $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
 $brandIntro = $homeSections->get('philosophy');
 $framework = $homeSections->get('framework');
 $finalCta = $homeSections->get('final_cta');
+$homeFinalSecondaryUrl = $finalCta?->payload['secondary_cta_url'] ?? null;
+if ($homeFinalSecondaryUrl === '#tools') $homeFinalSecondaryUrl = route('tools');
 $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
 $serviceImages = ['forex' => config('public.hero_defaults.learn'), 'development' => config('public.hero_defaults.tools'), 'studio' => config('public.hero_defaults.about')];
 $serviceEyebrows = ['forex' => 'Learn', 'development' => 'Build', 'studio' => 'Create'];
@@ -34,6 +37,7 @@ $homeHeroPrimaryLabel = $homePage?->hero_primary_label;
 $homeHeroPrimaryUrl = $homePage?->hero_primary_url;
 $homeHeroSecondaryLabel = $homePage?->hero_secondary_label;
 $homeHeroSecondaryUrl = $homePage?->hero_secondary_url;
+if ($homeHeroSecondaryUrl === '#tools') $homeHeroSecondaryUrl = route('tools');
 $homeHeroNote = $homePage?->hero_note;
 $homeHeroAside = $homePage?->hero_aside;
 $homeHeroAsideIndex = $homePage?->hero_aside_index;
@@ -65,9 +69,10 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     <meta name="twitter:title" content="{{ $homeOgTitle }}">
     <meta name="twitter:description" content="{{ $homeOgDescription }}">
     <meta name="twitter:image" content="{{ $homeOgImageUrl }}">
-    <link rel="icon" href="{{ $faviconUrl }}">
-    @if($appleTouchIcon)
-    <link rel="apple-touch-icon" href="{{ asset('storage/'.$appleTouchIcon) }}">@endif
+    <link rel="icon" href="{{ $faviconPngUrl }}" type="image/png" sizes="96x96">
+    <link rel="icon" href="{{ $faviconUrl }}" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl }}" sizes="180x180">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     <title>{{ $homeSeoTitle }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
@@ -78,11 +83,11 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     <header class="site-header" data-header>
         <div class="header-inner container">
             <a class="brand" href="#top" aria-label="{{ $brandName }} home"><img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt="{{ $brandName }}"><img class="brand-image brand-logo-dark" src="{{ $brandLogoDarkUrl }}" alt=""></a>
-            <nav class="desktop-nav" aria-label="Primary navigation">@forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a class="{{ $businessUnit->slug === 'forex' ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>@endforelse</nav>
+            <nav class="desktop-nav" aria-label="Primary navigation">@forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a class="{{ $businessUnit->slug === 'forex' ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('blog') }}">Blog</a><a href="{{ route('about') }}">About</a>@endforelse</nav>
             <div class="header-actions"><a class="header-contact header-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ route('contact') }}">Contact Us<span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
         </div>
         <div class="mobile-menu" id="mobile-menu" data-mobile-menu>
-            <nav aria-label="Mobile navigation">@forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About us</a>@endforelse<a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a></nav><a class="button button-dark" href="{{ route('contact') }}">Contact Us <span aria-hidden="true">↗</span></a>
+            <nav aria-label="Mobile navigation">@forelse($headerNavigation as $item)<x-navigation-links :item="$item" />@empty @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('blog') }}">Blog</a><a href="{{ route('about') }}">About us</a>@endforelse<a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a></nav><a class="button button-dark" href="{{ route('contact') }}">Contact Us <span aria-hidden="true">↗</span></a>
         </div>
     </header>
     <main id="main-content" class="mother-home">
@@ -151,46 +156,9 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
         </section>
         @endif
 
-        @php($toolsSection = $homeSections->get('tools'))
-        @if($toolsSection && $toolsSection->is_enabled)
-        <section class="mother-proof section" id="proof">
-            <div class="container">
-                <div class="split-heading">
-                    <div>
-                        <p class="eyebrow"><span class="eyebrow-line"></span>{{ $toolsSection->payload['eyebrow'] ?? 'Selected work and tools' }}</p>
-                        <h2>{{ $toolsSection->heading }}</h2>
-                    </div>
-                    <p class="body-copy">{{ $toolsSection->body }}</p>
-                </div>
-                <div class="mother-proof-grid">@foreach($products->take(3) as $product)<a class="mother-proof-item" href="{{ route('tools.show', $product) }}"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                        <div>
-                            <h3>{{ $product->name }}</h3>
-                            <p>{{ $product->short_description }}</p>
-                        </div><b aria-hidden="true">↗</b>
-                    </a>@endforeach @if($featuredArticle)<a class="mother-proof-item mother-proof-note" href="{{ route('journal.show', $featuredArticle) }}"><span>NOTE</span>
-                        <div>
-                            <h3>{{ $featuredArticle->title }}</h3>
-                            <p>{{ $featuredArticle->excerpt }}</p>
-                        </div><b aria-hidden="true">↗</b>
-                    </a>@endif</div>
-            </div>
-        </section>
-        @endif
-
         @if($framework && $framework->is_enabled)
         @include('public.home.framework', ['section' => $framework])
         @endif
-
-        @php($principleSection = $homeSections->get('probability'))
-        @if($principleSection && $principleSection->is_enabled)<section class="mother-principle section">
-            <div class="container two-column">
-                <div>
-                    <p class="eyebrow"><span class="eyebrow-line"></span>{{ $principleSection->payload['eyebrow'] ?? 'Why Mwanafunzi' }}</p>
-                    <h2>{{ $principleSection->heading }}</h2>
-                </div>
-                <div class="body-copy rich-copy">{!! \App\Support\RichText::render($principleSection->body) !!}</div>
-            </div>
-        </section>@endif
 
         @if($finalCta && $finalCta->is_enabled)
         <section class="mother-final-cta final-cta">
@@ -198,7 +166,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
                 <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>{{ $finalCta->payload['eyebrow'] ?? 'Come back to the process' }}</p>
                 <h2>{{ $finalCta->heading }}</h2>
                 <p>{{ $finalCta->body }}</p>
-                <div class="hero-buttons"><a class="button button-accent" href="{{ $finalCta->cta_url ?: route('contact') }}">{{ $finalCta->cta_label ?: 'Start a conversation' }} <span aria-hidden="true">↗</span></a>@if(!empty($finalCta->payload['secondary_cta_label']) && !empty($finalCta->payload['secondary_cta_url']))<a class="text-link text-link-light" href="{{ $finalCta->payload['secondary_cta_url'] }}">{{ $finalCta->payload['secondary_cta_label'] }} <span aria-hidden="true">→</span></a>@endif</div>
+                <div class="hero-buttons"><a class="button button-accent" href="{{ $finalCta->cta_url ?: route('contact') }}">{{ $finalCta->cta_label ?: 'Start a conversation' }} <span aria-hidden="true">↗</span></a>@if(!empty($finalCta->payload['secondary_cta_label']) && $homeFinalSecondaryUrl)<a class="text-link text-link-light" href="{{ $homeFinalSecondaryUrl }}">{{ $finalCta->payload['secondary_cta_label'] }} <span aria-hidden="true">→</span></a>@endif</div>
             </div>
         </section>
         @endif

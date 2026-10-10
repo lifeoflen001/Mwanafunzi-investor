@@ -9,7 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Your Mwanafunzi Investor learning and customer workspace.">
     <meta name="theme-color" content="#101c24">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-96x96.png') }}?v=favicon4" type="image/png" sizes="96x96">
+    <link rel="icon" href="{{ asset('favicon.svg') }}?v=favicon4" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}?v=favicon4" sizes="180x180">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     <title>@yield('title', 'Student portal') — Mwanafunzi Investor</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
@@ -20,8 +23,8 @@
         <aside class="portal-sidebar account-sidebar" aria-label="Student portal navigation" id="account-sidebar" data-admin-sidebar>
             <div class="account-sidebar-head">
                 <a class="account-brand" href="{{ route('account.dashboard') }}" aria-label="Mwanafunzi Investor student portal">
-                    <img class="account-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.png') }}" alt="Mwanafunzi Investor">
-                    <img class="account-brand-mark" src="{{ asset('favicon.svg') }}" alt="">
+                    <img class="account-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="Mwanafunzi Investor">
+                    <img class="account-brand-mark" src="{{ asset('web-app-manifest-512x512.png') }}" alt="">
                     <span>STUDENT PORTAL</span>
                 </a>
                 <button class="admin-sidebar-close" type="button" aria-label="Close student navigation" data-admin-sidebar-close>×</button>
@@ -71,9 +74,9 @@
             <main class="portal-content account-content" id="account-main-content">
                 @include('partials.form-feedback')
                 @yield('content')
-                <footer class="account-footer"><span>© {{ date('Y') }} Mwanafunzi Investor</span><span>Educational content only. Trading involves risk.</span><a href="{{ route('contact') }}">Need help? Contact the desk ↗</a></footer>
             </main>
         </div>
     </div>
+    @include('partials.public-footer')
 </body>
 </html>

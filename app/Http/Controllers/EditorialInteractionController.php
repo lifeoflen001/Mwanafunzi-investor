@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleReaction;
 use App\Models\Comment;
 use App\Models\CommentReport;
+use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
@@ -47,6 +48,7 @@ class EditorialInteractionController extends Controller
             'body' => ['required', 'string', 'min:2', 'max:3000'],
             'parent_id' => ['nullable', 'integer', Rule::exists('comments', 'id')->where(fn ($query) => $query->where('article_id', $article->id)->whereNull('parent_id')->where('status', 'approved'))],
             'website' => ['prohibited'],
+            'recaptcha_token' => Recaptcha::rules('comments'),
         ]);
         RateLimiter::hit($key, 300);
 

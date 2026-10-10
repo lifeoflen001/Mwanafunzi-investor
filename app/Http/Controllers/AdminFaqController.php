@@ -10,42 +10,36 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Support\AdminAudit;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator as Paginator;
+use Illuminate\Support\Facades\DB;
 
 class AdminFaqController extends Controller
 {
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q'));
-        $rows = collect();
+        $like = "%{$search}%";
+        $matches = fn ($query) => $search === ''
+            ? $query
+            : $query->where(fn ($nested) => $nested->where('question', 'like', $like)->orWhere('answer', 'like', $like));
 
-        CourseFaq::with('course')
-            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('question', 'like', "%{$search}%")->orWhere('answer', 'like', "%{$search}%")))
-            ->get()
-            ->each(fn (CourseFaq $faq) => $rows->push($this->row($faq, 'course', $faq->course?->title ?: 'Course')));
+        // Keep the combined FAQ view paginated in SQL. The previous approach
+        // loaded every FAQ from every target table before slicing in PHP.
+        $rows = $matches(CourseFaq::query()->join('courses', 'courses.id', '=', 'course_faqs.course_id'))
+            ->select('course_faqs.id', DB::raw("'course' as source"), 'courses.title as target', 'course_faqs.question', 'course_faqs.answer', 'course_faqs.sort_order', 'course_faqs.updated_at')
+            ->unionAll($matches(Faq::query()->join('products', function ($join) {
+                $join->on('products.id', '=', 'faqs.faqable_id')->where('faqs.faqable_type', Product::class);
+            }))->select('faqs.id', DB::raw("'product' as source"), 'products.name as target', 'faqs.question', 'faqs.answer', 'faqs.sort_order', 'faqs.updated_at'))
+            ->unionAll($matches(Faq::query()->join('pages', function ($join) {
+                $join->on('pages.id', '=', 'faqs.faqable_id')->where('faqs.faqable_type', Page::class);
+            }))->select('faqs.id', DB::raw("'page' as source"), 'pages.name as target', 'faqs.question', 'faqs.answer', 'faqs.sort_order', 'faqs.updated_at'))
+            ->unionAll($matches(Faq::query()->join('learning_topics', function ($join) {
+                $join->on('learning_topics.id', '=', 'faqs.faqable_id')->where('faqs.faqable_type', LearningTopic::class);
+            }))->select('faqs.id', DB::raw("'topic' as source"), 'learning_topics.title as target', 'faqs.question', 'faqs.answer', 'faqs.sort_order', 'faqs.updated_at'));
 
-        Faq::with('faqable')
-            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('question', 'like', "%{$search}%")->orWhere('answer', 'like', "%{$search}%")))
-            ->get()
-            ->each(function (Faq $faq) use ($rows) {
-                $target = $faq->faqable;
-                if (! $target) return;
-                $type = match (true) {
-                    $target instanceof Product => 'product',
-                    $target instanceof Page => 'page',
-                    $target instanceof LearningTopic => 'topic',
-                    default => null,
-                };
-                if ($type) $rows->push($this->row($faq, $type, $target->name ?? $target->title));
-            });
-
-        $rows = $rows->sortByDesc('updated_at')->values();
-        $perPage = 30;
-        $page = Paginator::resolveCurrentPage();
-        $paginator = new Paginator($rows->forPage($page, $perPage)->values(), $rows->count(), $perPage, $page, [
-            'path' => Paginator::resolveCurrentPath(),
-            'query' => $request->query(),
-        ]);
+        $paginator = DB::query()->fromSub($rows, 'faq_rows')
+            ->orderByDesc('updated_at')
+            ->paginate(30)
+            ->through(fn ($row) => (array) $row);
 
         return view('admin.faqs.index', [
             'faqs' => $paginator,

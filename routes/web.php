@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminMfaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\MediaController;
@@ -57,6 +58,12 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/financial-academy/courses/{course:slug}', 'course')->name('courses.show');
     Route::get('/financial-academy/tools', 'tools')->name('tools');
     Route::get('/financial-academy/tools/{product:slug}', 'tool')->name('tools.show');
+    // Blog is the canonical public URL. Keep the journal routes below for compatibility.
+    Route::get('/blog', 'journal')->name('blog');
+    Route::get('/blog/category/{category:slug}', 'journalCategory')->name('blog.category');
+    Route::get('/blog/tag/{tag:slug}', 'journalTag')->name('blog.tag');
+    Route::get('/blog/author/{member:slug}', 'journalAuthor')->name('blog.author');
+    Route::get('/blog/{article:slug}', 'article')->name('blog.show');
     Route::get('/journal', 'journal')->name('journal');
     Route::get('/journal/category/{category:slug}', 'journalCategory')->name('journal.category');
     Route::get('/journal/tag/{tag:slug}', 'journalTag')->name('journal.tag');
@@ -69,6 +76,8 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/pages/{slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
+    Route::post('/blog/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('blog.reaction');
+    Route::post('/blog/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('blog.comments.store');
     Route::post('/journal/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('journal.reaction');
     Route::post('/journal/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('journal.comments.store');
     Route::post('/comments/{comment}/report', [EditorialInteractionController::class, 'report'])->middleware(['auth', 'throttle:10,10'])->name('comments.report');
@@ -103,6 +112,10 @@ Route::get('/login', [CustomerAuthController::class, 'login'])->name('login');
 Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->middleware('throttle:5,1')->name('login.store');
 Route::get('/register', [CustomerAuthController::class, 'register'])->name('register');
 Route::post('/register', [CustomerAuthController::class, 'storeRegister'])->middleware('throttle:5,1')->name('register.store');
+Route::get('/forgot-password', [CustomerAuthController::class, 'forgotPassword'])->name('password.request');
+Route::post('/forgot-password', [CustomerAuthController::class, 'sendPasswordReset'])->middleware('throttle:3,10')->name('password.email');
+Route::get('/reset-password/{token}', [CustomerAuthController::class, 'resetPassword'])->name('password.reset');
+Route::post('/reset-password', [CustomerAuthController::class, 'updatePasswordFromReset'])->middleware('throttle:5,10')->name('password.update');
 Route::get('/email/verify', [CustomerAuthController::class, 'verificationNotice'])->middleware('auth')->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [CustomerAuthController::class, 'verify'])->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 Route::post('/email/verification-notification', [CustomerAuthController::class, 'resendVerification'])->middleware(['auth', 'throttle:3,1'])->name('verification.send');
@@ -145,8 +158,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
     Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('logout');
+    Route::middleware(['auth', 'admin'])->prefix('mfa')->name('mfa.')->group(function () {
+        Route::get('/setup', [AdminMfaController::class, 'setup'])->name('setup');
+        Route::post('/setup', [AdminMfaController::class, 'storeSetup'])->middleware('throttle:5,1')->name('setup.store');
+        Route::get('/challenge', [AdminMfaController::class, 'challenge'])->name('challenge');
+        Route::post('/challenge', [AdminMfaController::class, 'verifyChallenge'])->middleware('throttle:5,1')->name('challenge.verify');
+    });
 
-    Route::middleware(['auth', 'admin'])->group(function () {
+    Route::middleware(['auth', 'admin', 'admin.mfa'])->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/preview/{type}/{id}', [PublicSiteController::class, 'preview'])->middleware('signed')->name('preview');
         Route::get('/courses', [AdminController::class, 'courses'])->name('courses');
@@ -217,6 +236,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+        Route::get('/settings/security', [SiteSettingsController::class, 'security'])->name('settings.security');
+        Route::put('/settings/security', [SiteSettingsController::class, 'updateSecurity'])->name('settings.security.update');
         Route::get('/business-units', [AdminBusinessUnitController::class, 'index'])->name('business-units');
         Route::put('/business-units/{businessUnit}', [AdminBusinessUnitController::class, 'update'])->name('business-units.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');
@@ -230,6 +251,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/profile/avatar', [AdminProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
         Route::delete('/profile/avatar', [AdminProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/profile/mfa/disable', [AdminMfaController::class, 'disable'])->middleware('throttle:5,1')->name('profile.mfa.disable');
         Route::get('/administrators', [AdminUserController::class, 'index'])->name('administrators');
         Route::get('/administrators/create', [AdminUserController::class, 'create'])->name('administrators.create');
         Route::post('/administrators', [AdminUserController::class, 'store'])->name('administrators.store');

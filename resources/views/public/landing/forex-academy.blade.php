@@ -3,6 +3,7 @@
 @php
     $homePhilosophy = $homePage?->section('philosophy');
     $homeFramework = $homePage?->section('framework');
+    $toolsSection = $homePage?->section('tools');
     $homeFinalCta = $homePage?->section('final_cta');
 @endphp
 
@@ -24,7 +25,20 @@
 
         <section class="academy-courses section"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span>Courses and paths</p><h2>Start where your process <em>needs work.</em></h2></div><a class="text-link" href="{{ route('courses') }}">View all courses <span aria-hidden="true">→</span></a></div><div class="academy-course-list">@forelse($courses->take(4) as $course)<a href="{{ route('courses.show', $course) }}"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><div><h3>{{ $course->title }}</h3><p>{{ $course->short_description }}</p></div><small>{{ $course->level ?: 'Self-paced' }} ↗</small></a>@empty<div class="empty-state"><p>The first courses are being prepared.</p></div>@endforelse</div></div></section>
 
-        @if($products->isNotEmpty())<section class="academy-tools section"><div class="container two-column"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>Tools for deliberate practice</p><h2>Make the process <em>visible.</em></h2></div><div><div class="body-copy rich-copy">Simple tools for journaling, planning and reviewing the work around a trade.</div><div class="academy-tool-links">@foreach($products->take(3) as $product)<a href="{{ route('tools.show', $product) }}"><span>{{ $product->name }}</span><b aria-hidden="true">↗</b></a>@endforeach</div></div></div></section>@endif
+        @if($products->isNotEmpty() && (!$toolsSection || $toolsSection->is_enabled))
+            <section class="academy-tools section">
+                <div class="container two-column">
+                    <div>
+                        <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>{{ $toolsSection?->payload['eyebrow'] ?? 'Tools for deliberate practice' }}</p>
+                        <h2>@if($toolsSection?->heading){{ $toolsSection->heading }}@else Make the process <em>visible.</em>@endif</h2>
+                    </div>
+                    <div>
+                        <div class="body-copy rich-copy">{!! \App\Support\RichText::render($toolsSection?->body ?: 'Simple tools for journaling, planning and reviewing the work around a trade.') !!}</div>
+                        <div class="academy-tool-links">@foreach($products->take(3) as $product)<a href="{{ route('tools.show', $product) }}"><span>{{ $product->name }}</span><b aria-hidden="true">↗</b></a>@endforeach</div>
+                    </div>
+                </div>
+            </section>
+        @endif
 
         <section class="academy-risk section"><div class="container two-column"><div><p class="eyebrow"><span class="eyebrow-line"></span>Risk first. Process always.</p><h2>No promises. Just <em>better questions.</em></h2></div><div class="body-copy">Trading involves risk. The academy focuses on probability, position sizing, trade management, journaling and the discipline to keep learning—never fabricated results or guaranteed outcomes.</div></div></section>
 

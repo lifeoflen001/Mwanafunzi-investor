@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\CheckoutService;
 use App\Services\PaymentService;
 use App\Services\Payments\PaymentGatewayManager;
+use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -81,7 +82,7 @@ class CommerceController extends Controller
 
     private function store(Request $request, Product|Course $purchasable, string $kind)
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'max:190'], 'phone' => ['nullable', 'string', 'max:40'], 'country' => ['nullable', 'string', 'size:2'], 'terms' => ['accepted']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'max:190'], 'phone' => ['nullable', 'string', 'max:40'], 'country' => ['nullable', 'string', 'size:2'], 'terms' => ['accepted'], 'recaptcha_token' => Recaptcha::rules('checkout')]);
         try {
             $order = $kind === 'product' ? app(CheckoutService::class)->createForProduct($request->user(), $purchasable, $data) : app(CheckoutService::class)->createForCourse($request->user(), $purchasable, $data);
             $result = app(CheckoutService::class)->initialize($order, route('payments.flutterwave.return'));

@@ -17,6 +17,7 @@ use App\Models\Service;
 use App\Models\Testimonial;
 use App\Models\TeamMember;
 use App\Models\Redirect;
+use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
@@ -154,7 +155,11 @@ class PublicSiteController extends Controller
 
     public function courses()
     {
-        $courses = Course::published()->withCount('modules')->orderBy('sort_order')->paginate(12);
+        $courses = Course::published()
+            ->select(['id', 'title', 'slug', 'featured_image', 'level', 'status', 'short_description', 'sort_order'])
+            ->withCount('modules')
+            ->orderBy('sort_order')
+            ->paginate(12);
         return view('public.courses.index', ['courses' => $courses, 'page' => $this->cmsPage('courses')]);
     }
 
@@ -205,7 +210,11 @@ class PublicSiteController extends Controller
 
     public function tools()
     {
-        $products = Product::available()->with('features')->orderBy('sort_order')->paginate(12);
+        $products = Product::available()
+            ->select(['id', 'name', 'slug', 'product_type', 'thumbnail', 'short_description', 'availability', 'sort_order'])
+            ->with('features:id,product_id,title,description,sort_order')
+            ->orderBy('sort_order')
+            ->paginate(12);
         return view('public.tools.index', ['products' => $products, 'page' => $this->cmsPage('tools')]);
     }
 
@@ -280,6 +289,7 @@ class PublicSiteController extends Controller
             'message' => ['required', 'string', 'min:10', 'max:5000'],
             'consent' => ['accepted'],
             'website' => ['prohibited'],
+            'recaptcha_token' => Recaptcha::rules('contact'),
         ]);
         ContactMessage::create([...$validated, 'consented_at' => now()]);
         return to_route('contact')->with('success', 'Thank you. Your message has been received by the Mwanafunzi desk.');
@@ -304,7 +314,7 @@ class PublicSiteController extends Controller
     public function sitemap()
     {
         $urls = collect([
-            route('home'), route('forex-academy'), route('digital-systems'), route('digital-software.products'), route('digital-software.projects'), route('digital-software.testimonials'), route('creative-studio'), route('creative-studio.services'), route('creative-studio.projects'), route('creative-studio.testimonials'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('journal'), route('feed'), route('about'), route('contact'), route('student-of-money'),
+            route('home'), route('forex-academy'), route('digital-systems'), route('digital-software.products'), route('digital-software.projects'), route('digital-software.testimonials'), route('creative-studio'), route('creative-studio.services'), route('creative-studio.projects'), route('creative-studio.testimonials'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('blog'), route('feed'), route('about'), route('contact'), route('student-of-money'),
             route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
         ]);
         $urls = $urls->merge(TeamMember::active()->get()->map(fn ($member) => route('team.show', $member->slug)));
@@ -312,10 +322,10 @@ class PublicSiteController extends Controller
         $urls = $urls->merge(LearningTopic::where('is_published', true)->where('status', 'published')->get()->map(fn ($topic) => route('learn.show', $topic)));
         $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
         $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
-        $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('journal.show', $article)));
-        $urls = $urls->merge(ArticleCategory::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($category) => route('journal.category', $category)));
-        $urls = $urls->merge(Tag::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($tag) => route('journal.tag', $tag)));
-        $urls = $urls->merge(TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($member) => route('journal.author', $member)));
+        $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('blog.show', $article)));
+        $urls = $urls->merge(ArticleCategory::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($category) => route('blog.category', $category)));
+        $urls = $urls->merge(Tag::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($tag) => route('blog.tag', $tag)));
+        $urls = $urls->merge(TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($member) => route('blog.author', $member)));
         $urls = $urls->merge(Service::active()->get()->map(fn ($service) => route('services.show', $service)));
         $urls = $urls->merge(Project::published()->get()->map(fn ($project) => route('projects.show', $project)));
         $urls = $urls->merge(Page::published()->whereNotNull('slug')->whereNotIn('key', ['learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->get()->map(fn ($page) => route('pages.show', $page)));
@@ -340,7 +350,8 @@ class PublicSiteController extends Controller
     {
         $search = trim((string) ($request->input('search') ?: $request->input('q')));
         $categories = ArticleCategory::withCount(['articles as published_articles_count' => fn ($query) => $query->published()])->orderBy('name')->get();
-        $articlesQuery = Article::published()->with(['category', 'authorMember'])
+        $articleListColumns = ['id', 'article_category_id', 'team_member_id', 'title', 'slug', 'excerpt', 'featured_image', 'author', 'published_at', 'reading_time', 'status'];
+        $articlesQuery = Article::published()->select($articleListColumns)->with(['category', 'authorMember'])
             ->withCount(['reactions as likes_count', 'approvedComments as comments_count'])
             ->when($category, fn ($query) => $query->where('article_category_id', $category->id))
             ->when($tag, fn ($query) => $query->whereHas('tags', fn ($tags) => $tags->whereKey($tag->id)))
@@ -354,10 +365,10 @@ class PublicSiteController extends Controller
 
         $articles = $articlesQuery->latest('published_at')->paginate(12)->withQueryString();
         $featured = $search === '' && ! $category && ! $tag && ! $author
-            ? Article::featured()->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->limit(1)->first()
+            ? Article::featured()->select($articleListColumns)->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->limit(1)->first()
             : null;
         $trending = $search === '' && ! $category && ! $tag && ! $author
-            ? Article::published()->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->orderByDesc('likes_count')->orderByDesc('comments_count')->latest('published_at')->limit(8)->get()->filter(fn ($article) => ($article->likes_count + $article->comments_count) > 0)->take(3)->values()
+            ? Article::published()->select($articleListColumns)->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->orderByDesc('likes_count')->orderByDesc('comments_count')->latest('published_at')->limit(8)->get()->filter(fn ($article) => ($article->likes_count + $article->comments_count) > 0)->take(3)->values()
             : collect();
 
         return view('public.journal.index', compact('articles', 'categories', 'featured', 'trending', 'category', 'tag', 'author', 'search'))->with('page', $this->cmsPage('journal'));

@@ -55,6 +55,12 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
+    | The optional asset URL lets a CDN serve immutable build files and
+    | public media without changing application-generated routes.
+    */
+    'asset_url' => env('ASSET_URL'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

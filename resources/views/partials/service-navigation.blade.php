@@ -7,7 +7,6 @@
                 ['label' => 'Learn', 'url' => route('learn')],
                 ['label' => 'Courses', 'url' => route('courses')],
                 ['label' => 'Tools', 'url' => route('tools')],
-                ['label' => 'Blog', 'url' => route('journal')],
             ],
         ],
         'development' => [
@@ -15,7 +14,6 @@
             'links' => [
                 ['label' => 'Home', 'url' => route('digital-systems')],
                 ['label' => 'Products', 'url' => route('digital-software.products')],
-                ['label' => 'Technology', 'url' => route('digital-systems').'#languages'],
                 ['label' => 'Projects', 'url' => route('digital-software.projects')],
                 ['label' => 'Testimonials', 'url' => route('digital-software.testimonials')],
             ],
@@ -25,7 +23,6 @@
             'links' => [
                 ['label' => 'Home', 'url' => route('creative-studio')],
                 ['label' => 'Services', 'url' => route('creative-studio.services')],
-                ['label' => 'Formats', 'url' => route('creative-studio').'#formats'],
                 ['label' => 'Projects', 'url' => route('creative-studio.projects')],
                 ['label' => 'Testimonials', 'url' => route('creative-studio.testimonials')],
             ],

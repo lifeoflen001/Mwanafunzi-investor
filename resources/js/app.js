@@ -1,4 +1,6 @@
-import './bootstrap';
+if (document.querySelector('[data-avatar-form]')) import('./modules/avatar-crop.js');
+if (document.querySelector('[data-media-picker], [data-rich-editor-wrapper]')) import('./modules/media-editor.js');
+if (window.mwanafunziRecaptcha?.siteKey) import('./modules/recaptcha.js');
 
 const header = document.querySelector('[data-header]');
 const menuToggle = document.querySelector('[data-menu-toggle]');
@@ -246,11 +248,11 @@ document.querySelectorAll('[data-password-toggle]').forEach((button) => button.a
     if (!input) return;
     const visible = input.type === 'text';
     input.type = visible ? 'password' : 'text';
-    button.textContent = visible ? 'Show' : 'Hide';
-    button.setAttribute('aria-label', `${visible ? 'Show' : 'Hide'} password`);
+    const label = (button.dataset.passwordLabel || 'Show password').replace(/^Show\s+/i, '');
+    button.classList.toggle('is-visible', !visible);
+    button.setAttribute('aria-label', `${visible ? 'Show' : 'Hide'} ${label}`);
     button.setAttribute('aria-pressed', String(!visible));
 }));
-
 document.querySelectorAll('input[name="password_confirmation"]').forEach((confirmation) => {
     const form = confirmation.form;
     const password = form?.querySelector('input[name="password"]');
@@ -288,116 +290,6 @@ document.querySelectorAll('[data-auth-form]').forEach((form) => form.addEventLis
     if (label) label.textContent = form.querySelector('[name="password_confirmation"]') ? 'Creating account…' : 'Signing in…';
 }));
 
-const avatarForm = document.querySelector('[data-avatar-form]');
-const avatarInput = document.querySelector('[data-avatar-input]');
-const avatarCropModal = document.querySelector('[data-avatar-crop-modal]');
-const avatarCropCanvas = document.querySelector('[data-avatar-crop-canvas]');
-const avatarCropZoom = document.querySelector('[data-avatar-crop-zoom]');
-const avatarCropApply = document.querySelector('[data-avatar-crop-apply]');
-const avatarCropCancelButtons = document.querySelectorAll('[data-avatar-crop-cancel]');
-const avatarCropStatus = document.querySelector('[data-avatar-crop-status]');
-const avatarCropHelp = avatarCropModal?.querySelector('.admin-avatar-crop-help');
-let avatarCropImage = null;
-let avatarCropObjectUrl = null;
-let avatarCropOffset = { x: 0, y: 0 };
-let avatarCropDragging = false;
-let avatarCropLastPoint = null;
-let avatarCropReturnFocus = null;
-const drawAvatarCrop = () => {
-    if (!avatarCropCanvas || !avatarCropImage) return;
-    const context = avatarCropCanvas.getContext('2d');
-    const width = avatarCropImage.naturalWidth;
-    const height = avatarCropImage.naturalHeight;
-    const zoom = Number(avatarCropZoom?.value || 1);
-    const cropSize = Math.min(width, height) / zoom;
-    const maxX = (width - cropSize) / 2;
-    const maxY = (height - cropSize) / 2;
-    avatarCropOffset.x = Math.max(-maxX, Math.min(maxX, avatarCropOffset.x));
-    avatarCropOffset.y = Math.max(-maxY, Math.min(maxY, avatarCropOffset.y));
-    const sourceX = (width - cropSize) / 2 + avatarCropOffset.x;
-    const sourceY = (height - cropSize) / 2 + avatarCropOffset.y;
-    context.clearRect(0, 0, avatarCropCanvas.width, avatarCropCanvas.height);
-    context.fillStyle = '#202521';
-    context.fillRect(0, 0, avatarCropCanvas.width, avatarCropCanvas.height);
-    context.drawImage(avatarCropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, avatarCropCanvas.width, avatarCropCanvas.height);
-};
-const closeAvatarCrop = (clearFile = true) => {
-    if (!avatarCropModal) return;
-    avatarCropModal.hidden = true;
-    avatarCropImage = null;
-    if (avatarCropObjectUrl) URL.revokeObjectURL(avatarCropObjectUrl);
-    avatarCropObjectUrl = null;
-    avatarCropZoom && (avatarCropZoom.value = '1');
-    avatarCropOffset = { x: 0, y: 0 };
-    if (clearFile && avatarInput) avatarInput.value = '';
-    const returnFocus = avatarCropReturnFocus;
-    avatarCropReturnFocus = null;
-    returnFocus?.focus?.();
-};
-const openAvatarCrop = (file) => {
-    if (!avatarCropModal || !avatarCropCanvas || !file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) || file.size > 4 * 1024 * 1024) {
-        if (avatarCropHelp) avatarCropHelp.textContent = 'Choose a JPG, PNG, WebP or AVIF image up to 4 MB.';
-        if (avatarInput) avatarInput.value = '';
-        return;
-    }
-    avatarCropReturnFocus = document.activeElement;
-    avatarCropObjectUrl = URL.createObjectURL(file);
-    avatarCropImage = new Image();
-    avatarCropImage.onload = () => {
-        avatarCropOffset = { x: 0, y: 0 };
-        if (avatarCropZoom) avatarCropZoom.value = '1';
-        drawAvatarCrop();
-        avatarCropModal.hidden = false;
-        avatarCropApply?.focus();
-    };
-    avatarCropImage.onerror = () => closeAvatarCrop();
-    avatarCropImage.src = avatarCropObjectUrl;
-};
-avatarInput?.addEventListener('change', () => openAvatarCrop(avatarInput.files?.[0]));
-avatarCropZoom?.addEventListener('input', drawAvatarCrop);
-avatarCropCanvas?.addEventListener('pointerdown', (event) => {
-    avatarCropDragging = true;
-    avatarCropLastPoint = { x: event.clientX, y: event.clientY };
-    avatarCropCanvas.setPointerCapture(event.pointerId);
-});
-avatarCropCanvas?.addEventListener('pointermove', (event) => {
-    if (!avatarCropDragging || !avatarCropImage) return;
-    const zoom = Number(avatarCropZoom?.value || 1);
-    const cropSize = Math.min(avatarCropImage.naturalWidth, avatarCropImage.naturalHeight) / zoom;
-    const scale = cropSize / avatarCropCanvas.width;
-    avatarCropOffset.x -= (event.clientX - avatarCropLastPoint.x) * scale;
-    avatarCropOffset.y -= (event.clientY - avatarCropLastPoint.y) * scale;
-    avatarCropLastPoint = { x: event.clientX, y: event.clientY };
-    drawAvatarCrop();
-});
-avatarCropCanvas?.addEventListener('pointerup', () => { avatarCropDragging = false; avatarCropLastPoint = null; });
-avatarCropCanvas?.addEventListener('pointercancel', () => { avatarCropDragging = false; avatarCropLastPoint = null; });
-avatarCropCancelButtons.forEach((button) => button.addEventListener('click', () => closeAvatarCrop()));
-avatarCropApply?.addEventListener('click', () => {
-    if (!avatarCropCanvas || !avatarInput || !avatarCropImage) return;
-    avatarCropCanvas.toBlob((blob) => {
-        if (!blob || typeof DataTransfer === 'undefined') return;
-        const transfer = new DataTransfer();
-        transfer.items.add(new File([blob], 'profile-cropped.png', { type: 'image/png', lastModified: Date.now() }));
-        avatarInput.files = transfer.files;
-        avatarInput.dataset.cropped = 'true';
-        if (avatarCropStatus) avatarCropStatus.textContent = 'Cropped photo ready to upload.';
-        closeAvatarCrop(false);
-    }, 'image/png', .92);
-});
-document.addEventListener('keydown', (event) => {
-    if (!avatarCropModal || avatarCropModal.hidden) return;
-    if (event.key === 'Escape') { closeAvatarCrop(); return; }
-    if (event.key !== 'Tab') return;
-    const focusable = focusablesWithin(avatarCropModal);
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-});
-
 const adminDetailsMenus = [...document.querySelectorAll('.admin-action-menu, .admin-quick-actions')];
 const closeAdminDetailsMenus = (except = null) => adminDetailsMenus.forEach((menu) => {
     if (menu !== except) menu.removeAttribute('open');
@@ -428,97 +320,6 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => link.addEventListene
     event.preventDefault();
     target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }));
-
-document.querySelectorAll('[data-media-picker]').forEach((picker) => {
-    const search = picker.querySelector('.media-picker-search');
-    const select = picker.querySelector('[data-media-select]');
-    const preview = picker.querySelector('[data-media-preview]');
-    const searchUrl = picker.dataset.mediaSearchUrl;
-    let searchTimer;
-    let requestController;
-    const updatePreview = () => {
-        const option = select.selectedOptions[0];
-        preview.replaceChildren();
-        if (!option?.dataset.url) { preview.hidden = true; return; }
-        const image = document.createElement('img');
-        image.src = option.dataset.url;
-        image.alt = 'Selected media preview';
-        preview.append(image);
-        preview.hidden = false;
-    };
-    const renderResults = (items) => {
-        const selected = select.value;
-        const selectedUrl = select.selectedOptions[0]?.dataset.url;
-        select.replaceChildren(new Option('No image selected', ''));
-        items.forEach((item) => {
-            const option = new Option(item.label, item.path, false, item.path === selected);
-            option.dataset.url = item.url;
-            select.append(option);
-        });
-        if (selected && !items.some((item) => item.path === selected)) {
-            const option = new Option(`${selected.split('/').pop()} · current selection`, selected, true, true);
-            option.dataset.url = selectedUrl || `${window.location.origin}/storage/${selected.replace(/^\/+/, '')}`;
-            select.append(option);
-        }
-        updatePreview();
-    };
-    const searchMedia = async () => {
-        if (!searchUrl) return;
-        requestController?.abort();
-        requestController = new AbortController();
-        const url = new URL(searchUrl, window.location.origin);
-        if (search.value.trim()) url.searchParams.set('q', search.value.trim());
-        try {
-            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal });
-            if (!response.ok) return;
-            renderResults(await response.json());
-        } catch (error) {
-            if (error.name !== 'AbortError') console.warn('Media search failed', error);
-        }
-    };
-    search?.addEventListener('input', () => {
-        window.clearTimeout(searchTimer);
-        searchTimer = window.setTimeout(searchMedia, 250);
-    });
-    search?.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter') return;
-        event.preventDefault();
-        window.clearTimeout(searchTimer);
-        searchMedia();
-    });
-    select?.addEventListener('change', updatePreview);
-});
-
-document.querySelectorAll('[data-rich-editor-wrapper]').forEach((wrapper) => {
-    const editor = wrapper.querySelector('[data-rich-editor]');
-    const source = wrapper.querySelector('[data-rich-source]');
-    if (!editor || !source) return;
-    const sync = () => { source.value = editor.innerHTML; };
-    editor.addEventListener('input', sync);
-    wrapper.querySelectorAll('[data-rich-command]').forEach((button) => button.addEventListener('mousedown', (event) => {
-        event.preventDefault();
-        editor.focus();
-        const command = button.dataset.richCommand;
-        if (command === 'createLink') {
-            const url = window.prompt('Link URL');
-            if (url) document.execCommand('createLink', false, url);
-        } else if (command === 'insertTable') {
-            document.execCommand('insertHTML', false, '<table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Value</td><td>Value</td></tr></tbody></table><p><br></p>');
-        } else if (command === 'insertImage') {
-            const url = window.prompt('Image URL from the Media Library or a trusted https:// source');
-            if (!url || !/^(https?:\/\/|\/|#)/i.test(url)) return;
-            const alt = window.prompt('Image alt text') || '';
-            const escapeAttribute = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            document.execCommand('insertHTML', false, `<img src="${escapeAttribute(url)}" alt="${escapeAttribute(alt)}">`);
-        } else if (command === 'formatBlock') {
-            document.execCommand(command, false, `<${button.dataset.richValue}>`);
-        } else {
-            document.execCommand(command, false);
-        }
-        sync();
-    }));
-    editor.closest('form')?.addEventListener('submit', sync);
-});
 
 document.querySelectorAll('form[data-unsaved-warning]').forEach((form) => {
     let dirty = false;

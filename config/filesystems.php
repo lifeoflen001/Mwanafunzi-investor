@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Commerce assets are private and must only be served through the
+            // signed entitlement-checked download controller.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
@@ -41,7 +43,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => rtrim(env('CDN_URL', env('APP_URL', 'http://localhost')), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

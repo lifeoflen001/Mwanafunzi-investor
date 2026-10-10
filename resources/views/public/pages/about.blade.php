@@ -59,7 +59,8 @@
         <div class="team-grid">
             @foreach($teamMembers as $member)
                 <a class="team-card" href="{{ route('team.show', $member->slug) }}">
-                    <div class="team-card-media">@if($member->portrait)<img src="{{ str_starts_with($member->portrait, 'http') ? $member->portrait : asset(ltrim($member->portrait, '/')) }}" alt="{{ $member->name }}" loading="lazy" style="object-position:{{ $member->portrait_focal_point ?: 'center 25%' }}">@endif</div>
+                    @php($memberImage = $member->portrait ? \App\Support\PublicHero::candidate($member->portrait) : null)
+                    <div class="team-card-media">@if($memberImage)<img src="{{ $memberImage['url'] }}" @if($memberImage['srcset']) srcset="{{ $memberImage['srcset'] }}" sizes="(max-width: 760px) 90vw, 42vw" @endif @if($memberImage['width']) width="{{ $memberImage['width'] }}" height="{{ $memberImage['height'] }}" @endif alt="{{ $member->name }}" loading="lazy" style="object-position:{{ $member->portrait_focal_point ?: 'center 25%' }}">@endif</div>
                     <div class="team-card-body"><div><span class="eyebrow">{{ $member->role ?: ($member->department ?: 'Mwanafunzi Investor team') }}</span><h3>{{ $member->name }}</h3>@if($member->short_intro)<p>{{ $member->short_intro }}</p>@endif</div><span class="team-card-arrow" aria-hidden="true">↗</span></div>
                 </a>
             @endforeach

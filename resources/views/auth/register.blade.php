@@ -25,6 +25,7 @@
             <form class="client-auth-form client-register-form" method="post" action="{{ route('register.store') }}" data-auth-form>
                 @csrf
                 @include('partials.form-feedback')
+                @include('components.recaptcha', ['action' => 'register'])
 
                 <label class="client-register-field-wide" for="client-name">Name
                     <input id="client-name" type="text" name="name" value="{{ old('name') }}" required autocomplete="name" aria-describedby="client-name-error">
@@ -39,7 +40,7 @@
                 <label for="client-password">Password
                     <div class="client-password-field">
                         <input id="client-password" type="password" name="password" required autocomplete="new-password" aria-describedby="client-password-error">
-                        <button class="client-password-toggle" type="button" data-password-toggle aria-label="Show password">Show</button>
+                        <x-password-toggle class="client-password-toggle" />
                     </div>
                     @error('password')<small class="client-field-error" id="client-password-error">{{ $message }}</small>@enderror
                 </label>
@@ -47,7 +48,7 @@
                 <label for="client-password-confirmation">Confirm password
                     <div class="client-password-field">
                         <input id="client-password-confirmation" type="password" name="password_confirmation" required autocomplete="new-password" aria-describedby="client-password-confirmation-error">
-                        <button class="client-password-toggle" type="button" data-password-toggle aria-label="Show password">Show</button>
+                        <x-password-toggle class="client-password-toggle" />
                     </div>
                     @error('password_confirmation')<small class="client-field-error" id="client-password-confirmation-error">{{ $message }}</small>@enderror
                 </label>

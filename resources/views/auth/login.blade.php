@@ -25,6 +25,7 @@
             <form class="client-auth-form" method="post" action="{{ route('login.store') }}" data-auth-form>
                 @csrf
                 @include('partials.form-feedback')
+                @include('components.recaptcha', ['action' => 'login'])
 
                 <label for="client-email">Email
                     <input id="client-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" aria-describedby="client-email-error">
@@ -34,13 +35,14 @@
                 <label for="client-password">Password
                     <div class="client-password-field">
                         <input id="client-password" type="password" name="password" required autocomplete="current-password" aria-describedby="client-password-error">
-                        <button class="client-password-toggle" type="button" data-password-toggle aria-label="Show password">Show</button>
+                        <x-password-toggle class="client-password-toggle" />
                     </div>
                     @error('password')<small class="client-field-error" id="client-password-error">{{ $message }}</small>@enderror
                 </label>
 
                 <div class="client-auth-options">
                     <label class="client-remember"><input type="checkbox" name="remember" value="1"> <span>Remember me</span></label>
+                    <a href="{{ route('password.request') }}">Forgot password?</a>
                 </div>
 
                 <button class="button button-dark client-auth-submit" type="submit" data-auth-submit><span data-auth-submit-label>Sign in</span> <span aria-hidden="true">↗</span></button>

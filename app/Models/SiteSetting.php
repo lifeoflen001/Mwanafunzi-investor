@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Throwable;
 
 class SiteSetting extends Model
 {
@@ -19,8 +21,18 @@ class SiteSetting extends Model
         return match ($setting['type']) {
             'boolean' => filter_var($setting['value'], FILTER_VALIDATE_BOOLEAN),
             'json' => json_decode($setting['value'], true),
+            'encrypted' => static::decrypt($setting['value'], $default),
             default => $setting['value'],
         };
+    }
+
+    private static function decrypt(string $value, mixed $default): mixed
+    {
+        try {
+            return Crypt::decryptString($value);
+        } catch (Throwable) {
+            return $default;
+        }
     }
 
     public static function valuesForKeys(array $keys): array

@@ -18,6 +18,7 @@ use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
@@ -136,9 +137,61 @@ class CommerceTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'refunded']);
     }
 
+    public function test_refunds_cannot_exceed_the_remaining_paid_balance(): void
+    {
+        $owner = $this->customer();
+        $product = $this->product(['availability' => 'available', 'price' => '10000.00']);
+        $order = app(CheckoutService::class)->createForProduct($owner, $product, ['name' => $owner->name, 'email' => $owner->email]);
+        app(CheckoutService::class)->initialize($order, route('payments.flutterwave.return'));
+        $payment = $order->payments()->firstOrFail();
+        app(PaymentService::class)->verifyAndComplete($payment, ['status' => 'successful', 'id' => 'refund-balance-test', 'tx_ref' => $payment->internal_reference, 'amount' => '10000.00', 'currency' => 'TZS'], 'refund-balance-event');
+
+        app(RefundService::class)->markRefunded($order->fresh(), $owner, '6000.00', 'Partial refund');
+        app(RefundService::class)->markRefunded($order->fresh(), $owner, '4000.00', 'Final refund');
+
+        $this->expectException(\RuntimeException::class);
+        app(RefundService::class)->markRefunded($order->fresh(), $owner, '1.00', 'Over-refund attempt');
+    }
+
     public function test_flutterwave_webhook_rejects_invalid_signature(): void
     {
         $this->postJson(route('payments.flutterwave.webhook'), ['data' => ['tx_ref' => 'unknown']])->assertUnauthorized();
+    }
+
+    public function test_duplicate_signed_flutterwave_webhooks_fulfill_once(): void
+    {
+        config()->set('services.flutterwave.secret_hash', 'webhook-test-secret');
+        config()->set('services.flutterwave.secret_key', 'webhook-test-key');
+        $owner = $this->customer();
+        $product = $this->product(['availability' => 'available', 'price' => '10000.00']);
+        $order = app(CheckoutService::class)->createForProduct($owner, $product, ['name' => $owner->name, 'email' => $owner->email]);
+        $payment = Payment::create(['order_id' => $order->id, 'provider' => 'flutterwave', 'internal_reference' => 'MI-PAY-WEBHOOK-TEST', 'amount' => '10000.00', 'currency' => 'TZS', 'status' => PaymentStatus::Processing]);
+        $payload = ['id' => 'provider-event-1', 'data' => ['tx_ref' => $payment->internal_reference, 'id' => 'provider-transaction-1']];
+        Http::fake(['*' => Http::response(['data' => ['status' => 'successful', 'id' => 'provider-transaction-1', 'tx_ref' => $payment->internal_reference, 'amount' => '10000.00', 'currency' => 'TZS']], 200)]);
+
+        $this->withHeader('verif-hash', 'webhook-test-secret')->postJson(route('payments.flutterwave.webhook'), $payload)->assertOk();
+        $this->withHeader('verif-hash', 'webhook-test-secret')->postJson(route('payments.flutterwave.webhook'), $payload)->assertOk();
+
+        $this->assertSame(1, $owner->fresh()->entitlements()->count());
+        $this->assertDatabaseCount('payment_events', 1);
+    }
+
+    public function test_provider_failure_does_not_grant_access(): void
+    {
+        config()->set('commerce.provider', 'flutterwave');
+        config()->set('services.flutterwave.secret_key', 'test-secret');
+        Http::fake(['*' => Http::response(['status' => 'error'], 503)]);
+        $owner = $this->customer();
+        $product = $this->product(['availability' => 'available', 'price' => '10000.00']);
+        $order = app(CheckoutService::class)->createForProduct($owner, $product, ['name' => $owner->name, 'email' => $owner->email]);
+
+        try {
+            app(CheckoutService::class)->initialize($order, route('payments.flutterwave.return'));
+            $this->fail('A provider outage must not initialize a paid checkout.');
+        } catch (\RuntimeException) {
+            $this->assertSame(PaymentStatus::Pending, $order->payments()->firstOrFail()->status);
+            $this->assertSame(0, $owner->fresh()->entitlements()->count());
+        }
     }
 
     public function test_admin_can_upload_a_private_product_asset_and_customer_portal_renders(): void

@@ -1,12 +1,22 @@
 @php
+    $brandName = $brandName ?? \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
+    $email = $email ?? \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
+    $phone = $phone ?? \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
+    $whatsapp = $whatsapp ?? \App\Models\SiteSetting::getValue('contact_whatsapp');
+    $location = $location ?? \App\Models\SiteSetting::getValue('contact_location', 'Tanzania');
+    $footerCopy = $footerCopy ?? \App\Models\SiteSetting::getValue('footer_copy', 'Student of Money. Probability. Systems. Discipline.');
+    $footerCopyright = $footerCopyright ?? \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
+    $footerBottomStatement = $footerBottomStatement ?? \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
     $footerDisclaimer = $disclaimer ?? $riskDisclaimer ?? 'Educational content only. This is not personalised financial advice. Trading involves risk.';
+    $footerNavigation = $footerNavigation ?? \App\Support\PublicSiteData::footerNavigation();
+    $socialLinks = $socialLinks ?? \App\Support\PublicSiteData::socialLinks();
 @endphp
 <footer class="site-footer">
     <div class="container">
         <div class="footer-top">
             <div class="footer-brand">
                 <a class="brand" href="{{ route('home') }}" aria-label="{{ $brandName }} home">
-                    <img class="brand-image brand-logo-light" src="{{ asset('images/brand/mwanafunzi-logo-light.png') }}" alt="{{ $brandName }}">
+                    <img class="brand-image brand-logo-light" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="{{ $brandName }}">
                 </a>
                 <p class="footer-tagline">{!! nl2br(e($footerCopy)) !!}</p>
                 <p class="footer-brand-context">Learn, build and create works with a point of view.</p>
@@ -46,21 +56,21 @@
                     <div>
                         <span>{{ ucfirst($group) }}</span>
                         @foreach($items as $item)
-                            <a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->label }}</a>
+                            <a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->publicLabel() }}</a>
                             @foreach($item->children->where('is_visible', true)->sortBy('sort_order') as $child)
-                                <a class="footer-sub-link" href="{{ $child->href() }}" target="{{ $child->target }}">{{ $child->label }}</a>
+                                <a class="footer-sub-link" href="{{ $child->href() }}" target="{{ $child->target }}">{{ $child->publicLabel() }}</a>
                             @endforeach
                         @endforeach
                     </div>
                 @empty
                     <div><span>Explore</span><a href="{{ route('learn') }}">Learn</a><a href="{{ route('courses') }}">Courses</a><a href="{{ route('tools') }}">Tools</a></div>
-                    <div><span>Company</span><a href="{{ route('journal') }}">Blog</a><a href="{{ route('about') }}">About us</a><a href="{{ route('contact') }}">Contact us</a></div>
+                    <div><span>Company</span><a href="{{ route('blog') }}">Blog</a><a href="{{ route('about') }}">About us</a><a href="{{ route('contact') }}">Contact us</a></div>
                     <div><span>Legal</span><a href="{{ route('legal', 'privacy-policy') }}">Privacy policy</a><a href="{{ route('legal', 'terms') }}">Terms of services</a><a href="{{ route('legal', 'risk-disclosure') }}">Risk disclosure</a></div>
                 @endforelse
 
                 <div class="footer-contact">
                     <span>Contact</span>
-                    <a class="footer-contact-link" href="mailto:{{ $email }}" aria-label="Email {{ $email }}"><span>Email us</span><small class="sr-only">{{ $email }}</small></a>
+                    <a class="footer-contact-link" href="mailto:{{ $email }}" aria-label="Email {{ $email }}"><span style="text-transform: lowercase;">hello@mwanafunziinvestor.com</span><small class="sr-only">{{ $email }}</small></a>
                     <a href="tel:{{ preg_replace('/\D+/', '', $phone) }}">{{ $phone }}</a>
                     @if($whatsapp)
                         <a href="https://wa.me/{{ preg_replace('/\D+/', '', $whatsapp) }}" target="_blank" rel="noopener">WhatsApp {{ $whatsapp }} <span aria-hidden="true">↗</span></a>

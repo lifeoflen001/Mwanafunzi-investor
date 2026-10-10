@@ -142,8 +142,13 @@ APP_NAME="Mwanafunzi Investor"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://YOUR_REAL_DOMAIN.example
+ASSET_URL=https://cdn.YOUR_REAL_DOMAIN.example
+CDN_URL=https://cdn.YOUR_REAL_DOMAIN.example
 APP_TIMEZONE=Africa/Dar_es_Salaam
 APP_KEY=
+ADMIN_MFA_REQUIRED=true
+OUTBOUND_CONNECT_TIMEOUT=10
+OUTBOUND_TIMEOUT=20
 
 LOG_CHANNEL=stack
 LOG_STACK=daily
@@ -169,6 +174,14 @@ MAIL_MAILER=smtp
 MAIL_SCHEME=tls
 MAIL_HOST=YOUR_SMTP_HOST
 MAIL_PORT=587
+MAIL_TIMEOUT=20
+RECAPTCHA_ENABLED=true
+RECAPTCHA_SITE_KEY=replace-with-public-site-key
+RECAPTCHA_SECRET_KEY=replace-with-server-secret
+RECAPTCHA_VERSION=v3
+RECAPTCHA_MIN_SCORE=0.5
+RECAPTCHA_HOSTNAME=your-production-hostname
+RECAPTCHA_TIMEOUT=5
 MAIL_USERNAME=YOUR_SMTP_USERNAME
 MAIL_PASSWORD=YOUR_SECURE_SMTP_PASSWORD
 MAIL_FROM_ADDRESS=YOUR_VERIFIED_FROM_ADDRESS
@@ -278,6 +291,40 @@ Upload `public/build/` to the live document root. The live application does not 
 
 The audited production build generated approximately 177.55 kB CSS (32.17 kB gzip) and 68.76 kB JavaScript (24.61 kB gzip). Build output is ignored by Git, so it must be generated during deployment or included in the release package.
 
+### Asset/CDN delivery
+
+`ASSET_URL` controls Laravel's generated URLs for immutable build assets and
+public files. `CDN_URL` controls the public storage disk URL for CMS media.
+Leave both blank for same-origin delivery. If enabled, configure the CDN origin
+to the Laravel `public/` directory and the `/storage` public-media path only.
+Never map private commerce storage or authenticated account routes to a public
+CDN origin.
+
+Vite filenames are content-hashed. The repository's `public/.htaccess` applies
+one-year immutable caching to CSS, JavaScript, image and font assets. Configure
+the equivalent rule at the CDN/Nginx layer, and keep HTML/authenticated
+responses out of a shared public cache.
+
+The application does not install a CDN SDK or fake load balancing in Laravel.
+Supported infrastructure choices include Cloudflare, CloudFront, Bunny CDN or
+an equivalent provider configured outside the application.
+
+### Compression
+
+Enable Brotli at the CDN or web server for HTML, CSS, JavaScript, JSON and SVG,
+with gzip as fallback. Do not compress JPEG, WebP, AVIF or ZIP files again.
+Apache deployments use the existing `mod_deflate` fallback in
+`public/.htaccess`; Nginx/CDN deployments should configure Brotli/gzip at the
+edge.
+
+### Image delivery
+
+Public editorial images use responsive `srcset` candidates where variants are
+available. The primary hero remains eager/priority; below-the-fold cards and
+galleries remain lazy. The media service generates WebP variants when GD or
+Imagick is available. Keep the original upload as the source of truth and
+serve variants through public media URLs only.
+
 ## 8. Storage, Uploads and Permissions
 
 Run from the application directory:
@@ -343,6 +390,32 @@ On cPanel without a persistent worker, use a cron job that exits when the queue 
 ```
 
 Avoid overlapping long-running cron workers. Monitor `failed_jobs` and use `php artisan queue:failed`/`php artisan queue:retry all` deliberately after reviewing failures.
+
+### Multi-instance readiness
+
+The Laravel request layer is designed to remain stateless when the configured
+session, cache and queue stores are shared. For two or more app nodes use:
+
+```text
+Internet → CDN/WAF → Load balancer → Laravel nodes → Redis/MySQL/object storage
+```
+
+Use database or Redis sessions, a shared cache/queue backend, centralized
+MySQL/MariaDB, and S3-compatible object storage for public media/private
+commerce assets when local disks are not shared. Configure Laravel's trusted
+proxy settings at the infrastructure boundary so forwarded HTTPS and client-IP
+headers are accepted only from the known proxy/load-balancer network. Do not
+add persistent PHP connections or application-level load-balancer logic.
+
+Size web workers and queue workers against the database `max_connections`
+budget. A starting capacity calculation is:
+
+```text
+web workers + queue workers + scheduler/maintenance headroom < database max_connections
+```
+
+Confirm the actual worker count, connection limit, cache/session driver and
+object-storage policy with the hosting provider before scaling out.
 
 ### Scheduler
 

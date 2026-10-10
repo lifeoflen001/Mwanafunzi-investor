@@ -6,7 +6,10 @@
     <meta name="theme-color" content="#101c24">
     <meta name="font-family" content="DM Sans">
     <title>{{ $title }} — Mwanafunzi Investor</title>
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-96x96.png') }}?v=favicon4" type="image/png" sizes="96x96">
+    <link rel="icon" href="{{ asset('favicon.svg') }}?v=favicon4" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}?v=favicon4" sizes="180x180">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     @vite(['resources/css/app.css'])
     <style>
         :root { --error-night:#101c24; --error-ink:#121c24; --error-paper:#f6f3ed; --error-copper:#ff6a00; --error-muted:#aeb8b9; }
@@ -38,7 +41,7 @@
     <main class="error-page">
         <div class="error-shell">
             <header class="error-header">
-                <a href="{{ route('home') }}" aria-label="Mwanafunzi Investor home"><img class="error-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.png') }}" alt="Mwanafunzi Investor"></a>
+                <a href="{{ route('home') }}" aria-label="Mwanafunzi Investor home"><img class="error-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="Mwanafunzi Investor"></a>
                 <span class="error-status"><i aria-hidden="true"></i> Mwanafunzi Investor</span>
             </header>
             <section class="error-content" aria-labelledby="error-heading">

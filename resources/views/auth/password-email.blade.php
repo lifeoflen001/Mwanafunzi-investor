@@ -1,0 +1,6 @@
+@extends('layouts.public')
+@section('title', 'Reset your password — Mwanafunzi Investor')
+@section('body_class', 'client-auth-page')
+@section('content')
+<section class="client-auth-shell"><div class="container client-auth-container"><div class="client-auth-intro"><p class="eyebrow"><span class="eyebrow-line"></span>Client portal</p><h1>Reset your password.</h1><p>Enter your account email and we will send a secure, time-limited reset link.</p></div><div class="client-auth-grid"><aside class="client-auth-context"><p class="eyebrow">Account security</p><p>Reset links expire automatically. Never share a password or reset link with anyone else.</p></aside><form class="client-auth-form" method="post" action="{{ route('password.email') }}">@csrf @include('partials.form-feedback') @include('components.recaptcha', ['action' => 'password_reset'])<label for="reset-email">Email<input id="reset-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label><button class="button button-dark client-auth-submit" type="submit">Send reset link <span aria-hidden="true">↗</span></button><p class="client-register-prompt"><a href="{{ route('login') }}">Return to sign in</a></p></form></div></div></section>
+@endsection

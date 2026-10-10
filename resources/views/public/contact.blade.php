@@ -49,6 +49,7 @@
             <form class="contact-form" method="post" action="{{ route('contact.submit') }}">
                 @csrf
                 @include('partials.form-feedback')
+                @include('components.recaptcha', ['action' => 'contact'])
                 <p class="contact-form-intro">A few details help us send your enquiry to the right part of the platform.</p>
                 <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" name="website"></label>
                 <div class="form-row">

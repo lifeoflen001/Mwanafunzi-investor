@@ -15,7 +15,7 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     public function initializePayment(Payment $payment, Order $order, string $redirectUrl): array
     {
         $this->assertConfigured();
-        $response = Http::withToken(config('services.flutterwave.secret_key'))->acceptJson()->post(rtrim(config('services.flutterwave.base_url'), '/').'/payments', [
+        $response = Http::connectTimeout(config('security.outbound_connect_timeout'))->timeout(config('security.outbound_timeout'))->withToken(config('services.flutterwave.secret_key'))->acceptJson()->post(rtrim(config('services.flutterwave.base_url'), '/').'/payments', [
             'tx_ref' => $payment->internal_reference,
             'amount' => $payment->amount,
             'currency' => $payment->currency,
@@ -31,7 +31,7 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     {
         $this->assertConfigured();
         if (! $providerTransactionId) throw new RuntimeException('A provider transaction ID is required for verification.');
-        $response = Http::withToken(config('services.flutterwave.secret_key'))->acceptJson()->get(rtrim(config('services.flutterwave.base_url'), '/').'/transactions/'.urlencode($providerTransactionId).'/verify');
+        $response = Http::connectTimeout(config('security.outbound_connect_timeout'))->timeout(config('security.outbound_timeout'))->withToken(config('services.flutterwave.secret_key'))->acceptJson()->get(rtrim(config('services.flutterwave.base_url'), '/').'/transactions/'.urlencode($providerTransactionId).'/verify');
         if ($response->failed() || ! $response->json('data')) throw new RuntimeException('The payment provider could not verify this payment.');
         $data = $response->json('data');
         return ['status' => $data['status'] ?? 'unknown', 'id' => (string) ($data['id'] ?? $providerTransactionId), 'tx_ref' => $data['tx_ref'] ?? null, 'amount' => $data['amount'] ?? null, 'currency' => $data['currency'] ?? null, 'provider_reference' => $data['flw_ref'] ?? null, 'metadata' => ['payment_type' => $data['payment_type'] ?? null]];
@@ -42,7 +42,9 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     public function validateWebhook(array $headers, string $rawBody): bool
     {
         $secret = config('services.flutterwave.secret_hash');
-        return $secret && isset($headers['verif-hash']) && hash_equals($secret, (string) $headers['verif-hash']);
+        $provided = $headers['verif-hash'] ?? $headers['Verif-Hash'] ?? null;
+        if (is_array($provided)) $provided = $provided[0] ?? null;
+        return is_string($secret) && $secret !== '' && is_string($provided) && hash_equals($secret, $provided);
     }
     public function refundPayment(Payment $payment, string $amount, string $reason): array { throw new RuntimeException('Flutterwave automated refunds are not enabled in this phase.'); }
     private function assertConfigured(): void { if (! config('services.flutterwave.secret_key')) throw new RuntimeException('Flutterwave sandbox credentials are not configured.'); }

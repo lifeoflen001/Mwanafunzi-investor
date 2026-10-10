@@ -50,7 +50,7 @@
 <section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $focalPoint }}; --hero-overlay-strength: {{ $overlay }};">
     @if($hero)
         <picture class="public-hero-media" aria-hidden="true">
-            @if($hero['srcset'])<img src="{{ $hero['url'] }}" srcset="{{ $hero['srcset'] }}" sizes="100vw" alt="" fetchpriority="high">@else<img src="{{ $hero['url'] }}" alt="" fetchpriority="high">@endif
+            @if($hero['srcset'])<img src="{{ $hero['url'] }}" srcset="{{ $hero['srcset'] }}" sizes="100vw" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@else<img src="{{ $hero['url'] }}" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@endif
         </picture>
     @endif
     <div class="public-hero-overlay" aria-hidden="true"></div>
