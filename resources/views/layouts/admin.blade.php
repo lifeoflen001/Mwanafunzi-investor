@@ -25,7 +25,6 @@
                 <a class="portal-brand" href="{{ route('admin.dashboard') }}" aria-label="Mwanafunzi Investor admin portal">
                     <img class="portal-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="Mwanafunzi Investor">
                     <img class="portal-brand-mark" src="{{ asset('web-app-manifest-512x512.png') }}" alt="">
-                    <span><small>ADMIN DESK</small></span>
                 </a>
                 <button class="admin-sidebar-close" type="button" aria-label="Close admin navigation" data-admin-sidebar-close>×</button>
             </div>
@@ -62,6 +61,12 @@
                 </nav>
                 </div>
                 <div class="admin-nav-group">
+                    <p class="portal-section-label">Communication</p>
+                <nav class="portal-nav" aria-label="Communication navigation">
+                    <a class="{{ request()->routeIs('admin.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Newsletter</a>
+                </nav>
+                </div>
+                <div class="admin-nav-group">
                     <p class="portal-section-label">Platform</p>
                 <nav class="portal-nav" aria-label="Platform navigation">
                     <a class="{{ request()->routeIs('admin.services*') ? 'is-active' : '' }}" href="{{ route('admin.services') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Services</a>
@@ -75,7 +80,11 @@
                     <a class="{{ request()->routeIs('admin.business-units*') ? 'is-active' : '' }}" href="{{ route('admin.business-units') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Business modules</a>
                     <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
                     <a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span>Settings</a>
+                    <a class="{{ request()->routeIs('admin.compliance') ? 'is-active' : '' }}" href="{{ route('admin.compliance') }}"><span class="portal-nav-icon" aria-hidden="true">✓</span>Compliance &amp; privacy</a>
                     <a class="{{ request()->routeIs('admin.settings.security*') ? 'is-active' : '' }}" href="{{ route('admin.settings.security') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Security</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.settings.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Newsletter settings</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.cookies*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Cookies &amp; privacy</a>
+                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.cookies.registry*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies.registry') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Cookie registry</a>
                     <a class="{{ request()->routeIs('admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.social-links') }}"><span class="portal-nav-icon" aria-hidden="true">↗</span>Social links</a>
                     <a class="{{ request()->routeIs('admin.audit*') ? 'is-active' : '' }}" href="{{ route('admin.audit') }}"><span class="portal-nav-icon" aria-hidden="true">◷</span>Activity log</a>
                     <a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Administrators</a>
@@ -97,7 +106,7 @@
                 <button class="admin-sidebar-toggle" type="button" aria-label="Toggle admin navigation" aria-controls="admin-sidebar" aria-expanded="true" data-admin-sidebar-toggle><span aria-hidden="true">☰</span></button>
                 <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
                 <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
-                <form class="portal-search admin-search" method="get" action="{{ route('admin.search') }}" data-admin-search-form data-suggestions-url="{{ route('admin.search.suggestions') }}" role="search" autocomplete="off"><label class="sr-only" for="admin-search">Search the desk</label><span class="admin-search-icon" aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk" data-admin-search-input aria-controls="admin-search-suggestions" aria-expanded="false"><kbd class="admin-search-shortcut" aria-label="Keyboard shortcut Control K">Ctrl K</kbd><button class="admin-search-clear" type="button" aria-label="Clear search" data-admin-search-clear hidden>×</button><span class="admin-search-loading" aria-hidden="true" data-admin-search-loading hidden></span><div class="admin-search-suggestions" id="admin-search-suggestions" role="listbox" hidden data-admin-search-suggestions></div></form><button class="admin-mobile-search-button admin-icon-button" type="button" title="Search the desk" aria-label="Open search" data-admin-mobile-search>⌕</button>
+                <form class="portal-search admin-search" method="get" action="{{ route('admin.search') }}" data-admin-search-form data-suggestions-url="{{ route('admin.search.suggestions') }}" role="search" autocomplete="off"><label class="sr-only" for="admin-search">Search the desk</label><span class="admin-search-icon" aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk" data-admin-search-input aria-controls="admin-search-suggestions" aria-expanded="false"><kbd class="admin-search-shortcut" aria-label="Keyboard shortcut Control K">Ctrl K</kbd><button class="admin-search-clear" type="button" aria-label="Clear search" data-admin-search-clear hidden>×</button><span class="admin-search-loading" aria-hidden="true" data-admin-search-loading hidden></span><div class="admin-search-suggestions" id="admin-search-suggestions" role="listbox" hidden data-admin-search-suggestions></div><div class="admin-search-loading-panel" data-admin-search-loading-panel hidden aria-hidden="true"><x-skeleton variant="text" width="72%" height="12px" /><x-skeleton variant="text" width="52%" height="12px" /><x-skeleton variant="text" width="64%" height="12px" /></div><span class="sr-only" aria-live="polite" data-admin-search-status></span></form><button class="admin-mobile-search-button admin-icon-button" type="button" title="Search the desk" aria-label="Open search" data-admin-mobile-search>⌕</button>
                 <div class="portal-topbar-actions">
                     @auth
                         <details class="admin-quick-actions">
@@ -118,7 +127,6 @@
             </main>
         </div>
     </div>
-    @include('partials.public-footer')
     <div class="admin-confirm-modal" data-confirm-modal hidden role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
         <div class="admin-confirm-card">
             <span class="admin-confirm-icon" aria-hidden="true">!</span>

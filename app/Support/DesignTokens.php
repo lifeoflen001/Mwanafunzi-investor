@@ -36,7 +36,7 @@ final class DesignTokens
             'admin_sidebar' => ['label' => 'Admin sidebar', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#101c24', 'css' => '--admin-sidebar'],
             'admin_orange' => ['label' => 'Admin active accent', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#ff6a00', 'css' => '--admin-orange'],
             'admin_orange_hover' => ['label' => 'Admin accent hover', 'group' => 'Admin colours', 'type' => 'color', 'default' => '#d95400', 'css' => '--admin-orange-hover'],
-            'container_max_width' => ['label' => 'Public content max width', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 960, 'max' => 1600, 'default' => 1180, 'css' => '--container-max-width', 'unit' => 'px'],
+            'container_max_width' => ['label' => 'Public content max width', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 960, 'max' => 1600, 'default' => 1240, 'css' => '--container-max-width', 'unit' => 'px'],
             'page_gutter' => ['label' => 'Public page gutter', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 24, 'max' => 120, 'default' => 80, 'css' => '--page-gutter', 'unit' => 'px'],
             'body_size' => ['label' => 'Base text size', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 14, 'max' => 20, 'default' => 16, 'css' => '--body-size', 'unit' => 'px'],
             'button_height' => ['label' => 'Button height', 'group' => 'Layout tokens', 'type' => 'integer', 'min' => 40, 'max' => 72, 'default' => 52, 'css' => '--button-height', 'unit' => 'px'],

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\PolicyRevision;
 use App\Models\Redirect;
 use App\Support\AdminAudit;
 use App\Support\HeroFocalPoint;
@@ -50,6 +51,7 @@ class AdminPageController extends Controller
         $data['slug'] = $data['slug'] ? Str::slug($data['slug']) : null;
         $data['is_visible'] = $request->boolean('is_visible');
         $page = Page::create($data);
+        if ($page->page_type === 'policy') $this->recordPolicyRevision($page, $request);
         AdminAudit::record('page.created', 'Created page '.$page->name, $page);
         return to_route('admin.pages.edit', $page)->with('success', 'Page created. Add sections when the page content is ready.');
     }
@@ -76,6 +78,8 @@ class AdminPageController extends Controller
         }
         $this->saveSections($request, $page);
         $this->createSection($request, $page);
+        $page->refresh()->load('sections');
+        if ($page->page_type === 'policy') $this->recordPolicyRevision($page, $request);
         AdminAudit::record('page.updated', 'Updated page '.$page->name, $page, ['sections' => $page->sections()->count()]);
         return back()->with('success', 'Page and sections updated.');
     }
@@ -259,6 +263,27 @@ class AdminPageController extends Controller
             'cta_url' => $request->input('new_section_cta_url'),
             'sort_order' => max(0, (int) $request->input('new_section_sort_order', 0)),
             'is_enabled' => $request->boolean('new_section_enabled', true),
+        ]);
+    }
+
+    private function recordPolicyRevision(Page $page, Request $request): void
+    {
+        $revision = ((int) PolicyRevision::where('page_id', $page->id)->max('revision')) + 1;
+        PolicyRevision::create([
+            'page_id' => $page->id,
+            'revision' => $revision,
+            'page_name' => $page->name,
+            'title' => $page->hero_title,
+            'summary' => $page->hero_summary,
+            'effective_date' => $page->effective_date,
+            'sections' => $page->sections->map(fn ($section) => [
+                'key' => $section->key,
+                'heading' => $section->heading,
+                'body' => $section->body,
+                'payload' => $section->payload,
+                'is_enabled' => $section->is_enabled,
+            ])->values()->all(),
+            'changed_by' => $request->user()?->id,
         ]);
     }
 }

@@ -16,6 +16,7 @@ class Page extends Model
 
     public function sections() { return $this->hasMany(PageSection::class)->orderBy('sort_order'); }
     public function faqs() { return $this->morphMany(Faq::class, 'faqable')->orderBy('sort_order'); }
+    public function revisions() { return $this->hasMany(PolicyRevision::class)->latest(); }
 
     public function scopePublished(Builder $query): Builder { return $query->where('status', 'published')->where('is_visible', true)->where(fn (Builder $query) => $query->whereNull('published_at')->orWhere('published_at', '<=', now())); }
 

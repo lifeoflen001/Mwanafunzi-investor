@@ -27,5 +27,6 @@ return [
         'comments' => (bool) env('RECAPTCHA_FORM_COMMENTS', true),
         'waitlist' => (bool) env('RECAPTCHA_FORM_WAITLIST', true),
         'checkout' => (bool) env('RECAPTCHA_FORM_CHECKOUT', true),
+        'newsletter' => (bool) env('RECAPTCHA_FORM_NEWSLETTER', true),
     ],
 ];

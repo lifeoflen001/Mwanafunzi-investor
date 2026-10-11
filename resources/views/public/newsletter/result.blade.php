@@ -1,0 +1,5 @@
+@extends('layouts.public')
+@section('title', $type === 'confirmed' ? 'Subscription confirmed' : ($type === 'unsubscribed' ? 'Unsubscribed' : 'Newsletter link unavailable'))
+@section('content')
+<section class="newsletter-result platform-section"><div class="container"><p class="eyebrow"><span class="eyebrow-line"></span>Newsletter</p><h1>@if($type === 'confirmed')You're subscribed.@elseif($type === 'unsubscribed')You're unsubscribed.@else>This link is no longer available.@endif</h1><p>@if($type === 'confirmed')Thanks for confirming your email. We'll send useful Mwanafunzi Investor updates without filling your inbox.@elseif($type === 'unsubscribed')You will no longer receive newsletter updates. Changed your mind? You can subscribe again from the footer.@else>The link may have expired or already been used. You can return to the site and submit a new request if needed.@endif</p><a class="button button-accent" href="{{ route('home') }}">Return to website <span aria-hidden="true">↗</span></a></div></section>
+@endsection

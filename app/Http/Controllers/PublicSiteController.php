@@ -304,6 +304,11 @@ class PublicSiteController extends Controller
         return view("public.pages.{$page}", $data);
     }
 
+    public function cookiePolicy()
+    {
+        return view('public.pages.cookie-policy', ['page' => $this->cmsPage('cookie-policy')]);
+    }
+
     public function teamMember(string $member)
     {
         $member = TeamMember::active()->where('slug', $member)->firstOrFail();
@@ -315,7 +320,7 @@ class PublicSiteController extends Controller
     {
         $urls = collect([
             route('home'), route('forex-academy'), route('digital-systems'), route('digital-software.products'), route('digital-software.projects'), route('digital-software.testimonials'), route('creative-studio'), route('creative-studio.services'), route('creative-studio.projects'), route('creative-studio.testimonials'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('blog'), route('feed'), route('about'), route('contact'), route('student-of-money'),
-            route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'),
+            route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'), route('cookie-policy'),
         ]);
         $urls = $urls->merge(TeamMember::active()->get()->map(fn ($member) => route('team.show', $member->slug)));
         $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class Media extends Model
 {
     protected $table = 'media';
-    protected $fillable = ['disk', 'path', 'filename', 'mime_type', 'size', 'width', 'height', 'alt_text', 'caption', 'title', 'uploaded_by', 'variants'];
+    protected $fillable = ['disk', 'path', 'filename', 'mime_type', 'size', 'width', 'height', 'alt_text', 'caption', 'title', 'source', 'copyright_owner', 'license', 'license_url', 'attribution_required', 'attribution_text', 'internal_usage_notes', 'rights_verified', 'uploaded_by', 'variants'];
     protected function casts(): array { return ['variants' => 'array']; }
 
     public function uploader() { return $this->belongsTo(User::class, 'uploaded_by'); }

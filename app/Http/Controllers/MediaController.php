@@ -55,10 +55,10 @@ class MediaController extends Controller
 
     public function store(Request $request, MediaService $mediaService)
     {
-        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000']]);
+        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000'], 'source' => ['nullable', 'string', 'max:500'], 'copyright_owner' => ['nullable', 'string', 'max:190'], 'license' => ['nullable', 'string', 'max:190'], 'license_url' => ['nullable', 'url', 'max:500'], 'attribution_required' => ['nullable', 'boolean'], 'attribution_text' => ['nullable', 'string', 'max:500'], 'internal_usage_notes' => ['nullable', 'string', 'max:2000'], 'rights_verified' => ['nullable', 'boolean']]);
         $file = $request->file('file');
         $media = $mediaService->store($file, 'media', $data['alt_text'], $data['title'] ?? null);
-        $media->update(['uploaded_by' => $request->user()->id, 'caption' => $request->input('caption')]);
+        $media->update(['uploaded_by' => $request->user()->id, ...collect($data)->except('file')->all(), 'attribution_required' => $request->boolean('attribution_required'), 'rights_verified' => $request->boolean('rights_verified')]);
         AdminAudit::record('media.created', 'Uploaded media '.$media->filename, $media);
         return back()->with('success', 'Media uploaded.');
     }
@@ -69,6 +69,14 @@ class MediaController extends Controller
             'title' => ['nullable', 'string', 'max:190'],
             'alt_text' => ['required', 'string', 'max:190'],
             'caption' => ['nullable', 'string', 'max:1000'],
+            'source' => ['nullable', 'string', 'max:500'],
+            'copyright_owner' => ['nullable', 'string', 'max:190'],
+            'license' => ['nullable', 'string', 'max:190'],
+            'license_url' => ['nullable', 'url', 'max:500'],
+            'attribution_required' => ['nullable', 'boolean'],
+            'attribution_text' => ['nullable', 'string', 'max:500'],
+            'internal_usage_notes' => ['nullable', 'string', 'max:2000'],
+            'rights_verified' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'],
         ]);
         if ($request->hasFile('file')) {
@@ -89,6 +97,8 @@ class MediaController extends Controller
             ]);
         }
         unset($data['file']);
+        $data['attribution_required'] = $request->boolean('attribution_required');
+        $data['rights_verified'] = $request->boolean('rights_verified');
         $media->update($data);
         AdminAudit::record($request->hasFile('file') ? 'media.replaced' : 'media.updated', ($request->hasFile('file') ? 'Replaced media ' : 'Updated media ').$media->filename, $media);
         return back()->with('success', 'Media metadata updated.');

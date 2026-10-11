@@ -62,7 +62,7 @@
                 </div>
                 <label for="category">What can we help with?<select id="category" name="category" required><option value="">Select a reason</option><option value="general">General question</option><option value="course">Course question</option><option value="product">Digital product support</option><option value="partnership">Partnership</option><option value="support">Technical support</option><option value="other">Other</option></select></label>
                 <label for="message">Message<textarea id="message" name="message" rows="5" required>{{ old('message') }}</textarea>@error('message')<small>{{ $message }}</small>@enderror</label>
-                <label class="consent"><input type="checkbox" name="consent" value="1" required> <span>I understand this is an educational platform and not personalised financial advice. <a href="{{ route('legal', 'risk-disclosure') }}">Read the risk disclosure.</a></span></label>
+                <label class="consent"><input type="checkbox" name="consent" value="1" required> <span>I agree that Mwanafunzi Investor may use the information in this form to respond to my enquiry. This is an educational platform, not personalised financial advice. <a href="{{ route('legal', 'privacy-policy') }}">Read the Privacy Policy</a> and <a href="{{ route('legal', 'risk-disclosure') }}">Risk Disclosure</a>.</span></label>
                 <button class="button button-dark contact-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
                 <p class="contact-response-note">We usually reply with the next useful step, not a sales script.</p>
             </form>

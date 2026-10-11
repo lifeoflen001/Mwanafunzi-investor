@@ -31,6 +31,10 @@ use App\Http\Controllers\AdminTestimonialController;
 use App\Http\Controllers\AdminTeamMemberController;
 use App\Http\Controllers\AdminCommentController;
 use App\Http\Controllers\EditorialInteractionController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\AdminNewsletterController;
+use App\Http\Controllers\AdminPrivacyController;
+use App\Http\Controllers\AdminComplianceController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -76,6 +80,9 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/pages/{slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,10')->name('newsletter.subscribe');
+    Route::get('/newsletter/confirm/{token}', [NewsletterController::class, 'confirm'])->middleware(['signed', 'throttle:10,10'])->name('newsletter.confirm');
+    Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->middleware(['signed', 'throttle:10,10'])->name('newsletter.unsubscribe');
     Route::post('/blog/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('blog.reaction');
     Route::post('/blog/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('blog.comments.store');
     Route::post('/journal/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('journal.reaction');
@@ -83,6 +90,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::post('/comments/{comment}/report', [EditorialInteractionController::class, 'report'])->middleware(['auth', 'throttle:10,10'])->name('comments.report');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
+    Route::get('/cookie-policy', 'cookiePolicy')->name('cookie-policy');
 });
 
 // Legacy public URLs redirect to the classified Financial Academy namespace.
@@ -238,6 +246,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
         Route::get('/settings/security', [SiteSettingsController::class, 'security'])->name('settings.security');
         Route::put('/settings/security', [SiteSettingsController::class, 'updateSecurity'])->name('settings.security.update');
+        Route::get('/settings/newsletter', [AdminNewsletterController::class, 'settings'])->name('settings.newsletter');
+        Route::put('/settings/newsletter', [AdminNewsletterController::class, 'updateSettings'])->name('settings.newsletter.update');
+        Route::get('/settings/cookies', [AdminPrivacyController::class, 'settings'])->name('settings.cookies');
+        Route::put('/settings/cookies', [AdminPrivacyController::class, 'updateSettings'])->name('settings.cookies.update');
+        Route::get('/settings/cookies/registry', [AdminPrivacyController::class, 'registry'])->name('settings.cookies.registry');
+        Route::post('/settings/cookies/registry', [AdminPrivacyController::class, 'storeRegistry'])->name('settings.cookies.registry.store');
+        Route::put('/settings/cookies/registry/{entry}', [AdminPrivacyController::class, 'updateRegistry'])->name('settings.cookies.registry.update');
+        Route::delete('/settings/cookies/registry/{entry}', [AdminPrivacyController::class, 'destroyRegistry'])->name('settings.cookies.registry.destroy');
+        Route::get('/compliance', [AdminComplianceController::class, 'index'])->name('compliance');
+        Route::get('/newsletter/export', [AdminNewsletterController::class, 'export'])->name('newsletter.export');
+        Route::get('/newsletter', [AdminNewsletterController::class, 'index'])->name('newsletter');
+        Route::get('/newsletter/{subscriber}', [AdminNewsletterController::class, 'show'])->name('newsletter.show');
+        Route::post('/newsletter', [AdminNewsletterController::class, 'store'])->name('newsletter.store');
+        Route::post('/newsletter/{subscriber}/resend', [AdminNewsletterController::class, 'resend'])->name('newsletter.resend');
+        Route::post('/newsletter/{subscriber}/unsubscribe', [AdminNewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe.admin');
+        Route::post('/newsletter/{subscriber}/restore', [AdminNewsletterController::class, 'restore'])->name('newsletter.restore');
+        Route::delete('/newsletter/{subscriber}', [AdminNewsletterController::class, 'destroy'])->name('newsletter.destroy');
         Route::get('/business-units', [AdminBusinessUnitController::class, 'index'])->name('business-units');
         Route::put('/business-units/{businessUnit}', [AdminBusinessUnitController::class, 'update'])->name('business-units.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit');

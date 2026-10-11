@@ -65,7 +65,7 @@
 
                 <label class="consent client-register-consent" for="client-terms">
                     <input id="client-terms" type="checkbox" name="terms" value="1" required {{ old('terms') ? 'checked' : '' }}>
-                    <span>I accept the <a href="{{ route('legal', 'terms') }}">Terms</a> and understand the <a href="{{ route('legal', 'risk-disclosure') }}">risk disclosure</a>.</span>
+                    <span>I accept the <a href="{{ route('legal', 'terms') }}">Terms</a>, acknowledge the <a href="{{ route('legal', 'privacy-policy') }}">Privacy Policy</a> and understand the <a href="{{ route('legal', 'risk-disclosure') }}">risk disclosure</a>.</span>
                 </label>
                 @error('terms')<small class="client-field-error client-register-terms-error">{{ $message }}</small>@enderror
 

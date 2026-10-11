@@ -51,7 +51,9 @@ const syncAdminSidebarToggle = () => {
     const mobileOpen = adminShell.classList.contains('is-sidebar-open');
     const collapsed = adminShell.classList.contains('is-sidebar-collapsed');
     adminSidebarToggle.setAttribute('aria-expanded', String(isAdminMobile() ? mobileOpen : !collapsed));
-    adminSidebarToggle.setAttribute('aria-label', isAdminMobile() ? (mobileOpen ? `Close ${portalSidebarLabel} navigation` : `Open ${portalSidebarLabel} navigation`) : (collapsed ? `Expand ${portalSidebarLabel} navigation` : `Collapse ${portalSidebarLabel} navigation`));
+    const label = isAdminMobile() ? (mobileOpen ? `Close ${portalSidebarLabel} navigation` : `Open ${portalSidebarLabel} navigation`) : (collapsed ? `Expand ${portalSidebarLabel} navigation` : `Collapse ${portalSidebarLabel} navigation`);
+    adminSidebarToggle.setAttribute('aria-label', label);
+    adminSidebarToggle.dataset.sidebarTooltipLabel = label;
 };
 if (adminShell && !isAdminMobile() && window.localStorage.getItem(adminSidebarCollapseKey) === 'true') adminShell.classList.add('is-sidebar-collapsed');
 const closeAdminSidebar = (restoreFocus = true) => {
@@ -77,9 +79,80 @@ window.addEventListener('resize', syncAdminSidebarToggle, { passive: true });
 syncAdminSidebarToggle();
 document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', () => closeAdminSidebar()));
 adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeAdminSidebar(false)));
+
+/* One body-level tooltip keeps collapsed sidebar labels out of overflow-hidden panels. */
+const sidebarTooltip = (() => {
+    if (!adminShell || !adminSidebar) return null;
+    const tooltip = document.createElement('div');
+    tooltip.id = 'portal-sidebar-tooltip';
+    tooltip.className = 'portal-sidebar-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.setAttribute('aria-hidden', 'true');
+    document.body.append(tooltip);
+
+    const targets = [...adminSidebar.querySelectorAll('.portal-nav a, .portal-sidebar-footer a, .portal-signout'), adminSidebarToggle].filter(Boolean);
+    let activeTarget = null;
+    let showTimer = null;
+    let hideTimer = null;
+
+    const labelFor = (target) => {
+        if (target.dataset.sidebarTooltipLabel) return target.dataset.sidebarTooltipLabel;
+        const clone = target.cloneNode(true);
+        clone.querySelectorAll('[aria-hidden="true"]').forEach((element) => element.remove());
+        return clone.textContent.replace(/\s+/g, ' ').trim();
+    };
+    const canShow = (target) => !isAdminMobile() && adminShell.classList.contains('is-sidebar-collapsed') && Boolean(target?.getClientRects().length);
+    const position = () => {
+        if (!activeTarget || tooltip.hidden) return;
+        const targetRect = activeTarget.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        if (!targetRect.width && !targetRect.height) return;
+        const fitsRight = targetRect.right + 12 + tooltipRect.width <= window.innerWidth - 8;
+        const left = fitsRight ? targetRect.right + 12 : Math.max(8, targetRect.left - tooltipRect.width - 12);
+        const top = Math.min(Math.max(8, targetRect.top + (targetRect.height - tooltipRect.height) / 2), Math.max(8, window.innerHeight - tooltipRect.height - 8));
+        tooltip.style.left = `${Math.round(left)}px`;
+        tooltip.style.top = `${Math.round(top)}px`;
+    };
+    const hide = (immediate = false) => {
+        window.clearTimeout(showTimer);
+        window.clearTimeout(hideTimer);
+        activeTarget?.removeAttribute('aria-describedby');
+        activeTarget = null;
+        tooltip.classList.remove('is-visible');
+        tooltip.setAttribute('aria-hidden', 'true');
+        if (immediate) tooltip.hidden = true;
+        else hideTimer = window.setTimeout(() => { tooltip.hidden = true; }, 160);
+    };
+    const show = (target) => {
+        window.clearTimeout(hideTimer);
+        window.clearTimeout(showTimer);
+        if (!canShow(target)) { hide(true); return; }
+        if (activeTarget && activeTarget !== target) activeTarget.removeAttribute('aria-describedby');
+        activeTarget = target;
+        tooltip.textContent = labelFor(target);
+        tooltip.hidden = false;
+        tooltip.setAttribute('aria-hidden', 'false');
+        target.setAttribute('aria-describedby', tooltip.id);
+        position();
+        showTimer = window.setTimeout(() => tooltip.classList.add('is-visible'), 120);
+    };
+
+    targets.forEach((target) => {
+        if (!target.dataset.sidebarTooltipLabel) target.dataset.sidebarTooltipLabel = labelFor(target);
+        if (!target.hasAttribute('aria-label')) target.setAttribute('aria-label', target.dataset.sidebarTooltipLabel);
+        target.addEventListener('pointerenter', () => show(target));
+        target.addEventListener('pointerleave', () => hide());
+        target.addEventListener('focusin', () => show(target));
+        target.addEventListener('focusout', () => hide());
+    });
+    window.addEventListener('resize', () => { if (activeTarget) { if (canShow(activeTarget)) position(); else hide(true); } }, { passive: true });
+    document.addEventListener('scroll', () => { if (activeTarget) { if (canShow(activeTarget)) position(); else hide(true); } }, true);
+    return { hide };
+})();
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         if (mobileMenu?.classList.contains('is-open')) closeMobileMenu();
+        sidebarTooltip?.hide(true);
         closeAdminSidebar();
         return;
     }
@@ -154,6 +227,8 @@ const adminSearchInput = document.querySelector('[data-admin-search-input]');
 const adminSearchSuggestions = document.querySelector('[data-admin-search-suggestions]');
 const adminSearchClear = document.querySelector('[data-admin-search-clear]');
 const adminSearchLoading = document.querySelector('[data-admin-search-loading]');
+const adminSearchLoadingPanel = document.querySelector('[data-admin-search-loading-panel]');
+const adminSearchStatus = document.querySelector('[data-admin-search-status]');
 const adminMobileSearchButton = document.querySelector('[data-admin-mobile-search]');
 let adminSearchTimer = null;
 let adminSearchAbort = null;
@@ -163,6 +238,8 @@ const closeAdminSearch = () => {
     if (!adminSearchSuggestions || !adminSearchInput) return;
     adminSearchSuggestions.hidden = true;
     adminSearchInput.setAttribute('aria-expanded', 'false');
+    adminSearchLoadingPanel?.setAttribute('hidden', 'hidden');
+    adminSearchSuggestions.removeAttribute('aria-busy');
     adminSearchActiveIndex = -1;
 };
 const openAdminSearch = () => {
@@ -172,6 +249,9 @@ const openAdminSearch = () => {
 };
 const renderAdminSearchSuggestions = (payload, term) => {
     if (!adminSearchSuggestions) return;
+    adminSearchLoadingPanel?.setAttribute('hidden', 'hidden');
+    adminSearchSuggestions.removeAttribute('aria-busy');
+    if (adminSearchStatus) adminSearchStatus.textContent = 'Search suggestions updated.';
     adminSearchSuggestions.replaceChildren();
     adminSearchActiveIndex = -1;
     if (!payload.total) {
@@ -214,12 +294,28 @@ const fetchAdminSearchSuggestions = () => {
     if (!term) { closeAdminSearch(); return; }
     adminSearchTimer = window.setTimeout(async () => {
         adminSearchLoading?.removeAttribute('hidden');
-        adminSearchAbort = new AbortController();
+        const requestController = new AbortController();
+        adminSearchAbort = requestController;
+        adminSearchSuggestions?.setAttribute('aria-busy', 'true');
+        adminSearchSuggestions && (adminSearchSuggestions.hidden = true);
+        adminSearchLoadingPanel?.removeAttribute('hidden');
+        if (adminSearchStatus) adminSearchStatus.textContent = 'Loading search suggestions.';
         try {
-            const response = await fetch(`${adminSearchForm.dataset.suggestionsUrl}?q=${encodeURIComponent(term)}`, { headers: { Accept: 'application/json' }, signal: adminSearchAbort.signal });
-            if (response.ok) renderAdminSearchSuggestions(await response.json(), term);
-        } catch (error) { if (error.name !== 'AbortError') closeAdminSearch(); }
-        finally { adminSearchLoading?.setAttribute('hidden', 'hidden'); }
+            const response = await fetch(`${adminSearchForm.dataset.suggestionsUrl}?q=${encodeURIComponent(term)}`, { headers: { Accept: 'application/json' }, signal: requestController.signal });
+            if (!response.ok) throw new Error(`Search suggestions returned ${response.status}`);
+            renderAdminSearchSuggestions(await response.json(), term);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                if (adminSearchStatus) adminSearchStatus.textContent = 'Search suggestions are unavailable.';
+                closeAdminSearch();
+            }
+        } finally {
+            if (adminSearchAbort === requestController) {
+                adminSearchLoading?.setAttribute('hidden', 'hidden');
+                adminSearchLoadingPanel?.setAttribute('hidden', 'hidden');
+                adminSearchSuggestions?.removeAttribute('aria-busy');
+            }
+        }
     }, 220);
 };
 adminSearchInput?.addEventListener('input', fetchAdminSearchSuggestions);
@@ -332,6 +428,78 @@ document.querySelectorAll('form[data-unsaved-warning]').forEach((form) => {
         event.returnValue = '';
     });
 });
+
+document.querySelectorAll('[data-newsletter-form]').forEach((form) => form.addEventListener('submit', () => {
+    const submit = form.querySelector('[data-newsletter-submit]');
+    const label = form.querySelector('[data-newsletter-submit-label]');
+    if (!submit || form.dataset.submitting === 'true') return;
+    form.dataset.submitting = 'true';
+    submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
+    if (label) label.textContent = 'Subscribing…';
+}));
+
+const cookieRoot = document.querySelector('[data-cookie-consent]');
+if (cookieRoot) {
+    const cookieConfig = (() => {
+        try { return JSON.parse(decodeURIComponent(escape(window.atob(cookieRoot.dataset.cookieConfig || '')))); } catch { return {}; }
+    })();
+    const cookieName = 'mwanafunzi_cookie_consent';
+    const readCookie = (name) => document.cookie.split('; ').find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || null;
+    const readConsent = () => {
+        const value = readCookie(cookieName);
+        if (!value) return null;
+        try {
+            const state = JSON.parse(decodeURIComponent(value));
+            return state.version === cookieConfig.version && state.essential === true ? state : null;
+        } catch { return null; }
+    };
+    const writeConsent = (state) => {
+        const maxAge = Math.max(1, Number(cookieConfig.lifetime || 9)) * 30 * 24 * 60 * 60;
+        document.cookie = `${cookieName}=${encodeURIComponent(JSON.stringify({ essential: true, preferences: Boolean(state.preferences), analytics: Boolean(state.analytics), marketing: Boolean(state.marketing), external_media: Boolean(state.external_media), version: cookieConfig.version }))}; max-age=${maxAge}; path=/; samesite=lax${window.location.protocol === 'https:' ? '; secure' : ''}`;
+        window.dispatchEvent(new CustomEvent('mwanafunzi:cookie-consent', { detail: { ...state, essential: true, version: cookieConfig.version } }));
+    };
+    const modal = cookieRoot.querySelector('[data-cookie-modal]');
+    const banner = cookieRoot.querySelector('[data-cookie-banner]');
+    const toggles = [...cookieRoot.querySelectorAll('[data-cookie-toggle]')];
+    let cookieReturnFocus = null;
+    const optionalState = () => Object.fromEntries(toggles.map((toggle) => [toggle.dataset.cookieToggle, toggle.checked]));
+    const syncToggles = (state) => toggles.forEach((toggle) => { toggle.checked = Boolean(state?.[toggle.dataset.cookieToggle]); });
+    const loadConsentAwareScripts = (state) => document.querySelectorAll('script[type="text/plain"][data-cookie-category]').forEach((placeholder) => {
+        if (placeholder.dataset.loaded === 'true' || !state?.[placeholder.dataset.cookieCategory]) return;
+        const script = document.createElement('script');
+        [...placeholder.attributes].filter((attribute) => !['type', 'data-cookie-category'].includes(attribute.name)).forEach((attribute) => script.setAttribute(attribute.name, attribute.value));
+        script.textContent = placeholder.textContent;
+        placeholder.replaceWith(script);
+    });
+    const close = () => { modal.hidden = true; if (readConsent()) cookieRoot.hidden = true; else { banner.hidden = false; cookieRoot.hidden = false; } cookieReturnFocus?.focus?.(); cookieReturnFocus = null; };
+    const openPreferences = () => { cookieReturnFocus = document.activeElement; syncToggles(readConsent() || {}); banner.hidden = true; modal.hidden = false; cookieRoot.hidden = false; modal.querySelector('button, input')?.focus(); };
+    const apply = (state) => { writeConsent(state); modal.hidden = true; banner.hidden = false; cookieRoot.hidden = true; loadConsentAwareScripts(state); cookieReturnFocus?.focus?.(); cookieReturnFocus = null; };
+    cookieRoot.querySelectorAll('[data-cookie-action]').forEach((button) => button.addEventListener('click', () => {
+        const action = button.dataset.cookieAction;
+        if (action === 'accept') apply({ preferences: cookieConfig.preferencesEnabled !== false, analytics: cookieConfig.analyticsEnabled === true, marketing: cookieConfig.marketingEnabled === true, external_media: cookieConfig.externalMediaEnabled === true });
+        else if (action === 'reject') apply({ preferences: false, analytics: false, marketing: false, external_media: false });
+        else if (action === 'save') apply(optionalState());
+        else if (action === 'manage') openPreferences();
+        else if (action === 'close') close();
+    }));
+    document.querySelectorAll('[data-cookie-preferences]').forEach((link) => link.addEventListener('click', (event) => { event.preventDefault(); openPreferences(); }));
+    document.addEventListener('keydown', (event) => {
+        if (modal.hidden) return;
+        if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+        if (event.key !== 'Tab') return;
+        const focusable = focusablesWithin(modal);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    const consent = readConsent();
+    if (consent) { cookieRoot.hidden = true; loadConsentAwareScripts(consent); }
+    else { cookieRoot.hidden = false; banner.hidden = false; modal.hidden = true; }
+    window.mwanafunziCookieConsent = { current: readConsent, open: openPreferences, has: (category) => Boolean(readConsent()?.[category]) };
+}
 
 const faqTargetType = document.querySelector('[name="target_type"]');
 const faqTargetRecord = document.querySelector('[name="target_id"]');

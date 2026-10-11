@@ -25,7 +25,6 @@
                 <a class="account-brand" href="{{ route('account.dashboard') }}" aria-label="Mwanafunzi Investor student portal">
                     <img class="account-brand-logo" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="Mwanafunzi Investor">
                     <img class="account-brand-mark" src="{{ asset('web-app-manifest-512x512.png') }}" alt="">
-                    <span>STUDENT PORTAL</span>
                 </a>
                 <button class="admin-sidebar-close" type="button" aria-label="Close student navigation" data-admin-sidebar-close>×</button>
             </div>
@@ -77,6 +76,5 @@
             </main>
         </div>
     </div>
-    @include('partials.public-footer')
 </body>
 </html>

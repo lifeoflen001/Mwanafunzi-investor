@@ -125,5 +125,6 @@
     </header>
     <main id="main-content">@yield('content')</main>
     @include('partials.public-footer')
+    @include('partials.cookie-consent')
 </body>
 </html>

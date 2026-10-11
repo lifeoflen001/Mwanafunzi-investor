@@ -22,6 +22,8 @@
             @endforeach
         </select>
     </label>
+    <div class="media-picker-loading" data-media-loading hidden aria-hidden="true"><x-skeleton variant="text" width="42%" height="10px" /></div>
+    <span class="sr-only" data-media-status aria-live="polite"></span>
     <small class="field-help">{{ $help }} <a href="{{ route('admin.media') }}" target="_blank" rel="noopener">Upload media ↗</a></small>
     <div class="media-picker-preview" data-media-preview @if(! $fieldValue) hidden @endif>@if($fieldValue)<img src="{{ $selectedUrl }}" alt="Selected media preview">@endif</div>
 </div>

@@ -2,6 +2,8 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
     const search = picker.querySelector('.media-picker-search');
     const select = picker.querySelector('[data-media-select]');
     const preview = picker.querySelector('[data-media-preview]');
+    const loading = picker.querySelector('[data-media-loading]');
+    const status = picker.querySelector('[data-media-status]');
     const searchUrl = picker.dataset.mediaSearchUrl;
     let searchTimer;
     let requestController;
@@ -35,15 +37,28 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
     const searchMedia = async () => {
         if (!searchUrl) return;
         requestController?.abort();
-        requestController = new AbortController();
+        const currentController = new AbortController();
+        requestController = currentController;
         const url = new URL(searchUrl, window.location.origin);
         if (search.value.trim()) url.searchParams.set('q', search.value.trim());
+        picker.setAttribute('aria-busy', 'true');
+        loading?.removeAttribute('hidden');
+        if (status) status.textContent = 'Loading media results.';
         try {
-            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal });
-            if (!response.ok) return;
+            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: currentController.signal });
+            if (!response.ok) throw new Error(`Media search returned ${response.status}`);
             renderResults(await response.json());
+            if (status) status.textContent = 'Media results updated.';
         } catch (error) {
-            if (error.name !== 'AbortError') console.warn('Media search failed', error);
+            if (error.name !== 'AbortError') {
+                if (status) status.textContent = 'Media results are unavailable.';
+                console.warn('Media search failed', error);
+            }
+        } finally {
+            if (requestController === currentController) {
+                picker.removeAttribute('aria-busy');
+                loading?.setAttribute('hidden', 'hidden');
+            }
         }
     };
     search?.addEventListener('input', () => {

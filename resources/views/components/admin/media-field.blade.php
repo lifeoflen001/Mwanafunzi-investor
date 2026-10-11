@@ -7,6 +7,8 @@
 @endphp
 <div class="media-picker" data-media-picker data-media-search-url="{{ route('admin.media.search') }}">
     <label>{{ $label }}<input type="search" class="media-picker-search" placeholder="Search uploaded media" aria-label="Search media"><select name="{{ $name }}" data-media-select><option value="">No image selected</option>@if($fieldValue && ! $selectedIsListed)<option value="{{ $fieldValue }}" data-url="{{ $selectedUrl }}" selected>{{ basename($fieldValue) }} · current selection</option>@endif @foreach($media as $item)<option value="{{ $item->path }}" data-url="{{ $item->url }}" @selected($fieldValue === $item->path)>{{ $item->filename }}{{ $item->width ? ' · '.$item->width.'×'.$item->height : '' }}</option>@endforeach</select></label>
+    <div class="media-picker-loading" data-media-loading hidden aria-hidden="true"><x-skeleton variant="text" width="42%" height="10px" /></div>
+    <span class="sr-only" data-media-status aria-live="polite"></span>
     <small class="field-help">{{ $help }} <a href="{{ route('admin.media') }}" target="_blank" rel="noopener">Upload media ↗</a></small>
     <div class="media-picker-preview" data-media-preview @if(! $fieldValue) hidden @endif>@if($fieldValue)<img src="{{ $selectedUrl }}" alt="Selected media preview">@endif</div>
 </div>
