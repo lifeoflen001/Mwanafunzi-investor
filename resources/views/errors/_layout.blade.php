@@ -28,7 +28,8 @@
         .error-eyebrow { display:flex; align-items:center; gap:12px; margin:0 0 24px; color:var(--error-copper); font:600 11px var(--sans, 'DM Sans', Arial, sans-serif); letter-spacing:.13em; text-transform:uppercase; }
         .error-eyebrow::before { content:''; width:36px; height:1px; background:currentColor; }
         .error-content h1 { max-width:760px; margin:0 0 22px; color:var(--error-paper); font:600 clamp(43px,7vw,92px)/.96 'DM Sans',Arial,sans-serif; letter-spacing:-.075em; }
-        .error-message { max-width:540px; margin:0; color:var(--error-muted); font-size:clamp(15px,1.5vw,19px); line-height:1.65; }
+        .error-message { display:flex; align-items:flex-start; gap:10px; width:fit-content; max-width:min(540px,100%); margin:0; padding:12px 14px; border:1px solid #e9c8c2; border-left:3px solid #bd5a4b; border-radius:3px; background:#fff1ef; color:#943d33; font-size:clamp(14px,1.35vw,17px); line-height:1.5; }
+        .error-message-icon { display:grid; place-items:center; width:20px; height:20px; flex:0 0 20px; border-radius:50%; background:#f5d8d3; color:#943d33; font-size:13px; font-weight:700; line-height:1; }
         .error-button { display:inline-flex; align-items:center; gap:18px; min-height:50px; margin-top:32px; padding:0 20px; background:var(--error-copper); color:#fff; font-size:12px; font-weight:700; text-decoration:none; transition:background .18s ease,transform .18s ease; }
         .error-button:hover { background:#d95300; transform:translateY(-2px); }
         .error-button:focus-visible { outline:2px solid #fff; outline-offset:4px; }
@@ -47,7 +48,7 @@
             <section class="error-content" aria-labelledby="error-heading">
                 <p class="error-eyebrow">{{ $eyebrow }}</p>
                 <h1 id="error-heading">{{ $heading }}</h1>
-                <p class="error-message">{{ $message }}</p>
+                <p class="error-message" role="alert"><span class="error-message-icon" aria-hidden="true">!</span><span>{{ $message }}</span></p>
                 <a class="error-button" href="{{ route('home') }}">Return home <span aria-hidden="true">↗</span></a>
             </section>
             <footer class="error-footer"><span>Student of Money. Systems. Discipline.</span><strong>Always a Mwanafunzi.</strong></footer>

@@ -283,8 +283,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/administrators/{administrator}/edit', [AdminUserController::class, 'edit'])->name('administrators.edit');
         Route::put('/administrators/{administrator}', [AdminUserController::class, 'update'])->name('administrators.update');
         Route::get('/customers', [AdminCustomerController::class, 'index'])->name('customers');
+        Route::get('/customers/create', [AdminCustomerController::class, 'create'])->name('customers.create');
+        Route::post('/customers', [AdminCustomerController::class, 'store'])->name('customers.store');
         Route::get('/customers/{customer}', [AdminCustomerController::class, 'show'])->name('customers.show');
+        Route::get('/customers/{customer}/edit', [AdminCustomerController::class, 'edit'])->name('customers.edit');
+        Route::put('/customers/{customer}', [AdminCustomerController::class, 'update'])->name('customers.update');
         Route::patch('/customers/{customer}/status', [AdminCustomerController::class, 'updateStatus'])->name('customers.status');
+        Route::delete('/customers/{customer}', [AdminCustomerController::class, 'destroy'])->name('customers.destroy');
         Route::get('/pages', [AdminPageController::class, 'index'])->name('pages');
         Route::get('/policies', [AdminPageController::class, 'policies'])->name('policies');
         Route::get('/redirects', [AdminRedirectController::class, 'index'])->name('redirects');

@@ -4,7 +4,12 @@
 @section('portal-heading', 'Customers')
 
 @section('content')
-    <x-admin.page-header eyebrow="Students / Customers" title="{{ $customer->name }}" description="{{ $customer->email }} · Joined {{ $customer->created_at?->format('M j, Y') }}" />
+    <x-admin.page-header eyebrow="Students / Customers" title="{{ $customer->name }}" description="{{ $customer->email }} · Joined {{ $customer->created_at?->format('M j, Y') }}">
+        <x-slot:actions>
+            <a class="button button-secondary" href="{{ route('admin.customers.edit', $customer) }}">Edit account <span aria-hidden="true">↗</span></a>
+            <form method="post" action="{{ route('admin.customers.destroy', $customer) }}" data-confirm="Delete {{ $customer->name }} permanently? Accounts with purchase or learning history must be suspended instead.">@csrf @method('delete')<button class="button button-danger" type="submit">Delete account</button></form>
+        </x-slot:actions>
+    </x-admin.page-header>
     <a class="admin-back-link" href="{{ route('admin.customers') }}">← Back to customers</a>
 
     <div class="admin-stats">

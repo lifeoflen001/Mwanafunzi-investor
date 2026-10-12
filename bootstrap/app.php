@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,5 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: ['payments/flutterwave/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (TooManyRequestsHttpException $exception, $request) {
+            if (! $request->routeIs('newsletter.subscribe')) {
+                return null;
+            }
+
+            $referer = (string) $request->headers->get('referer');
+            $refererPath = $referer ? (string) parse_url($referer, PHP_URL_PATH) : '';
+            $destination = $referer && $refererPath !== '/newsletter/subscribe'
+                ? $referer
+                : route('home');
+
+            return redirect()->to($destination)->with('newsletter_status', 'rate-limited');
+        });
     })->create();

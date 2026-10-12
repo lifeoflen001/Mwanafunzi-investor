@@ -263,6 +263,38 @@ class PlatformRoutesTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_admin_can_create_update_and_delete_customer_accounts(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->get(route('admin.customers.create'))->assertOk()->assertSee('Add a customer');
+        $this->actingAs($admin)->post(route('admin.customers.store'), [
+            'name' => 'Managed Customer',
+            'email' => 'managed@example.com',
+            'phone' => '+255 700 000 000',
+            'country' => 'tz',
+            'password' => 'customer-password',
+            'password_confirmation' => 'customer-password',
+            'status' => 'active',
+        ])->assertRedirect();
+
+        $customer = User::where('email', 'managed@example.com')->firstOrFail();
+        $this->actingAs($admin)->get(route('admin.customers.edit', $customer))->assertOk()->assertSee('Edit customer account');
+        $this->actingAs($admin)->put(route('admin.customers.update', $customer), [
+            'name' => 'Updated Customer',
+            'email' => 'updated@example.com',
+            'phone' => '',
+            'country' => 'TZ',
+            'password' => '',
+            'password_confirmation' => '',
+            'status' => 'suspended',
+        ])->assertRedirect(route('admin.customers.show', $customer));
+
+        $this->assertDatabaseHas('users', ['id' => $customer->id, 'name' => 'Updated Customer', 'email' => 'updated@example.com', 'status' => 'suspended', 'country' => 'TZ']);
+        $this->actingAs($admin)->delete(route('admin.customers.destroy', $customer))->assertRedirect(route('admin.customers'));
+        $this->assertDatabaseMissing('users', ['id' => $customer->id]);
+    }
+
     public function test_admin_learning_topic_hero_and_seo_propagate_to_public_page(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

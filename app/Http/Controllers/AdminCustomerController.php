@@ -32,6 +32,22 @@ class AdminCustomerController extends Controller
         return view('admin.customers.index', compact('customers', 'term'));
     }
 
+    public function create()
+    {
+        return view('admin.customers.form', [
+            'customer' => new User(['status' => 'active']),
+            'isCreate' => true,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $customer = User::create($this->validated($request));
+        AdminAudit::record('customer.created', 'Created customer '.$customer->email, $customer);
+
+        return to_route('admin.customers.show', $customer)->with('success', 'Customer account created.');
+    }
+
     public function show(User $customer)
     {
         abort_unless(! $customer->is_admin, 404);
@@ -50,6 +66,26 @@ class AdminCustomerController extends Controller
         return view('admin.customers.show', compact('customer', 'downloadCount'));
     }
 
+    public function edit(User $customer)
+    {
+        abort_unless(! $customer->is_admin, 404);
+
+        return view('admin.customers.form', [
+            'customer' => $customer,
+            'isCreate' => false,
+        ]);
+    }
+
+    public function update(Request $request, User $customer)
+    {
+        abort_unless(! $customer->is_admin, 404);
+
+        $customer->update($this->validated($request, $customer));
+        AdminAudit::record('customer.updated', 'Updated customer '.$customer->email, $customer);
+
+        return to_route('admin.customers.show', $customer)->with('success', 'Customer account updated.');
+    }
+
     public function updateStatus(Request $request, User $customer)
     {
         abort_unless(! $customer->is_admin, 404);
@@ -59,5 +95,42 @@ class AdminCustomerController extends Controller
         AdminAudit::record('customer.status_updated', 'Updated customer status for '.$customer->email, $customer, ['status' => $data['status']]);
 
         return back()->with('success', 'Customer account status updated.');
+    }
+
+    public function destroy(User $customer)
+    {
+        abort_unless(! $customer->is_admin, 404);
+
+        if ($customer->orders()->exists() || $customer->enrollments()->exists() || $customer->entitlements()->exists()) {
+            return back()->withErrors(['customer' => 'This customer has purchase or learning records. Suspend the account instead of deleting it so those records remain intact.']);
+        }
+
+        $email = $customer->email;
+        AdminAudit::record('customer.deleted', 'Deleted customer '.$email, $customer);
+        $customer->delete();
+
+        return to_route('admin.customers')->with('success', 'Customer account deleted.');
+    }
+
+    private function validated(Request $request, ?User $customer = null): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($customer?->id)],
+            'phone' => ['nullable', 'string', 'max:40'],
+            'country' => ['nullable', 'string', 'size:2'],
+            'status' => ['required', Rule::in(['active', 'suspended'])],
+            'password' => [$customer ? 'nullable' : 'required', 'string', 'min:10', 'confirmed'],
+        ]);
+
+        $data['country'] = filled($data['country'] ?? null) ? strtoupper($data['country']) : null;
+
+        if (blank($data['password'] ?? null)) {
+            unset($data['password']);
+        }
+
+        $data['is_admin'] = false;
+
+        return $data;
     }
 }

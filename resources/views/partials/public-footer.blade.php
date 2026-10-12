@@ -10,7 +10,6 @@
     $footerCopy = trim(preg_replace('/\s+/', ' ', str_replace('\\n', ' ', (string) ($footerCopy ?? 'Student of Money. Probability. Systems. Discipline.'))));
     $footerCopyright = $footerCopyright ?? \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
     $footerBottomStatement = $footerBottomStatement ?? \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
-    $footerDisclaimer = $disclaimer ?? $riskDisclaimer ?? 'Educational content only. This is not personalised financial advice. Trading involves risk.';
     $footerNavigation = $footerNavigation ?? \App\Support\PublicSiteData::footerNavigation();
     $socialLinks = $socialLinks ?? \App\Support\PublicSiteData::socialLinks();
     $resolvePublicUrl = static function (string $path): string {
@@ -37,8 +36,6 @@
                 </a>
                 <p class="footer-tagline">{{ $footerCopy }}</p>
                 <p class="footer-brand-context">Clear, practical lessons on markets, risk and probability.</p>
-                {{-- Suggestion for approval: "Start learning" keeps the CTA clear and points to Courses. --}}
-                <a class="button button-accent footer-brand-cta" href="{{ route('courses') }}">Start learning <span aria-hidden="true">↗</span></a>
             </div>
 
             <div class="footer-links">
@@ -130,15 +127,11 @@
                         <button class="button button-accent footer-newsletter-submit" type="submit" aria-label="Subscribe to the newsletter" aria-live="polite" data-newsletter-submit><span class="sr-only" data-newsletter-submit-label>Subscribe</span> <span aria-hidden="true">→</span></button>
                     </div>
                     <p class="footer-newsletter-consent">{{ $newsletterSettings['consent_copy'] }} <a href="{{ $resolvePublicUrl($newsletterSettings['privacy_url']) }}">Privacy policy</a></p>
-                    @if(in_array(session('newsletter_status'), ['check-inbox', 'subscribed'], true))<p class="form-success" role="status" aria-live="polite">{{ $newsletterSettings['success_message'] }}</p>@elseif(session('newsletter_status') === 'already')<p class="form-success" role="status" aria-live="polite">You're already subscribed.</p>@endif
+                    @if(in_array(session('newsletter_status'), ['check-inbox', 'subscribed'], true))<p class="form-success" role="status" aria-live="polite">{{ $newsletterSettings['success_message'] }}</p>@elseif(session('newsletter_status') === 'already')<p class="form-success" role="status" aria-live="polite">You're already subscribed.</p>@elseif(session('newsletter_status') === 'rate-limited')<p class="form-error" role="alert" aria-live="assertive">Please wait a moment before trying again.</p>@endif
                     @if($errors->has('email') && old('email') !== null)<p class="field-error" role="alert">{{ $errors->first('email') }}</p>@endif
                 </form>
             </section>
         @endif
-
-        <div class="footer-disclaimer-row">
-            <p class="site-disclaimer">{{ $footerDisclaimer }}</p>
-        </div>
 
         <div class="footer-bottom">
             <span>{{ $footerCopyright }}</span>

@@ -44,11 +44,8 @@
     $serviceHomeUrl = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')][$serviceContext] ?? route('home');
     $serviceContactUrl = $serviceContext ? route('contact', ['module' => $serviceContext]) : route('contact');
     $headerNavigation = \App\Support\PublicSiteData::headerNavigation();
-    $hasJournalNavigation = $headerNavigation->contains(function ($item) {
-        return in_array(strtolower(trim((string) $item->label)), ['blog', 'journal'], true)
-            || in_array((string) $item->route_name, ['blog', 'journal'], true)
-            || in_array(rtrim((string) $item->url, '/'), ['/blog', '/journal'], true);
-    });
+    /* Keep Blog as a canonical global header link, immediately after About. */
+    $globalHeaderNavigation = $headerNavigation->reject(fn ($item) => $item->publicRouteName() === 'blog')->values();
     $footerNavigation = \App\Support\PublicSiteData::footerNavigation();
     $socialLinks = \App\Support\PublicSiteData::socialLinks();
 @endphp
@@ -99,12 +96,15 @@
                 <nav class="desktop-nav {{ $serviceContext ? 'service-desktop-nav' : '' }}" aria-label="{{ $serviceContext ? 'Service navigation' : 'Primary navigation' }}">
                     @if($serviceContext)
                         @include('partials.service-navigation', ['serviceContext' => $serviceContext])
-                    @elseif($headerNavigation->isNotEmpty())
-                        @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
+                    @elseif($globalHeaderNavigation->isNotEmpty())
+                        @foreach($globalHeaderNavigation as $item)
+                            <x-navigation-links :item="$item" />
+                            @if($item->publicRouteName() === 'about')<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>@endif
+                        @endforeach
+                        @unless($globalHeaderNavigation->contains(fn ($item) => $item->publicRouteName() === 'about'))<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>@endunless
                     @else
-                        @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a>
+                        @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a><a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>
                     @endif
-                    @unless($hasJournalNavigation)<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>@endunless
                 </nav>
                 <div class="header-actions"><a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a><a class="button button-small button-light" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
             @endif
@@ -113,12 +113,15 @@
             <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="{{ $serviceContext ? 'Service navigation' : 'Mobile navigation' }}">
                 @if($serviceContext)
                     @include('partials.service-navigation', ['serviceContext' => $serviceContext])
-                @elseif($headerNavigation->isNotEmpty())
-                    @foreach($headerNavigation as $item)<x-navigation-links :item="$item" />@endforeach
+                @elseif($globalHeaderNavigation->isNotEmpty())
+                    @foreach($globalHeaderNavigation as $item)
+                        <x-navigation-links :item="$item" />
+                        @if($item->publicRouteName() === 'about')<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>@endif
+                    @endforeach
+                    @unless($globalHeaderNavigation->contains(fn ($item) => $item->publicRouteName() === 'about'))<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
                 @else
-                    @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
+                    @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a><a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>
                 @endif
-                @unless($hasJournalNavigation)<a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>@endunless
                 <a class="mobile-client-link" href="{{ auth()->check() ? route('account.dashboard') : route('login') }}">{{ auth()->check() ? 'Client portal' : 'Client login' }}</a>
             </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">{{ $serviceContext === 'studio' ? 'Plan a shoot' : ($serviceContext === 'development' ? 'Start a project' : 'Start a conversation') }} <span aria-hidden="true">↗</span></a></div>
         @endif
