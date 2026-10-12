@@ -1,6 +1,5 @@
 @php
     $portalUser = auth()->user();
-    $verified = $portalUser?->hasVerifiedEmail();
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -43,12 +42,6 @@
                 </nav>
                 <p class="portal-section-label">Help</p>
                 <nav class="portal-nav" aria-label="Help navigation"><a href="{{ route('contact') }}"><span class="portal-nav-icon" aria-hidden="true">↗</span><span>Contact the desk</span></a></nav>
-            </div>
-            <div class="portal-sidebar-footer">
-                <span class="portal-status {{ $verified ? '' : 'portal-status-accent' }}"><i></i>{{ $verified ? 'Verified account' : 'Email verification required' }}</span>
-                <a href="{{ route('home') }}" target="_blank" rel="noopener">Visit website <span aria-hidden="true">↗</span></a>
-                <a href="{{ route('contact') }}">Support <span aria-hidden="true">↗</span></a>
-                <form method="post" action="{{ route('logout') }}">@csrf<button class="portal-signout" type="submit">Sign out</button></form>
             </div>
         </aside>
         <div class="admin-sidebar-backdrop" data-admin-sidebar-close></div>

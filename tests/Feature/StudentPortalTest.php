@@ -30,7 +30,8 @@ class StudentPortalTest extends TestCase
             ->assertSee('Learning overview')
             ->assertSee('Digital tools')
             ->assertSee('Recent purchases')
-            ->assertSee('Recommended next action');
+            ->assertSee('Recommended next action')
+            ->assertDontSee('portal-sidebar-footer');
 
         foreach (['account.courses', 'account.downloads', 'account.orders', 'account.profile', 'account.security'] as $route) {
             $this->actingAs($customer)->get(route($route))->assertOk();
