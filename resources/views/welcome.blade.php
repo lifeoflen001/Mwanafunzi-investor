@@ -25,6 +25,7 @@ $globalHeaderNavigation = $headerNavigation->reject(fn ($item) => $item->publicR
 $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
 $socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
 $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
+$brandIntro = $homeSections->get('philosophy');
 $framework = $homeSections->get('framework');
 $finalCta = $homeSections->get('final_cta');
 $homeFinalSecondaryUrl = $finalCta?->payload['secondary_cta_url'] ?? null;
@@ -104,6 +105,20 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
                 </div>
             </x-slot:aside>
         </x-public-hero>
+
+        @if($brandIntro && $brandIntro->is_enabled && !empty($brandIntro->payload['cards']))
+        <section class="mother-intro section" id="brand-intro">
+            <div class="container mother-principles-strip">
+                @foreach($brandIntro->payload['cards'] as $card)
+                    <div>
+                        <span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <strong>{{ $card['title'] ?? '' }}</strong>
+                        <p>{{ $card['body'] ?? '' }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
 
         <section class="mother-divisions section" id="divisions">
             <div class="container">
