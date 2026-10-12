@@ -848,6 +848,13 @@ nav a[aria-current="page"] { color:var(--copper-dark); }
 .mother-principles-strip p { max-width:250px; margin:7px 0 0; color:var(--muted); font-size:13px; }
 .mother-home #brand-intro { padding-top:clamp(48px,5vw,72px); padding-bottom:clamp(48px,5vw,72px); }
 .mother-home #brand-intro .mother-principles-strip { margin-top:0; }
+.mother-home #brand-intro { background:var(--night); }
+.mother-home #brand-intro .mother-principles-strip { border-top-color:rgba(255,253,250,.18); }
+.mother-home #brand-intro .mother-principles-strip>div { border-right-color:rgba(255,253,250,.18); }
+.mother-home #brand-intro .mother-principles-strip>div { border-bottom-color:rgba(255,253,250,.18); }
+.mother-home #brand-intro .mother-principles-strip span,
+.mother-home #brand-intro .mother-principles-strip strong { color:var(--copper); }
+.mother-home #brand-intro .mother-principles-strip p { color:rgba(255,253,250,.72); }
 .mother-divisions { background:var(--paper-deep); }
 .mother-divisions .split-heading,.mother-proof .split-heading { align-items:end; }
 .mother-divisions .body-copy,.mother-proof .body-copy { margin:0 0 4px; }
