@@ -7,33 +7,16 @@ use App\Models\CourseLesson;
 use App\Models\CourseLessonCompletion;
 use App\Models\Enrollment;
 use App\Models\Order;
+use App\Services\CustomerDashboardService;
 use App\Services\DownloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerAccountController extends Controller
 {
-    public function dashboard(Request $request)
+    public function dashboard(Request $request, CustomerDashboardService $dashboard)
     {
-        $user = $request->user();
-        $enrollments = $user->enrollments()
-            ->with(['course.modules.lessons', 'lessonCompletions'])
-            ->whereIn('status', [EnrollmentStatus::Active, EnrollmentStatus::Completed])
-            ->latest()
-            ->get();
-        $orders = $user->orders()->withCount('items')->latest()->limit(5)->get();
-        $downloads = $user->entitlements()->where('type', 'product')->where('status', 'active')->with('product.assets')->latest()->get();
-        return view('account.dashboard', [
-            'orders' => $orders,
-            'orderCount' => $user->orders()->count(),
-            'downloads' => $downloads,
-            'downloadCount' => $downloads->count(),
-            'enrollments' => $enrollments,
-            'courseCount' => $enrollments->count(),
-            'inProgressCount' => $enrollments->where('status', EnrollmentStatus::Active)->count(),
-            'completedCourseCount' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
-            'hasActivity' => $enrollments->isNotEmpty() || $orders->isNotEmpty() || $downloads->isNotEmpty(),
-        ]);
+        return view('account.dashboard', $dashboard->build($request->user()));
     }
     public function orders(Request $request) { return view('account.orders', ['orders' => $request->user()->orders()->withCount('items')->latest()->paginate(15)]); }
     public function order(Order $order) { $this->owner($order); return view('account.order', compact('order')); }
