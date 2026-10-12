@@ -36,8 +36,6 @@
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Content</p>
                 <nav class="portal-nav" aria-label="Content navigation">
-                    <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
-                    <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
                     <a class="{{ request()->routeIs('admin.articles*', 'admin.journal') ? 'is-active' : '' }}" href="{{ route('admin.journal') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span>All posts</a>
                     <a class="admin-nav-child {{ request()->routeIs('admin.articles.create', 'admin.journal.create') ? 'is-active' : '' }}" href="{{ route('admin.journal.create') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>New post</a>
                     <a class="admin-nav-child {{ request()->routeIs('admin.journal.daily-updates*') ? 'is-active' : '' }}" href="{{ route('admin.journal.daily-updates.create') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Daily update</a>
@@ -46,6 +44,13 @@
                     <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span>Tags</a>
                     <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span>FAQs</a>
                     <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
+                </nav>
+                </div>
+                <div class="admin-nav-group">
+                    <p class="portal-section-label">Learning</p>
+                <nav class="portal-nav" aria-label="Learning navigation">
+                    <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
+                    <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
                 </nav>
                 </div>
                 <div class="admin-nav-group">
@@ -64,11 +69,12 @@
                     <p class="portal-section-label">Communication</p>
                 <nav class="portal-nav" aria-label="Communication navigation">
                     <a class="{{ request()->routeIs('admin.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Newsletter</a>
+                    <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
                 </nav>
                 </div>
                 <div class="admin-nav-group">
-                    <p class="portal-section-label">Platform</p>
-                <nav class="portal-nav" aria-label="Platform navigation">
+                    <p class="portal-section-label">Site &amp; system</p>
+                <nav class="portal-nav" aria-label="Site and system navigation">
                     <a class="{{ request()->routeIs('admin.services*') ? 'is-active' : '' }}" href="{{ route('admin.services') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Services</a>
                     <a class="{{ request()->routeIs('admin.projects*') ? 'is-active' : '' }}" href="{{ route('admin.projects') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Projects</a>
                     <a class="{{ request()->routeIs('admin.team*') ? 'is-active' : '' }}" href="{{ route('admin.team') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Team</a>
@@ -78,7 +84,6 @@
                     <a class="{{ request()->routeIs('admin.redirects*') ? 'is-active' : '' }}" href="{{ route('admin.redirects') }}"><span class="portal-nav-icon" aria-hidden="true">↪</span>Redirects</a>
                     <a class="{{ request()->routeIs('admin.navigation*') ? 'is-active' : '' }}" href="{{ route('admin.navigation') }}"><span class="portal-nav-icon" aria-hidden="true">≡</span>Navigation</a>
                     <a class="{{ request()->routeIs('admin.business-units*') ? 'is-active' : '' }}" href="{{ route('admin.business-units') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Business modules</a>
-                    <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
                     <a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span>Settings</a>
                     <a class="{{ request()->routeIs('admin.compliance') ? 'is-active' : '' }}" href="{{ route('admin.compliance') }}"><span class="portal-nav-icon" aria-hidden="true">✓</span>Compliance &amp; privacy</a>
                     <a class="{{ request()->routeIs('admin.settings.security*') ? 'is-active' : '' }}" href="{{ route('admin.settings.security') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Security</a>
