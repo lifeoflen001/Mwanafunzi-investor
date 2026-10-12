@@ -4568,6 +4568,33 @@ body input:focus-visible, body select:focus-visible, body textarea:focus-visible
     flex:1 1 260px;
 }
 
+@media (min-width:761px) {
+    /* Keep the global search with the page context instead of burying it in the action cluster. */
+    .admin-portal .portal-topbar-title {
+        order:1;
+    }
+
+    .admin-portal .admin-search {
+        order:2;
+        width:min(360px,30vw);
+        margin-left:0;
+        margin-right:0;
+    }
+
+    .admin-portal .admin-mobile-search-button {
+        order:3;
+    }
+
+    .admin-portal .admin-breadcrumbs {
+        order:4;
+    }
+
+    .admin-portal .portal-topbar-actions {
+        order:5;
+        margin-left:auto;
+    }
+}
+
 .admin-portal .admin-topbar-action,
 .admin-portal .admin-sidebar-toggle,
 .admin-portal .admin-mobile-search-button,
