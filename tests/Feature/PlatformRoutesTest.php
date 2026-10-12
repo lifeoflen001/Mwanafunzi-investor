@@ -712,7 +712,7 @@ class PlatformRoutesTest extends TestCase
                 'cards' => 'A new pillar | Managed without Blade. |',
             ]],
         ])->assertRedirect();
-        $this->get('/')->assertOk()->assertSee('A new pillar')->assertSee('Managed without Blade.');
+        $this->get('/')->assertOk()->assertDontSee('A new pillar')->assertDontSee('Managed without Blade.');
 
         $this->actingAs($admin)->put(route('admin.pages.update', $home), [
             'name' => $home->name, 'key' => $home->key, 'slug' => $home->slug, 'page_type' => $home->page_type, 'status' => 'published', 'is_visible' => 1,

@@ -25,7 +25,6 @@ $globalHeaderNavigation = $headerNavigation->reject(fn ($item) => $item->publicR
 $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
 $socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
 $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
-$brandIntro = $homeSections->get('philosophy');
 $framework = $homeSections->get('framework');
 $finalCta = $homeSections->get('final_cta');
 $homeFinalSecondaryUrl = $finalCta?->payload['secondary_cta_url'] ?? null;
@@ -106,19 +105,6 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
             </x-slot:aside>
         </x-public-hero>
 
-        @if($brandIntro && $brandIntro->is_enabled)
-        <section class="mother-intro section" id="brand-intro">
-            <div class="container mother-intro-grid">
-                <div>
-                    <p class="eyebrow"><span class="eyebrow-line"></span>{{ $brandIntro->payload['eyebrow'] ?? 'Mwanafunzi' }}</p>
-                    <h2>{{ $brandIntro->heading }}</h2>
-                </div>
-                <div class="body-copy rich-copy">{!! \App\Support\RichText::render($brandIntro->body) !!}@if($brandIntro->cta_label && $brandIntro->cta_url)<a class="text-link" href="{{ $brandIntro->cta_url }}">{{ $brandIntro->cta_label }} <span aria-hidden="true">→</span></a>@endif</div>
-            </div>@if(!empty($brandIntro->payload['cards']))<div class="container mother-principles-strip">@foreach($brandIntro->payload['cards'] as $card)<div><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><strong>{{ $card['title'] ?? '' }}</strong>
-                    <p>{{ $card['body'] ?? '' }}</p>
-                </div>@endforeach</div>@endif
-        </section>
-        @endif
         <section class="mother-divisions section" id="divisions">
             <div class="container">
                 <div class="split-heading">
