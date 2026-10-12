@@ -2,6 +2,7 @@
     $unreadEnquiries = auth()->check() ? \App\Models\ContactMessage::whereNull('read_at')->count() : 0;
     $notificationMessages = auth()->check() ? \App\Models\ContactMessage::with('businessUnit')->latest()->limit(5)->get() : collect();
     $validationErrors = view()->shared('errors', new \Illuminate\Support\ViewErrorBag());
+    $adminPageHeading = trim($__env->yieldContent('portal-heading') ?: $__env->yieldContent('title') ?: 'Dashboard');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -31,69 +32,78 @@
             <div class="admin-sidebar-scroll">
                 <p class="portal-section-label">Overview</p>
                 <nav class="portal-nav" aria-label="Overview navigation">
-                    <a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
+                    <a class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
                 </nav>
+
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Content</p>
-                <nav class="portal-nav" aria-label="Content navigation">
-                    <a class="{{ request()->routeIs('admin.articles*', 'admin.journal') ? 'is-active' : '' }}" href="{{ route('admin.journal') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span>All posts</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.articles.create', 'admin.journal.create') ? 'is-active' : '' }}" href="{{ route('admin.journal.create') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>New post</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.journal.daily-updates*') ? 'is-active' : '' }}" href="{{ route('admin.journal.daily-updates.create') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Daily update</a>
-                    <a class="{{ request()->routeIs('admin.comments*') ? 'is-active' : '' }}" href="{{ route('admin.comments') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Comments</a>
-                    <a class="{{ request()->routeIs('admin.categories*') ? 'is-active' : '' }}" href="{{ route('admin.categories') }}"><span class="portal-nav-icon" aria-hidden="true">#</span>Categories</a>
-                    <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span>Tags</a>
-                    <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span>FAQs</a>
-                    <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Media library</a>
-                </nav>
+                    <nav class="portal-nav" aria-label="Content navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.articles*', 'admin.journal*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="posts">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.articles*', 'admin.journal') ? 'is-active' : '' }}" href="{{ route('admin.journal') }}"><span class="portal-nav-icon" aria-hidden="true">▥</span><span>Posts</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Posts navigation" aria-expanded="{{ request()->routeIs('admin.articles*', 'admin.journal*') ? 'true' : 'false' }}" aria-controls="admin-nav-posts" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.articles*', 'admin.journal*') ? 'true' : 'false' }}" data-nav-label="Posts"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-posts" @if(!request()->routeIs('admin.articles*', 'admin.journal*')) hidden @endif><a class="{{ request()->routeIs('admin.articles*', 'admin.journal') ? 'is-active' : '' }}" href="{{ route('admin.journal') }}">All posts</a><a class="{{ request()->routeIs('admin.articles.create', 'admin.journal.create') ? 'is-active' : '' }}" href="{{ route('admin.journal.create') }}">New post</a><a class="{{ request()->routeIs('admin.journal.daily-updates*') ? 'is-active' : '' }}" href="{{ route('admin.journal.daily-updates.create') }}">Daily update</a></div>
+                        </div>
+                        <a class="{{ request()->routeIs('admin.comments*') ? 'is-active' : '' }}" href="{{ route('admin.comments') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span><span>Comments</span></a>
+                        <a class="{{ request()->routeIs('admin.categories*') ? 'is-active' : '' }}" href="{{ route('admin.categories') }}"><span class="portal-nav-icon" aria-hidden="true">#</span><span>Categories</span></a>
+                        <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span><span>Tags</span></a>
+                        <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span><span>FAQs</span></a>
+                        <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span><span>Media library</span></a>
+                    </nav>
                 </div>
+
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Learning</p>
-                <nav class="portal-nav" aria-label="Learning navigation">
-                    <a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span>Courses</a>
-                    <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span>Learning topics</a>
-                </nav>
+                    <nav class="portal-nav" aria-label="Learning navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.courses*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="courses">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.courses*') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span><span>Courses</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Courses navigation" aria-expanded="{{ request()->routeIs('admin.courses*') ? 'true' : 'false' }}" aria-controls="admin-nav-courses" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.courses*') ? 'true' : 'false' }}" data-nav-label="Courses"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-courses" @if(!request()->routeIs('admin.courses*')) hidden @endif><a class="{{ request()->routeIs('admin.courses') ? 'is-active' : '' }}" href="{{ route('admin.courses') }}">All courses</a><a class="{{ request()->routeIs('admin.courses.create') ? 'is-active' : '' }}" href="{{ route('admin.courses.create') }}">Create course</a></div>
+                        </div>
+                        <a class="{{ request()->routeIs('admin.topics*') ? 'is-active' : '' }}" href="{{ route('admin.topics') }}"><span class="portal-nav-icon" aria-hidden="true">◌</span><span>Learning topics</span></a>
+                    </nav>
                 </div>
+
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Commerce</p>
-                <nav class="portal-nav" aria-label="Commerce navigation">
-                    <a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Products</a>
-                    <a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span>Commerce overview</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.orders*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.orders') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Orders</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.payments*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.payments') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Payments</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.entitlements*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.entitlements') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Entitlements</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.commerce.waitlists*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.waitlists') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Waitlists</a>
-                    <a class="{{ request()->routeIs('admin.customers*') ? 'is-active' : '' }}" href="{{ route('admin.customers') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Customers</a>
-                </nav>
+                    <nav class="portal-nav" aria-label="Commerce navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.commerce*', 'admin.products*', 'admin.customers*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="commerce">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}"><span class="portal-nav-icon" aria-hidden="true">$</span><span>Commerce</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Commerce navigation" aria-expanded="{{ request()->routeIs('admin.commerce*', 'admin.products*', 'admin.customers*') ? 'true' : 'false' }}" aria-controls="admin-nav-commerce" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.commerce*', 'admin.products*', 'admin.customers*') ? 'true' : 'false' }}" data-nav-label="Commerce"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-commerce" @if(!request()->routeIs('admin.commerce*', 'admin.products*', 'admin.customers*')) hidden @endif><a class="{{ request()->routeIs('admin.commerce.dashboard') ? 'is-active' : '' }}" href="{{ route('admin.commerce.dashboard') }}">Commerce overview</a><a class="{{ request()->routeIs('admin.products*') ? 'is-active' : '' }}" href="{{ route('admin.products') }}">Products</a><a class="{{ request()->routeIs('admin.commerce.orders*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.orders') }}">Orders</a><a class="{{ request()->routeIs('admin.commerce.payments*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.payments') }}">Payments</a><a class="{{ request()->routeIs('admin.commerce.entitlements*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.entitlements') }}">Entitlements</a><a class="{{ request()->routeIs('admin.commerce.waitlists*') ? 'is-active' : '' }}" href="{{ route('admin.commerce.waitlists') }}">Waitlists</a><a class="{{ request()->routeIs('admin.customers*') ? 'is-active' : '' }}" href="{{ route('admin.customers') }}">Customers</a></div>
+                        </div>
+                    </nav>
                 </div>
+
                 <div class="admin-nav-group">
                     <p class="portal-section-label">Communication</p>
-                <nav class="portal-nav" aria-label="Communication navigation">
-                    <a class="{{ request()->routeIs('admin.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Newsletter</a>
-                    <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span>Enquiries</a>
-                </nav>
+                    <nav class="portal-nav" aria-label="Communication navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.newsletter*', 'admin.settings.newsletter*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="newsletter">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.newsletter') ? 'is-active' : '' }}" href="{{ route('admin.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span><span>Newsletter</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Newsletter navigation" aria-expanded="{{ request()->routeIs('admin.newsletter*', 'admin.settings.newsletter*') ? 'true' : 'false' }}" aria-controls="admin-nav-newsletter" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.newsletter*', 'admin.settings.newsletter*') ? 'true' : 'false' }}" data-nav-label="Newsletter"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-newsletter" @if(!request()->routeIs('admin.newsletter*', 'admin.settings.newsletter*')) hidden @endif><a class="{{ request()->routeIs('admin.newsletter') ? 'is-active' : '' }}" href="{{ route('admin.newsletter') }}">Newsletter inbox</a><a href="{{ route('admin.newsletter.export') }}">Export subscribers</a><a class="{{ request()->routeIs('admin.settings.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.settings.newsletter') }}">Newsletter settings</a></div>
+                        </div>
+                        <a class="{{ request()->routeIs('admin.messages*') ? 'is-active' : '' }}" href="{{ route('admin.messages') }}"><span class="portal-nav-icon" aria-hidden="true">✉</span><span>Enquiries</span></a>
+                    </nav>
                 </div>
+
                 <div class="admin-nav-group">
-                    <p class="portal-section-label">Site &amp; system</p>
-                <nav class="portal-nav" aria-label="Site and system navigation">
-                    <a class="{{ request()->routeIs('admin.services*') ? 'is-active' : '' }}" href="{{ route('admin.services') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Services</a>
-                    <a class="{{ request()->routeIs('admin.projects*') ? 'is-active' : '' }}" href="{{ route('admin.projects') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span>Projects</a>
-                    <a class="{{ request()->routeIs('admin.team*') ? 'is-active' : '' }}" href="{{ route('admin.team') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Team</a>
-                    <a class="{{ request()->routeIs('admin.testimonials*') ? 'is-active' : '' }}" href="{{ route('admin.testimonials') }}"><span class="portal-nav-icon" aria-hidden="true">“</span>Testimonials</a>
-                    <a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span>Pages</a>
-                    <a class="{{ request()->routeIs('admin.policies*') ? 'is-active' : '' }}" href="{{ route('admin.policies') }}"><span class="portal-nav-icon" aria-hidden="true">§</span>Policies</a>
-                    <a class="{{ request()->routeIs('admin.redirects*') ? 'is-active' : '' }}" href="{{ route('admin.redirects') }}"><span class="portal-nav-icon" aria-hidden="true">↪</span>Redirects</a>
-                    <a class="{{ request()->routeIs('admin.navigation*') ? 'is-active' : '' }}" href="{{ route('admin.navigation') }}"><span class="portal-nav-icon" aria-hidden="true">≡</span>Navigation</a>
-                    <a class="{{ request()->routeIs('admin.business-units*') ? 'is-active' : '' }}" href="{{ route('admin.business-units') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Business modules</a>
-                    <a class="{{ request()->routeIs('admin.settings*', 'admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span>Settings</a>
-                    <a class="{{ request()->routeIs('admin.compliance') ? 'is-active' : '' }}" href="{{ route('admin.compliance') }}"><span class="portal-nav-icon" aria-hidden="true">✓</span>Compliance &amp; privacy</a>
-                    <a class="{{ request()->routeIs('admin.settings.security*') ? 'is-active' : '' }}" href="{{ route('admin.settings.security') }}"><span class="portal-nav-icon" aria-hidden="true">◈</span>Security</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.newsletter*') ? 'is-active' : '' }}" href="{{ route('admin.settings.newsletter') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Newsletter settings</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.cookies*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Cookies &amp; privacy</a>
-                    <a class="admin-nav-child {{ request()->routeIs('admin.settings.cookies.registry*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies.registry') }}"><span class="portal-nav-icon" aria-hidden="true">↳</span>Cookie registry</a>
-                    <a class="{{ request()->routeIs('admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.social-links') }}"><span class="portal-nav-icon" aria-hidden="true">↗</span>Social links</a>
-                    <a class="{{ request()->routeIs('admin.audit*') ? 'is-active' : '' }}" href="{{ route('admin.audit') }}"><span class="portal-nav-icon" aria-hidden="true">◷</span>Activity log</a>
-                    <a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span>Administrators</a>
-                </nav>
+                    <p class="portal-section-label">Website</p>
+                    <nav class="portal-nav" aria-label="Website navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.services*', 'admin.projects*', 'admin.team*', 'admin.testimonials*', 'admin.pages*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="website">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span><span>Website</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Website navigation" aria-expanded="{{ request()->routeIs('admin.services*', 'admin.projects*', 'admin.team*', 'admin.testimonials*', 'admin.pages*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*') ? 'true' : 'false' }}" aria-controls="admin-nav-website" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.services*', 'admin.projects*', 'admin.team*', 'admin.testimonials*', 'admin.pages*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*') ? 'true' : 'false' }}" data-nav-label="Website"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-website" @if(!request()->routeIs('admin.services*', 'admin.projects*', 'admin.team*', 'admin.testimonials*', 'admin.pages*', 'admin.redirects*', 'admin.navigation*', 'admin.business-units*')) hidden @endif><a class="{{ request()->routeIs('admin.pages*') ? 'is-active' : '' }}" href="{{ route('admin.pages') }}">Pages</a><a class="{{ request()->routeIs('admin.services*') ? 'is-active' : '' }}" href="{{ route('admin.services') }}">Services</a><a class="{{ request()->routeIs('admin.projects*') ? 'is-active' : '' }}" href="{{ route('admin.projects') }}">Projects</a><a class="{{ request()->routeIs('admin.team*') ? 'is-active' : '' }}" href="{{ route('admin.team') }}">Team</a><a class="{{ request()->routeIs('admin.testimonials*') ? 'is-active' : '' }}" href="{{ route('admin.testimonials') }}">Testimonials</a><a class="{{ request()->routeIs('admin.navigation*') ? 'is-active' : '' }}" href="{{ route('admin.navigation') }}">Navigation</a><a class="{{ request()->routeIs('admin.redirects*') ? 'is-active' : '' }}" href="{{ route('admin.redirects') }}">Redirects</a><a class="{{ request()->routeIs('admin.business-units*') ? 'is-active' : '' }}" href="{{ route('admin.business-units') }}">Business modules</a></div>
+                        </div>
+                    </nav>
+                </div>
+
+                <div class="admin-nav-group">
+                    <p class="portal-section-label">System</p>
+                    <nav class="portal-nav" aria-label="System navigation">
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.policies*', 'admin.compliance', 'admin.settings*', 'admin.social-links*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="system">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.settings') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}"><span class="portal-nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Settings navigation" aria-expanded="{{ request()->routeIs('admin.policies*', 'admin.compliance', 'admin.settings*', 'admin.social-links*') ? 'true' : 'false' }}" aria-controls="admin-nav-system" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.policies*', 'admin.compliance', 'admin.settings*', 'admin.social-links*') ? 'true' : 'false' }}" data-nav-label="Settings"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-system" @if(!request()->routeIs('admin.policies*', 'admin.compliance', 'admin.settings*', 'admin.social-links*')) hidden @endif><a class="{{ request()->routeIs('admin.settings') ? 'is-active' : '' }}" href="{{ route('admin.settings') }}">Site settings</a><a class="{{ request()->routeIs('admin.policies*') ? 'is-active' : '' }}" href="{{ route('admin.policies') }}">Policies</a><a class="{{ request()->routeIs('admin.compliance') ? 'is-active' : '' }}" href="{{ route('admin.compliance') }}">Compliance &amp; privacy</a><a class="{{ request()->routeIs('admin.settings.security*') ? 'is-active' : '' }}" href="{{ route('admin.settings.security') }}">Security</a><a class="{{ request()->routeIs('admin.social-links*') ? 'is-active' : '' }}" href="{{ route('admin.social-links') }}">Social links</a><a class="{{ request()->routeIs('admin.settings.cookies*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies') }}">Cookies &amp; privacy</a><a class="{{ request()->routeIs('admin.settings.cookies.registry*') ? 'is-active' : '' }}" href="{{ route('admin.settings.cookies.registry') }}">Cookie registry</a></div>
+                        </div>
+                        <div class="admin-nav-parent {{ request()->routeIs('admin.audit*', 'admin.administrators*') ? 'is-active-parent' : '' }}" data-admin-nav-parent data-nav-key="administration">
+                            <div class="admin-nav-parent-row"><a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}"><span class="portal-nav-icon" aria-hidden="true">◎</span><span>Administration</span></a><button type="button" class="admin-nav-toggle" aria-label="Expand Administration navigation" aria-expanded="{{ request()->routeIs('admin.audit*', 'admin.administrators*') ? 'true' : 'false' }}" aria-controls="admin-nav-administration" data-admin-nav-toggle data-nav-active="{{ request()->routeIs('admin.audit*', 'admin.administrators*') ? 'true' : 'false' }}" data-nav-label="Administration"><span aria-hidden="true">⌄</span></button></div>
+                            <div class="admin-nav-submenu" id="admin-nav-administration" @if(!request()->routeIs('admin.audit*', 'admin.administrators*')) hidden @endif><a class="{{ request()->routeIs('admin.administrators*') ? 'is-active' : '' }}" href="{{ route('admin.administrators') }}">Administrators</a><a class="{{ request()->routeIs('admin.audit*') ? 'is-active' : '' }}" href="{{ route('admin.audit') }}">Activity log</a></div>
+                        </div>
+                    </nav>
                 </div>
             </div>
             <div class="portal-sidebar-footer">
@@ -109,8 +119,8 @@
         <div class="portal-main">
             <header class="portal-topbar admin-topbar">
                 <button class="admin-sidebar-toggle" type="button" aria-label="Toggle admin navigation" aria-controls="admin-sidebar" aria-expanded="true" data-admin-sidebar-toggle><span aria-hidden="true">☰</span></button>
-                <div class="portal-topbar-title"><span class="portal-mobile-label">Admin desk</span><strong>@yield('portal-heading', 'Dashboard')</strong></div>
-                <div class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>@yield('portal-heading', 'Overview')</span></div>
+                <div class="portal-topbar-title"><span class="sr-only">Admin desk</span><strong>{{ $adminPageHeading }}</strong></div>
+                @if(!request()->routeIs('admin.dashboard'))<nav class="admin-breadcrumbs" aria-label="Breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a><span aria-hidden="true">/</span><span>{{ $adminPageHeading }}</span></nav>@endif
                 <form class="portal-search admin-search" method="get" action="{{ route('admin.search') }}" data-admin-search-form data-suggestions-url="{{ route('admin.search.suggestions') }}" role="search" autocomplete="off"><label class="sr-only" for="admin-search">Search the desk</label><span class="admin-search-icon" aria-hidden="true">⌕</span><input id="admin-search" name="q" value="{{ request('q') }}" placeholder="Search the desk" data-admin-search-input aria-controls="admin-search-suggestions" aria-expanded="false"><kbd class="admin-search-shortcut" aria-label="Keyboard shortcut Control K">Ctrl K</kbd><button class="admin-search-clear" type="button" aria-label="Clear search" data-admin-search-clear hidden>×</button><span class="admin-search-loading" aria-hidden="true" data-admin-search-loading hidden></span><div class="admin-search-suggestions" id="admin-search-suggestions" role="listbox" hidden data-admin-search-suggestions></div><div class="admin-search-loading-panel" data-admin-search-loading-panel hidden aria-hidden="true"><x-skeleton variant="text" width="72%" height="12px" /><x-skeleton variant="text" width="52%" height="12px" /><x-skeleton variant="text" width="64%" height="12px" /></div><span class="sr-only" aria-live="polite" data-admin-search-status></span></form><button class="admin-mobile-search-button admin-icon-button" type="button" title="Search the desk" aria-label="Open search" data-admin-mobile-search>⌕</button>
                 <div class="portal-topbar-actions">
                     @auth

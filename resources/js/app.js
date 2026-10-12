@@ -80,6 +80,50 @@ syncAdminSidebarToggle();
 document.querySelectorAll('[data-admin-sidebar-close]').forEach((element) => element.addEventListener('click', () => closeAdminSidebar()));
 adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeAdminSidebar(false)));
 
+/* Admin navigation parents use real buttons so route links and expansion stay distinct. */
+const adminNavStateKey = 'mwanafunzi-admin-nav-open';
+const adminNavToggles = [...(adminSidebar?.querySelectorAll('[data-admin-nav-toggle]') || [])];
+let adminNavState = {};
+try { adminNavState = JSON.parse(window.localStorage.getItem(adminNavStateKey) || '{}') || {}; } catch { adminNavState = {}; }
+const setAdminNavState = (toggle, open, persist = true) => {
+    const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
+    const parent = toggle.closest('[data-admin-nav-parent]');
+    if (!submenu || !parent) return;
+    submenu.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', `${open ? 'Collapse' : 'Expand'} ${toggle.dataset.navLabel || 'module'} navigation`);
+    parent.classList.toggle('is-open', open);
+    const flyout = open && !isAdminMobile() && adminShell?.classList.contains('is-sidebar-collapsed');
+    if (flyout) {
+        const rect = parent.getBoundingClientRect();
+        parent.classList.add('is-admin-nav-flyout');
+        parent.style.setProperty('--admin-nav-flyout-top', `${Math.max(8, rect.top)}px`);
+        parent.style.setProperty('--admin-nav-flyout-left', `${Math.max(8, rect.right + 10)}px`);
+    } else {
+        parent.classList.remove('is-admin-nav-flyout');
+        parent.style.removeProperty('--admin-nav-flyout-top');
+        parent.style.removeProperty('--admin-nav-flyout-left');
+    }
+    if (persist && toggle.closest('[data-nav-key]')) {
+        adminNavState[toggle.closest('[data-nav-key]').dataset.navKey] = open;
+        try { window.localStorage.setItem(adminNavStateKey, JSON.stringify(adminNavState)); } catch { /* Storage can be unavailable. */ }
+    }
+};
+adminNavToggles.forEach((toggle) => {
+    const key = toggle.closest('[data-nav-key]')?.dataset.navKey;
+    const routeActive = toggle.dataset.navActive === 'true';
+    setAdminNavState(toggle, routeActive || adminNavState[key] === true, false);
+    toggle.addEventListener('click', () => {
+        const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+        setAdminNavState(toggle, !isOpen);
+    });
+});
+const refreshAdminNavFlyouts = () => adminNavToggles.forEach((toggle) => {
+    if (toggle.getAttribute('aria-expanded') === 'true') setAdminNavState(toggle, true, false);
+});
+window.addEventListener('resize', refreshAdminNavFlyouts, { passive: true });
+document.addEventListener('scroll', refreshAdminNavFlyouts, true);
+
 /* One body-level tooltip keeps collapsed sidebar labels out of overflow-hidden panels. */
 const sidebarTooltip = (() => {
     if (!adminShell || !adminSidebar) return null;
