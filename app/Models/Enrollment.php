@@ -13,4 +13,23 @@ class Enrollment extends Model
     public function course() { return $this->belongsTo(Course::class); }
     public function order() { return $this->belongsTo(Order::class); }
     public function entitlement() { return $this->belongsTo(Entitlement::class); }
+    public function lessonCompletions() { return $this->hasMany(CourseLessonCompletion::class); }
+
+    public function totalPublishedLessons(): int
+    {
+        return $this->course?->modules->sum(fn ($module) => $module->lessons->where('is_published', true)->count()) ?? 0;
+    }
+
+    public function completedLessonCount(): int
+    {
+        return $this->relationLoaded('lessonCompletions')
+            ? $this->lessonCompletions->count()
+            : $this->lessonCompletions()->count();
+    }
+
+    public function progressPercent(): int
+    {
+        $total = $this->totalPublishedLessons();
+        return $total > 0 ? min(100, (int) round(($this->completedLessonCount() / $total) * 100)) : 0;
+    }
 }

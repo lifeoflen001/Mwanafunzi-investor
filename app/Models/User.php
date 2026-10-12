@@ -74,6 +74,7 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordC
     public function orders() { return $this->hasMany(Order::class); }
     public function entitlements() { return $this->hasMany(Entitlement::class); }
     public function enrollments() { return $this->hasMany(Enrollment::class); }
+    public function lessonCompletions() { return $this->hasMany(CourseLessonCompletion::class); }
     public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
     public function articleReactions() { return $this->hasMany(ArticleReaction::class); }
     public function comments() { return $this->hasMany(Comment::class); }

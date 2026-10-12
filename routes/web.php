@@ -154,6 +154,8 @@ Route::middleware(['auth'])->prefix('account')->name('account.')->group(function
     Route::get('/downloads', [CustomerAccountController::class, 'downloads'])->name('downloads');
     Route::get('/courses', [CustomerAccountController::class, 'courses'])->name('courses');
     Route::get('/courses/{enrollment}', [CustomerAccountController::class, 'course'])->name('courses.show');
+    Route::get('/courses/{enrollment}/lessons/{lesson}', [CustomerAccountController::class, 'lesson'])->name('courses.lessons.show');
+    Route::post('/courses/{enrollment}/lessons/{lesson}/complete', [CustomerAccountController::class, 'completeLesson'])->name('courses.lessons.complete');
     Route::get('/profile', [CustomerAccountController::class, 'profile'])->name('profile');
     Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/avatar', [CustomerAccountController::class, 'updateAvatar'])->name('profile.avatar.update');

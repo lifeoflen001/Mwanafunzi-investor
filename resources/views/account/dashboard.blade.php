@@ -13,6 +13,16 @@
 <section class="student-alert student-alert-success" role="status"><span class="student-alert-icon" aria-hidden="true">✓</span><div><strong>Your account is ready.</strong><p>Your verified account can access purchases, courses and downloads.</p></div><a href="{{ route('account.security') }}">Review security <span aria-hidden="true">↗</span></a></section>
 @endunless
 
+@if(!$hasActivity)
+<section class="student-onboarding-state student-panel">
+    <div class="student-onboarding-copy"><p class="student-eyebrow">Your next step</p><h2>Start with one deliberate action.</h2><p>Your workspace is ready. Browse the learning library, explore the tools, or finish your profile so the account is ready when you are.</p></div>
+    <div class="student-onboarding-actions">
+        <a class="student-button student-button-primary" href="{{ route('courses') }}">Browse courses <span aria-hidden="true">↗</span></a>
+        <a class="student-button student-button-secondary" href="{{ route('tools') }}">Explore tools <span aria-hidden="true">↗</span></a>
+        <a class="student-text-link" href="{{ route('account.profile') }}">Complete profile <span aria-hidden="true">→</span></a>
+    </div>
+</section>
+@else
 <div class="student-metric-grid">
     <x-portal-metric label="Active courses" :value="$courseCount" description="Your learning access" tone="teal" icon="▤" />
     <x-portal-metric label="Available tools" :value="$downloadCount" description="Your digital library" tone="gold" icon="↓" />
@@ -24,7 +34,8 @@
     <x-portal-card class="student-panel student-panel-wide">
         <div class="student-panel-heading"><div><p class="student-eyebrow">Course access</p><h2>Continue learning</h2></div><a class="student-text-link" href="{{ route('account.courses') }}">View all <span aria-hidden="true">→</span></a></div>
         @forelse($enrollments as $enrollment)
-            <a class="student-list-row" href="{{ route('account.courses.show', $enrollment) }}"><span class="student-list-icon student-list-icon-teal" aria-hidden="true">▤</span><span><strong>{{ $enrollment->course->title }}</strong><small>{{ $enrollment->course->short_description ?: 'Open your course workspace and curriculum.' }}</small></span><span class="student-list-trailing"><x-portal-status :status="$enrollment->status" /><b aria-hidden="true">↗</b></span></a>
+            @php($nextLesson = $enrollment->course->modules->flatMap(fn ($module) => $module->lessons->where('is_published', true))->first(fn ($lesson) => !$enrollment->lessonCompletions->contains('course_lesson_id', $lesson->id)))
+            <a class="student-list-row" href="{{ $nextLesson ? route('account.courses.lessons.show', [$enrollment, $nextLesson]) : route('account.courses.show', $enrollment) }}"><span class="student-list-icon student-list-icon-teal" aria-hidden="true">▤</span><span><strong>{{ $enrollment->course->title }}</strong><small>{{ $enrollment->progressPercent() }}% complete · {{ $nextLesson ? 'Resume the next lesson' : ($enrollment->progressPercent() >= 100 ? 'Course complete — review the curriculum' : ($enrollment->course->short_description ?: 'Open your course workspace and curriculum.')) }}</small></span><span class="student-list-trailing"><x-portal-status :status="$enrollment->status" /><b aria-hidden="true">↗</b></span></a>
         @empty
             <x-portal-empty icon="▤" title="No active courses yet." description="When you enroll, your learning will appear here." :href="route('courses')" action="Browse courses" />
         @endforelse
@@ -53,4 +64,5 @@
         <div class="student-quick-links"><a href="{{ route('account.profile') }}"><span class="student-quick-icon">○</span><span><strong>Profile details</strong><small>Update your personal information</small></span><b aria-hidden="true">→</b></a><a href="{{ route('account.security') }}"><span class="student-quick-icon">◇</span><span><strong>Security</strong><small>Protect your account access</small></span><b aria-hidden="true">→</b></a><a href="{{ route('contact') }}"><span class="student-quick-icon">↗</span><span><strong>Contact the desk</strong><small>Get help with the platform</small></span><b aria-hidden="true">→</b></a></div>
     </x-portal-card>
 </div>
+@endif
 @endsection

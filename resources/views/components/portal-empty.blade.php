@@ -1,5 +1,5 @@
 @props(['icon' => '○', 'title', 'description', 'href' => null, 'action' => null])
-<div class="student-empty">
+<div {{ $attributes->merge(['class' => 'student-empty']) }}>
     <span class="student-empty-icon" aria-hidden="true">{{ $icon }}</span>
     <div>
         <h3>{{ $title }}</h3>

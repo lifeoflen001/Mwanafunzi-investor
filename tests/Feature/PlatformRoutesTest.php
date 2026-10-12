@@ -522,7 +522,7 @@ class PlatformRoutesTest extends TestCase
     public function test_student_and_admin_portals_render_the_dashboard_shells(): void
     {
         $student = User::factory()->create(['email_verified_at' => now()]);
-        $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Continue learning')->assertSee('Account controls');
+        $this->actingAs($student)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal')->assertSee('Start with one deliberate action.')->assertSee('Browse courses');
         foreach ([route('account.orders'), route('account.downloads'), route('account.courses'), route('account.profile'), route('account.security')] as $accountRoute) {
             $this->get($accountRoute)->assertOk()->assertSee('Student portal');
         }

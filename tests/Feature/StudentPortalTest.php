@@ -3,6 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Enums\EnrollmentStatus;
+use App\Models\Course;
+use App\Models\CourseLesson;
+use App\Models\CourseModule;
+use App\Models\Enrollment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -60,5 +65,76 @@ class StudentPortalTest extends TestCase
         $path = $customer->fresh()->avatar_path;
         $this->assertNotEmpty($path);
         Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_customer_can_open_lessons_and_track_real_course_progress(): void
+    {
+        $customer = User::factory()->create(['is_admin' => false, 'email_verified_at' => now()]);
+        $otherCustomer = User::factory()->create(['is_admin' => false, 'email_verified_at' => now()]);
+        $course = Course::create([
+            'title' => 'Market structure foundations',
+            'slug' => 'market-structure-foundations-test',
+            'short_description' => 'A practical course for deliberate learners.',
+            'full_description' => 'Build a repeatable foundation.',
+            'status' => 'published',
+        ]);
+        $module = CourseModule::create(['course_id' => $course->id, 'title' => 'The foundation']);
+        $firstLesson = CourseLesson::create([
+            'course_module_id' => $module->id,
+            'title' => 'Read the market',
+            'slug' => 'read-the-market',
+            'content' => '<p>Understand the context before acting.</p>',
+            'is_published' => true,
+        ]);
+        $secondLesson = CourseLesson::create([
+            'course_module_id' => $module->id,
+            'title' => 'Build the rule',
+            'slug' => 'build-the-rule',
+            'content' => '<p>Turn the idea into a rule.</p>',
+            'sort_order' => 1,
+            'is_published' => true,
+        ]);
+        $enrollment = Enrollment::create([
+            'user_id' => $customer->id,
+            'course_id' => $course->id,
+            'status' => EnrollmentStatus::Active,
+            'enrolled_at' => now(),
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('account.courses.show', $enrollment))
+            ->assertOk()
+            ->assertSee('0%')
+            ->assertSee('Read the market');
+
+        $this->actingAs($customer)
+            ->get(route('account.courses.lessons.show', [$enrollment, $firstLesson]))
+            ->assertOk()
+            ->assertSee('Understand the context before acting.');
+
+        $this->actingAs($customer)
+            ->post(route('account.courses.lessons.complete', [$enrollment, $firstLesson]))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('course_lesson_completions', [
+            'user_id' => $customer->id,
+            'enrollment_id' => $enrollment->id,
+            'course_lesson_id' => $firstLesson->id,
+        ]);
+        $this->assertSame(50, $enrollment->fresh()->load(['course.modules.lessons', 'lessonCompletions'])->progressPercent());
+
+        $this->actingAs($customer)
+            ->post(route('account.courses.lessons.complete', [$enrollment, $firstLesson]))
+            ->assertSessionHas('success');
+        $this->assertDatabaseCount('course_lesson_completions', 1);
+
+        $this->actingAs($customer)
+            ->post(route('account.courses.lessons.complete', [$enrollment, $secondLesson]))
+            ->assertSessionHas('success');
+        $this->assertSame(EnrollmentStatus::Completed, $enrollment->fresh()->status);
+
+        $this->actingAs($otherCustomer)
+            ->get(route('account.courses.lessons.show', [$enrollment, $firstLesson]))
+            ->assertForbidden();
     }
 }
