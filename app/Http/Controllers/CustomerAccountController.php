@@ -30,6 +30,8 @@ class CustomerAccountController extends Controller
             'downloadCount' => $downloads->count(),
             'enrollments' => $enrollments,
             'courseCount' => $enrollments->count(),
+            'inProgressCount' => $enrollments->where('status', EnrollmentStatus::Active)->count(),
+            'completedCourseCount' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
             'hasActivity' => $enrollments->isNotEmpty() || $orders->isNotEmpty() || $downloads->isNotEmpty(),
         ]);
     }

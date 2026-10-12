@@ -23,7 +23,16 @@ class StudentPortalTest extends TestCase
     {
         $customer = User::factory()->create(['is_admin' => false, 'email_verified_at' => now()]);
 
-        foreach (['account.dashboard', 'account.courses', 'account.downloads', 'account.orders', 'account.profile', 'account.security'] as $route) {
+        $this->actingAs($customer)
+            ->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertSee('Start with one deliberate action.')
+            ->assertSee('Learning overview')
+            ->assertSee('Digital tools')
+            ->assertSee('Recent purchases')
+            ->assertSee('Recommended next action');
+
+        foreach (['account.courses', 'account.downloads', 'account.orders', 'account.profile', 'account.security'] as $route) {
             $this->actingAs($customer)->get(route($route))->assertOk();
         }
     }
@@ -102,6 +111,13 @@ class StudentPortalTest extends TestCase
         ]);
 
         $this->actingAs($customer)
+            ->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertSee('Continue learning')
+            ->assertSee('In progress')
+            ->assertSee('Completed');
+
+        $this->actingAs($customer)
             ->get(route('account.courses.show', $enrollment))
             ->assertOk()
             ->assertSee('0%')
@@ -132,6 +148,12 @@ class StudentPortalTest extends TestCase
             ->post(route('account.courses.lessons.complete', [$enrollment, $secondLesson]))
             ->assertSessionHas('success');
         $this->assertSame(EnrollmentStatus::Completed, $enrollment->fresh()->status);
+
+        $this->actingAs($customer)
+            ->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertSee('Completed')
+            ->assertSee('1');
 
         $this->actingAs($otherCustomer)
             ->get(route('account.courses.lessons.show', [$enrollment, $firstLesson]))

@@ -22,11 +22,13 @@
         <a class="student-text-link" href="{{ route('account.profile') }}">Complete profile <span aria-hidden="true">→</span></a>
     </div>
 </section>
-@else
+@endif
+
+@if($hasActivity)
 <div class="student-metric-grid">
-    <x-portal-metric label="Active courses" :value="$courseCount" description="Your learning access" tone="teal" icon="▤" />
-    <x-portal-metric label="Available tools" :value="$downloadCount" description="Your digital library" tone="gold" icon="↓" />
-    <x-portal-metric label="Orders" :value="$orderCount" description="Purchases and receipts" tone="blue" icon="▣" />
+    <x-portal-metric label="Courses" :value="$courseCount" description="Your learning access" tone="teal" icon="▤" />
+    <x-portal-metric label="In progress" :value="$inProgressCount" description="Courses underway" tone="gold" icon="↗" />
+    <x-portal-metric label="Completed" :value="$completedCourseCount" description="Finished courses" tone="blue" icon="✓" />
     <x-portal-metric label="Account status" :value="auth()->user()->hasVerifiedEmail() ? 'Ready' : 'Action'" :description="auth()->user()->hasVerifiedEmail() ? 'Workspace active' : 'Verify your email'" tone="copper" icon="○" />
 </div>
 
@@ -62,6 +64,25 @@
     <x-portal-card class="student-panel student-panel-dark">
         <div class="student-panel-heading"><div><p class="student-eyebrow">Account controls</p><h2>Keep your workspace in order.</h2></div></div>
         <div class="student-quick-links"><a href="{{ route('account.profile') }}"><span class="student-quick-icon">○</span><span><strong>Profile details</strong><small>Update your personal information</small></span><b aria-hidden="true">→</b></a><a href="{{ route('account.security') }}"><span class="student-quick-icon">◇</span><span><strong>Security</strong><small>Protect your account access</small></span><b aria-hidden="true">→</b></a><a href="{{ route('contact') }}"><span class="student-quick-icon">↗</span><span><strong>Contact the desk</strong><small>Get help with the platform</small></span><b aria-hidden="true">→</b></a></div>
+    </x-portal-card>
+</div>
+@else
+<div class="student-dashboard-grid student-dashboard-empty-grid">
+    <x-portal-card class="student-panel">
+        <div class="student-panel-heading"><div><p class="student-eyebrow">Learning overview</p><h2>Courses</h2></div><a class="student-text-link" href="{{ route('courses') }}">Browse <span aria-hidden="true">↗</span></a></div>
+        <x-portal-empty icon="▤" title="No course access yet." description="Browse the Financial Academy when you are ready to start learning." :href="route('courses')" action="Browse courses" />
+    </x-portal-card>
+    <x-portal-card class="student-panel">
+        <div class="student-panel-heading"><div><p class="student-eyebrow">Digital tools</p><h2>Your library</h2></div><a class="student-text-link" href="{{ route('tools') }}">Explore <span aria-hidden="true">↗</span></a></div>
+        <x-portal-empty icon="↓" title="No tools yet." description="Purchased tools and secure downloads will appear here." :href="route('tools')" action="Explore tools" />
+    </x-portal-card>
+    <x-portal-card class="student-panel">
+        <div class="student-panel-heading"><div><p class="student-eyebrow">Recent purchases</p><h2>Orders &amp; receipts</h2></div><a class="student-text-link" href="{{ route('account.orders') }}">View orders <span aria-hidden="true">↗</span></a></div>
+        <x-portal-empty icon="▣" title="No purchases yet." description="Confirmed orders and receipts will be listed here." :href="route('tools')" action="Explore products" />
+    </x-portal-card>
+    <x-portal-card class="student-panel student-panel-dark">
+        <div class="student-panel-heading"><div><p class="student-eyebrow">Recommended next action</p><h2>Keep your account ready.</h2></div></div>
+        <div class="student-quick-links"><a href="{{ auth()->user()->hasVerifiedEmail() ? route('account.profile') : route('verification.notice') }}"><span class="student-quick-icon">{{ auth()->user()->hasVerifiedEmail() ? '○' : '!' }}</span><span><strong>{{ auth()->user()->hasVerifiedEmail() ? 'Complete your profile' : 'Verify your email' }}</strong><small>{{ auth()->user()->hasVerifiedEmail() ? 'Keep your account details current' : 'Unlock protected account actions' }}</small></span><b aria-hidden="true">→</b></a><a href="{{ route('contact') }}"><span class="student-quick-icon">↗</span><span><strong>Contact the desk</strong><small>Get help when you need it</small></span><b aria-hidden="true">→</b></a></div>
     </x-portal-card>
 </div>
 @endif
