@@ -4576,6 +4576,10 @@ body input:focus-visible, body select:focus-visible, body textarea:focus-visible
     min-height:40px;
 }
 
+.admin-portal .admin-mobile-search-button {
+    display:none;
+}
+
 .admin-portal .admin-quick-actions summary {
     min-height:40px;
     border-radius:5px;
