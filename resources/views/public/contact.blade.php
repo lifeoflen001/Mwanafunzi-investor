@@ -14,7 +14,7 @@
 <section class="platform-section contact-section">
     <div class="container">
         <div class="contact-intro">
-            <x-section-label label="Start a conversation" />
+            <x-section-label label="Contact us" />
             <div>
                 <h2>Let’s talk.</h2>
                 <p>Tell us what you are learning, building or creating. The Mwanafunzi desk is here for thoughtful questions, project enquiries and useful next steps.</p>

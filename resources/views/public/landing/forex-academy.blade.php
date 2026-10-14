@@ -15,7 +15,7 @@
 
 @section('content')
     <div class="service-landing service-landing-academy">
-        <x-public-hero class="academy-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Financial Academy'" :title="$page?->hero_title ?: 'Become a'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Become a').'<br><em>'.e($page->hero_highlight).'</em>' : 'Become a<br><em>Student of Money.</em>'" :summary="$page?->hero_summary ?: 'Learn systematic trading, probability, risk planning and disciplined execution without the hype.'" setting="hero_learn_image" :fallback-image="config('public.hero_defaults.learn')" :overlay="$page?->hero_overlay ?: 'strong'">
+        <x-public-hero class="academy-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Financial Academy'" :title="$page?->hero_title ?: 'Become a'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Become a').'<br> <em>'.e($page->hero_highlight).'</em>' : 'Become a<br> <em>Student of Money.</em>'" :summary="$page?->hero_summary ?: 'Learn systematic trading, probability, risk planning and disciplined execution without the hype.'" setting="hero_learn_image" :fallback-image="config('public.hero_defaults.learn')" :overlay="$page?->hero_overlay ?: 'strong'">
             <div class="hero-buttons"><a class="button button-accent" href="#learning-pillars">Explore the academy <span aria-hidden="true">↓</span></a><a class="text-link text-link-light" href="{{ route('contact', ['module' => 'forex']) }}">Ask a question <span aria-hidden="true">↗</span></a></div>
         </x-public-hero>
 

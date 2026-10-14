@@ -14,7 +14,7 @@
             </div>
             <div>
                 <p>This module is now registered as part of the Mwanafunzi Investor platform. Its services, projects and media will be added here next without disturbing the Financial Academy experience.</p>
-                <a class="button button-dark" href="{{ route('contact') }}">Start a conversation <span aria-hidden="true">↗</span></a>
+                <a class="button button-dark" href="{{ route('contact') }}">Contact us <span aria-hidden="true">↗</span></a>
             </div>
         </div>
     </section>

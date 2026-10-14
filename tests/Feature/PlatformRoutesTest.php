@@ -47,14 +47,41 @@ class PlatformRoutesTest extends TestCase
         $this->get('/forex-academy')->assertRedirect('/financial-academy');
     }
 
+    public function test_policy_pages_have_specific_document_titles(): void
+    {
+        $this->get('/privacy-policy')->assertSee('<title>Privacy Policy — Mwanafunzi Investor</title>', false);
+        $this->get('/terms')->assertSee('<title>Terms of Use — Mwanafunzi Investor</title>', false);
+        $this->get('/disclaimer')->assertSee('<title>Educational Disclaimer — Mwanafunzi Investor</title>', false);
+    }
+
+    public function test_administrators_cannot_open_customer_account_routes(): void
+    {
+        $administrator = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($administrator)->get(route('account.dashboard'))->assertForbidden();
+        $this->actingAs($administrator)->get(route('account.orders'))->assertForbidden();
+    }
+
     public function test_service_sites_keep_scoped_navigation_and_shared_footer(): void
     {
         foreach (['/digital-software', '/digital-software/products', '/digital-software/projects', '/digital-software/testimonials', '/creative-studio', '/creative-studio/services', '/creative-studio/projects', '/creative-studio/testimonials'] as $route) {
             $this->get($route)->assertOk()->assertSee('site-footer', false);
         }
 
-        $this->get('/digital-software')->assertSee('/digital-software/products')->assertSee('Digital Software');
-        $this->get('/creative-studio')->assertSee('/creative-studio/projects')->assertSee('Creative Studio');
+        $this->get('/digital-software')
+            ->assertSee('/digital-software/products')
+            ->assertSee('Digital Software')
+            ->assertSee('Contact us')
+            ->assertDontSee('service-nav-label', false)
+            ->assertDontSee('service-testimonials', false)
+            ->assertDontSee('Client perspectives are published')
+            ->assertDontSee('Start a conversation');
+        $this->get('/creative-studio')
+            ->assertSee('/creative-studio/projects')
+            ->assertSee('Creative Studio')
+            ->assertSee('Contact us')
+            ->assertDontSee('service-nav-label', false)
+            ->assertDontSee('Start a conversation');
     }
 
     public function test_client_login_surface_uses_accessible_auth_controls(): void

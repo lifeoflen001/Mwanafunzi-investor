@@ -8,5 +8,5 @@
         <span><strong>02</strong> Useful outcome</span>
         <span><strong>03</strong> Client perspective</span>
     </div>
-    <a class="{{ $dark ? 'text-link text-link-light' : 'text-link' }}" href="{{ $contactUrl }}">Start a conversation <span aria-hidden="true">↗</span></a>
+    <a class="{{ $dark ? 'text-link text-link-light' : 'text-link' }}" href="{{ $contactUrl }}">Contact us <span aria-hidden="true">↗</span></a>
 </div>

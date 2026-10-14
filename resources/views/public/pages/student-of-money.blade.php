@@ -3,7 +3,7 @@
 @php
     $intro = $page?->section('intro');
     $framework = $page?->section('framework');
-    $heroTitleHtml = $page?->hero_highlight ? e($page->hero_title ?: 'Student of Money').'<br><em>'.e($page->hero_highlight).'</em>' : null;
+    $heroTitleHtml = $page?->hero_highlight ? e($page->hero_title ?: 'Student of Money').'<br> <em>'.e($page->hero_highlight).'</em>' : null;
     $steps = $framework?->payload['steps'] ?? [];
 @endphp
 

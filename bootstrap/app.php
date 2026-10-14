@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'admin.mfa' => \App\Http\Middleware\EnsureAdminMfa::class,
+            'customer' => \App\Http\Middleware\EnsureCustomer::class,
         ]);
         $middleware->redirectGuestsTo(fn ($request) => $request->routeIs('admin.*') ? \route('admin.login') : \route('login'));
         $middleware->validateCsrfTokens(except: ['payments/flutterwave/webhook']);

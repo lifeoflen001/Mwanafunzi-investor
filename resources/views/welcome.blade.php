@@ -33,7 +33,7 @@ if ($homeFinalSecondaryUrl === '#tools') $homeFinalSecondaryUrl = route('tools')
 $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
 $serviceImages = ['forex' => config('public.hero_defaults.learn'), 'development' => config('public.hero_defaults.tools'), 'studio' => config('public.hero_defaults.about')];
 $serviceEyebrows = ['forex' => 'Learn', 'development' => 'Build', 'studio' => 'Create'];
-$homeTitleHtml = $homePage?->hero_title && $homePage?->hero_highlight ? e($homePage->hero_title).'<br><em>'.e($homePage->hero_highlight).'</em>' : ($homePage?->hero_title ? null : 'Become a<br><em>Student of Money.</em>');
+$homeTitleHtml = $homePage?->hero_title && $homePage?->hero_highlight ? e($homePage->hero_title).'<br> <em>'.e($homePage->hero_highlight).'</em>' : ($homePage?->hero_title ? null : 'Become a<br> <em>Student of Money.</em>');
 $homeHeroPrimaryLabel = $homePage?->hero_primary_label;
 $homeHeroPrimaryUrl = $homePage?->hero_primary_url;
 $homeHeroSecondaryLabel = $homePage?->hero_secondary_label;
@@ -168,7 +168,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
                 <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>{{ $finalCta->payload['eyebrow'] ?? 'Come back to the process' }}</p>
                 <h2>{{ $finalCta->heading }}</h2>
                 <p>{{ $finalCta->body }}</p>
-                <div class="hero-buttons"><a class="button button-accent" href="{{ $finalCta->cta_url ?: route('contact') }}">{{ $finalCta->cta_label ?: 'Start a conversation' }} <span aria-hidden="true">↗</span></a>@if(!empty($finalCta->payload['secondary_cta_label']) && $homeFinalSecondaryUrl)<a class="text-link text-link-light" href="{{ $homeFinalSecondaryUrl }}">{{ $finalCta->payload['secondary_cta_label'] }} <span aria-hidden="true">→</span></a>@endif</div>
+                <div class="hero-buttons"><a class="button button-accent" href="{{ $finalCta->cta_url ?: route('contact') }}">{{ $finalCta->cta_label ?: 'Contact us' }} <span aria-hidden="true">↗</span></a>@if(!empty($finalCta->payload['secondary_cta_label']) && $homeFinalSecondaryUrl)<a class="text-link text-link-light" href="{{ $homeFinalSecondaryUrl }}">{{ $finalCta->payload['secondary_cta_label'] }} <span aria-hidden="true">→</span></a>@endif</div>
             </div>
         </section>
         @endif

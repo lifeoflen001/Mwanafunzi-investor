@@ -5,11 +5,13 @@
         return rtrim(request()->getSchemeAndHttpHost().request()->getBaseUrl(), '/').'/'.ltrim($path, '/');
     };
     $optionalCategories = [
-        ['key' => 'preferences', 'label' => 'Preferences / Functional', 'description' => $cookieSettings['preferences_description'], 'enabled' => (bool) $cookieSettings['preferences_enabled']],
-        ['key' => 'analytics', 'label' => 'Analytics', 'description' => $cookieSettings['analytics_description'], 'enabled' => (bool) $cookieSettings['analytics_enabled']],
-        ['key' => 'marketing', 'label' => 'Marketing', 'description' => $cookieSettings['marketing_description'], 'enabled' => (bool) $cookieSettings['marketing_enabled']],
-        ['key' => 'external_media', 'label' => 'External Media', 'description' => $cookieSettings['external_media_description'], 'enabled' => (bool) $cookieSettings['external_media_enabled']],
+        ['key' => 'analytics', 'label' => 'Analytics Cookies', 'icon' => '▥', 'description' => $cookieSettings['analytics_description']],
+        ['key' => 'marketing', 'label' => 'Marketing Cookies', 'icon' => '↗', 'description' => $cookieSettings['marketing_description']],
+        ['key' => 'preferences', 'label' => 'Preference Cookies', 'icon' => '✦', 'description' => $cookieSettings['preferences_description']],
     ];
+    if ((bool) $cookieSettings['external_media_enabled']) {
+        $optionalCategories[] = ['key' => 'external_media', 'label' => 'External Media Cookies', 'icon' => '◌', 'description' => $cookieSettings['external_media_description']];
+    }
 @endphp
 @if($cookieSettings['enabled'])
     <div class="cookie-consent" data-cookie-consent data-cookie-config="{{ base64_encode(json_encode(['version' => $cookieSettings['version'], 'lifetime' => $cookieSettings['lifetime_months'], 'preferencesEnabled' => $cookieSettings['preferences_enabled'], 'analyticsEnabled' => $cookieSettings['analytics_enabled'], 'marketingEnabled' => $cookieSettings['marketing_enabled'], 'externalMediaEnabled' => $cookieSettings['external_media_enabled']])) }}" hidden>
@@ -21,11 +23,9 @@
             <div class="cookie-modal-backdrop" data-cookie-action="close"></div>
             <section class="cookie-modal-panel"><div class="cookie-modal-head"><div><p class="eyebrow">Privacy choices</p><h2 id="cookie-modal-heading">{{ $cookieSettings['modal_heading'] }}</h2></div><button type="button" class="cookie-close" aria-label="Close cookie preferences" data-cookie-action="close">×</button></div><p class="cookie-modal-intro">Choose which optional categories you want to allow. Essential cookies remain active because they are required for the website to function securely.</p>
                 <div class="cookie-category-list">
-                    <div class="cookie-category"><div><strong>Essential Cookies</strong><p>{{ $cookieSettings['essential_description'] }}</p></div><span class="cookie-always-active">Always Active</span></div>
+                    <div class="cookie-category"><div><strong><span class="cookie-category-icon" aria-hidden="true">✓</span>Necessary Cookies</strong><p>{{ $cookieSettings['essential_description'] }}</p></div><span class="cookie-always-active">Always Active</span></div>
                     @foreach($optionalCategories as $category)
-                        @if($category['enabled'])
-                            <label class="cookie-category" for="cookie-toggle-{{ $category['key'] }}"><span><strong>{{ $category['label'] }}</strong><p id="cookie-description-{{ $category['key'] }}">{{ $category['description'] }}</p></span><input id="cookie-toggle-{{ $category['key'] }}" class="cookie-toggle-input" type="checkbox" role="switch" aria-label="Allow {{ $category['label'] }}" aria-describedby="cookie-description-{{ $category['key'] }}" data-cookie-toggle="{{ $category['key'] }}"><span class="cookie-toggle" aria-hidden="true"></span></label>
-                        @endif
+                        <label class="cookie-category" for="cookie-toggle-{{ $category['key'] }}"><span><strong><span class="cookie-category-icon" aria-hidden="true">{{ $category['icon'] }}</span>{{ $category['label'] }}</strong><p id="cookie-description-{{ $category['key'] }}">{{ $category['description'] }}</p></span><input id="cookie-toggle-{{ $category['key'] }}" class="cookie-toggle-input" type="checkbox" role="switch" aria-label="Allow {{ $category['label'] }}" aria-describedby="cookie-description-{{ $category['key'] }}" data-cookie-toggle="{{ $category['key'] }}"><span class="cookie-toggle" aria-hidden="true"></span></label>
                     @endforeach
                 </div>
                 <div class="cookie-modal-actions"><button type="button" class="button button-accent" data-cookie-action="save">Save preferences</button><button type="button" class="button button-light" data-cookie-action="accept">{{ $cookieSettings['accept_all_label'] }}</button><button type="button" class="cookie-text-button" data-cookie-action="reject">{{ $cookieSettings['reject_optional_label'] }}</button></div>

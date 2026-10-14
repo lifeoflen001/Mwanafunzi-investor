@@ -1,7 +1,6 @@
 @php
     $serviceNavigation = [
         'forex' => [
-            'label' => 'Financial Academy',
             'links' => [
                 ['label' => 'Home', 'url' => route('forex-academy')],
                 ['label' => 'Learn', 'url' => route('learn')],
@@ -10,7 +9,6 @@
             ],
         ],
         'development' => [
-            'label' => 'Digital Software',
             'links' => [
                 ['label' => 'Home', 'url' => route('digital-systems')],
                 ['label' => 'Products', 'url' => route('digital-software.products')],
@@ -19,7 +17,6 @@
             ],
         ],
         'studio' => [
-            'label' => 'Creative Studio',
             'links' => [
                 ['label' => 'Home', 'url' => route('creative-studio')],
                 ['label' => 'Services', 'url' => route('creative-studio.services')],
@@ -32,7 +29,6 @@
 @endphp
 
 @if($currentServiceNavigation)
-    <span class="service-nav-label">{{ $currentServiceNavigation['label'] }}</span>
     @foreach($currentServiceNavigation['links'] as $link)
         <a class="{{ request()->url() === $link['url'] ? 'active' : '' }}" href="{{ $link['url'] }}">{{ $link['label'] }}</a>
     @endforeach

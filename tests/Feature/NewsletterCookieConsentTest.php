@@ -78,6 +78,10 @@ class NewsletterCookieConsentTest extends TestCase
         ])->assertRedirect();
 
         $this->get(route('home'))->assertOk()
+            ->assertSee('Necessary Cookies')
+            ->assertSee('Analytics Cookies')
+            ->assertSee('Marketing Cookies')
+            ->assertSee('Preference Cookies')
             ->assertSee('data-cookie-toggle="preferences"', false)
             ->assertSee('data-cookie-toggle="analytics"', false)
             ->assertSee('data-cookie-toggle="marketing"', false)

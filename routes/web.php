@@ -146,7 +146,7 @@ Route::post('/payments/flutterwave/webhook', [CommerceController::class, 'flutte
 Route::post('/financial-academy/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist');
 Route::post('/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist.legacy');
 
-Route::middleware(['auth'])->prefix('account')->name('account.')->group(function () {
+Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->group(function () {
     Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
     Route::get('/orders', [CustomerAccountController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}', [CustomerAccountController::class, 'order'])->name('orders.show');

@@ -33,7 +33,7 @@
     $eyebrow = $cmsPage?->hero_eyebrow ?: $eyebrow;
     $title = $cmsPage?->hero_title ?: $title;
     if ($cmsPage?->hero_title && $cmsPage?->hero_highlight) {
-        $titleHtml = e($cmsPage->hero_title).'<br><em>'.e($cmsPage->hero_highlight).'</em>';
+        $titleHtml = e($cmsPage->hero_title).'<br> <em>'.e($cmsPage->hero_highlight).'</em>';
     } elseif ($cmsPage?->hero_title) {
         $titleHtml = null;
     }

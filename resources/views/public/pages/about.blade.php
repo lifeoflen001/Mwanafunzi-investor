@@ -9,7 +9,7 @@
     $storyImage = $cmsPhilosophy?->image ? \App\Support\PublicHero::candidate($cmsPhilosophy->image) : null;
     $storyImagePosition = \App\Support\HeroFocalPoint::normalise($storyPayload['image_focal_point'] ?? 'center center');
     $missionPayload = $cmsMissionVision?->payload ?: [];
-    $heroTitleHtml = $page?->hero_title && $page?->hero_highlight ? e($page->hero_title).'<br><em>'.e($page->hero_highlight).'</em>' : null;
+    $heroTitleHtml = $page?->hero_title && $page?->hero_highlight ? e($page->hero_title).'<br> <em>'.e($page->hero_highlight).'</em>' : null;
 @endphp
 @section('content')
 <x-public-hero class="public-page-hero" :eyebrow="$page?->hero_eyebrow" :title="$page?->hero_title" :title-html="$heroTitleHtml" :summary="$page?->hero_summary" :image="$page?->hero_image" :focal-point="$page?->hero_focal_point" :overlay="$page?->hero_overlay" :alignment="$page?->hero_alignment" setting="hero_about_image" :fallback-image="config('public.hero_defaults.about')">

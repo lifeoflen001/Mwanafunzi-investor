@@ -10,7 +10,7 @@
     $approach = $sections->get('approach');
     $process = $sections->get('process');
     $cta = $sections->get('final_cta');
-    $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br><em>'.e($page->hero_highlight).'</em>' : null;
+    $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br> <em>'.e($page->hero_highlight).'</em>' : null;
     $cards = $services?->payload['cards'] ?? [];
     $steps = $process?->payload['steps'] ?? [];
 @endphp

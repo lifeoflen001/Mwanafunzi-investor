@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // Never create the local demo account in a production database.
-        if (! app()->environment('production')) {
+        if (app()->environment('local', 'testing')) {
             User::updateOrCreate(['email' => 'test@example.com'], [
                 'name' => 'Test User',
                 'password' => 'password',

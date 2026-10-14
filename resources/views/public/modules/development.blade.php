@@ -7,10 +7,8 @@
     $capabilities = $sections->get('capabilities');
     $products = $sections->get('products');
     $languages = $sections->get('languages');
-    $testimonials = $sections->get('testimonials');
     $process = $sections->get('process');
-    $cta = $sections->get('final_cta');
-    $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br><em>'.e($page->hero_highlight).'</em>' : null;
+    $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br> <em>'.e($page->hero_highlight).'</em>' : null;
     $cards = $capabilities?->payload['cards'] ?? [];
     $steps = $process?->payload['steps'] ?? [];
 @endphp
@@ -51,7 +49,7 @@
     @endif
 
     @if($products)
-        <section class="platform-section software-products" id="products">
+        <section class="platform-dark software-products" id="products">
             <div class="container">
                 <div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ $products->payload['eyebrow'] ?? 'What we deliver' }}</p><h2>{{ $products->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($products->body) !!}</div></div>
                 <div class="service-card-grid">@foreach($products->payload['cards'] ?? [] as $card)<article class="service-card"><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div>
@@ -74,15 +72,8 @@
         </section>
     @endif
 
-    @if($testimonials)
-        <section class="platform-dark platform-section service-testimonials" id="testimonials">
-            <div class="container"><div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $testimonials->payload['eyebrow'] ?? 'Client perspective' }}</p><h2>{{ $testimonials->heading }}</h2></div><div class="rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div>@if($featuredTestimonials->isNotEmpty())<div class="service-testimonial-grid">@foreach($featuredTestimonials->take(3) as $testimonial)<blockquote>“{{ $testimonial->testimonial }}”<footer><strong>{{ $testimonial->displayName() }}</strong>@if($testimonial->client_role){{ $testimonial->client_role }}@endif</footer></blockquote>@endforeach</div>@else
-@include('partials.service-testimonial-placeholder', ['serviceName' => 'Digital Software', 'contactUrl' => route('contact', ['module' => 'development']), 'dark' => true])@endif<a class="text-link text-link-light" href="{{ route('digital-software.testimonials') }}">Explore software testimonials <span aria-hidden="true">↗</span></a></div>
-        </section>
-    @endif
-
     @if($process)
-        <section class="platform-dark dev-process">
+        <section class="platform-section dev-process">
             <div class="container">
                 <div class="dev-process-heading">
                     <div>
@@ -100,18 +91,4 @@
         </section>
     @endif
 
-    @if($cta)
-        <section class="platform-section dev-cta">
-            <div class="container two-column">
-                <div>
-                    <p class="eyebrow"><span class="eyebrow-line"></span> {{ $cta->payload['eyebrow'] ?? 'Have a project in mind?' }}</p>
-                    <h2>{{ $cta->heading }}</h2>
-                </div>
-                <div>
-                    <div class="rich-copy">{!! \App\Support\RichText::render($cta->body) !!}</div>
-                    @if($cta->cta_label && $cta->cta_url)<a class="button button-dark" href="{{ $cta->cta_url }}">{{ $cta->cta_label }} <span aria-hidden="true">↗</span></a>@endif
-                </div>
-            </div>
-        </section>
-    @endif
 @endsection

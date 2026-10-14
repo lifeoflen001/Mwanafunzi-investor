@@ -521,7 +521,7 @@ if (cookieRoot) {
     const apply = (state) => { writeConsent(state); modal.hidden = true; banner.hidden = false; cookieRoot.hidden = true; loadConsentAwareScripts(state); cookieReturnFocus?.focus?.(); cookieReturnFocus = null; };
     cookieRoot.querySelectorAll('[data-cookie-action]').forEach((button) => button.addEventListener('click', () => {
         const action = button.dataset.cookieAction;
-        if (action === 'accept') apply({ preferences: cookieConfig.preferencesEnabled !== false, analytics: cookieConfig.analyticsEnabled === true, marketing: cookieConfig.marketingEnabled === true, external_media: cookieConfig.externalMediaEnabled === true });
+        if (action === 'accept') apply({ preferences: true, analytics: true, marketing: true, external_media: cookieConfig.externalMediaEnabled === true });
         else if (action === 'reject') apply({ preferences: false, analytics: false, marketing: false, external_media: false });
         else if (action === 'save') apply(optionalState());
         else if (action === 'manage') openPreferences();
