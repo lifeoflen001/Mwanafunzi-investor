@@ -14,12 +14,13 @@
 @section('title', $memberTitle)
 @section('description', $memberDescription)
 @section('canonical', $member->canonical_url ?: route('team.show', $member->slug))
-@section('og_title', $memberTitle)
-@section('og_description', $memberDescription)
+@section('robots', $member->robots ?: 'index,follow')
+@section('og_title', $member->og_title ?: $memberTitle)
+@section('og_description', $member->og_description ?: $memberDescription)
 @if($member->og_image)
     @section('og_image', str_starts_with($member->og_image, 'http') ? $member->og_image : asset('storage/'.ltrim($member->og_image, '/')))
 @endif
-@section('structured_data')<script type="application/ld+json">{!! json_encode(array_filter($schema, fn ($value) => $value !== null && $value !== []), JSON_UNESCAPED_SLASHES) !!}</script>@endsection
+@section('structured_data')<script type="application/ld+json">{!! json_encode(array_filter($schema, fn ($value) => $value !== null && $value !== []), JSON_UNESCAPED_SLASHES) !!}</script><script type="application/ld+json">{!! json_encode(\App\Support\Seo::breadcrumbSchema([['label' => 'About', 'url' => route('about')], ['label' => $member->name]]), JSON_UNESCAPED_SLASHES) !!}</script>@endsection
 @section('content')
 <main class="team-member-page">
     <section class="team-member-hero">

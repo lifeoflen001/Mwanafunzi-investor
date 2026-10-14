@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use App\Support\PublicHero;
+use App\Support\Seo;
 
 class PublicSiteController extends Controller
 {
@@ -318,24 +319,83 @@ class PublicSiteController extends Controller
 
     public function sitemap()
     {
-        $urls = collect([
-            route('home'), route('forex-academy'), route('digital-systems'), route('digital-software.products'), route('digital-software.projects'), route('digital-software.testimonials'), route('creative-studio'), route('creative-studio.services'), route('creative-studio.projects'), route('creative-studio.testimonials'), route('services'), route('projects'), route('learn'), route('courses'), route('tools'), route('blog'), route('feed'), route('about'), route('contact'), route('student-of-money'),
-            route('legal', 'privacy-policy'), route('legal', 'terms'), route('legal', 'risk-disclosure'), route('legal', 'refund-policy'), route('legal', 'disclaimer'), route('cookie-policy'),
-        ]);
-        $urls = $urls->merge(TeamMember::active()->get()->map(fn ($member) => route('team.show', $member->slug)));
-        $urls = $urls->merge(BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->map(fn ($businessUnit) => route($businessUnit->route_name)));
-        $urls = $urls->merge(LearningTopic::where('is_published', true)->where('status', 'published')->get()->map(fn ($topic) => route('learn.show', $topic)));
-        $urls = $urls->merge(Course::published()->get()->map(fn ($course) => route('courses.show', $course)));
-        $urls = $urls->merge(Product::available()->get()->map(fn ($product) => route('tools.show', $product)));
-        $urls = $urls->merge(Article::published()->get()->map(fn ($article) => route('blog.show', $article)));
-        $urls = $urls->merge(ArticleCategory::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($category) => route('blog.category', $category)));
-        $urls = $urls->merge(Tag::whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($tag) => route('blog.tag', $tag)));
-        $urls = $urls->merge(TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->map(fn ($member) => route('blog.author', $member)));
-        $urls = $urls->merge(Service::active()->get()->map(fn ($service) => route('services.show', $service)));
-        $urls = $urls->merge(Project::published()->get()->map(fn ($project) => route('projects.show', $project)));
-        $urls = $urls->merge(Page::published()->whereNotNull('slug')->whereNotIn('key', ['learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->get()->map(fn ($page) => route('pages.show', $page)));
-        $xml = view('seo.sitemap', ['urls' => $urls])->render();
-        return response($xml)->header('Content-Type', 'application/xml');
+        $entries = collect();
+        $add = function (?string $url, mixed $lastModified = null) use (&$entries): void {
+            if (blank($url)) return;
+
+            if (filter_var($url, FILTER_VALIDATE_URL)) {
+                $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+                $siteHost = strtolower((string) parse_url(Seo::siteUrl(), PHP_URL_HOST));
+                if ($host && $siteHost && $host !== $siteHost) return;
+            }
+
+            $path = Seo::routePath($url);
+            $canonical = Seo::canonical($path);
+            $entries->put($canonical, $lastModified?->toAtomString());
+        };
+        $isIndexable = fn ($record): bool => ! str_contains((string) ($record->robots ?? 'index,follow'), 'noindex');
+
+        foreach ([
+            ['home', route('home')], ['learn', route('forex-academy')], ['development', route('digital-systems')],
+            ['studio', route('creative-studio')], ['services', route('services')], ['projects', route('projects')],
+            ['learn-index', route('learn')], ['courses', route('courses')], ['tools', route('tools')],
+            ['blog', route('blog')], ['site-map', route('site-map')], ['about', route('about')], ['contact', route('contact')],
+            ['student-of-money', route('student-of-money')], ['privacy-policy', route('legal', 'privacy-policy')],
+            ['terms', route('legal', 'terms')], ['risk-disclosure', route('legal', 'risk-disclosure')],
+            ['refund-policy', route('legal', 'refund-policy')], ['disclaimer', route('legal', 'disclaimer')],
+            ['cookie-policy', route('cookie-policy')],
+        ] as [$key, $url]) {
+            $page = Page::published()->where('key', $key)->first();
+            if (! $page || $isIndexable($page)) $add($url, $page?->updated_at);
+        }
+
+        BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->each(fn ($unit) => $add(route($unit->route_name), $unit->updated_at));
+        TeamMember::active()->get()->filter($isIndexable)->each(fn ($member) => $add($member->canonical_url ?: route('team.show', $member->slug), $member->updated_at));
+        LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(fn ($topic) => $add($topic->canonical_url ?: route('learn.show', $topic), $topic->updated_at));
+        Course::published()->get()->filter($isIndexable)->each(fn ($course) => $add($course->canonical_url ?: route('courses.show', $course), $course->updated_at));
+        Product::available()->get()->filter($isIndexable)->each(fn ($product) => $add($product->canonical_url ?: route('tools.show', $product), $product->updated_at));
+        Article::published()->get()->filter($isIndexable)->each(fn ($article) => $add($article->canonicalUrl(), $article->updated_at ?: $article->published_at));
+        ArticleCategory::where('is_active', true)->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($category) => $add(route('blog.category', $category), $category->updated_at));
+        Tag::whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($tag) => $add(route('blog.tag', $tag), $tag->updated_at));
+        TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($member) => $add(route('blog.author', $member), $member->updated_at));
+        Service::active()->get()->filter($isIndexable)->each(fn ($service) => $add($service->canonical_url ?: route('services.show', $service), $service->updated_at));
+        Project::published()->get()->filter($isIndexable)->each(fn ($project) => $add($project->canonical_url ?: route('projects.show', $project), $project->updated_at ?: $project->published_at));
+        Page::published()->whereNotNull('slug')->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', $page), $page->updated_at));
+
+        $xml = view('seo.sitemap', ['entries' => $entries])->render();
+        return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');
+    }
+
+    public function htmlSiteMap()
+    {
+        $groups = [
+            'Explore' => [
+                ['label' => 'Home', 'url' => route('home')],
+                ['label' => 'Financial Academy', 'url' => route('forex-academy')],
+                ['label' => 'Digital Software', 'url' => route('digital-systems')],
+                ['label' => 'Creative Studio', 'url' => route('creative-studio')],
+                ['label' => 'Services', 'url' => route('services')],
+                ['label' => 'Projects', 'url' => route('projects')],
+                ['label' => 'Blog', 'url' => route('blog')],
+                ['label' => 'About', 'url' => route('about')],
+                ['label' => 'Contact', 'url' => route('contact')],
+            ],
+            'Financial Academy' => [
+                ['label' => 'Learn', 'url' => route('learn')],
+                ['label' => 'Courses', 'url' => route('courses')],
+                ['label' => 'Tools', 'url' => route('tools')],
+            ],
+            'Policies' => [
+                ['label' => 'Privacy Policy', 'url' => route('legal', 'privacy-policy')],
+                ['label' => 'Terms', 'url' => route('legal', 'terms')],
+                ['label' => 'Risk Disclosure', 'url' => route('legal', 'risk-disclosure')],
+                ['label' => 'Refund Policy', 'url' => route('legal', 'refund-policy')],
+                ['label' => 'Disclaimer', 'url' => route('legal', 'disclaimer')],
+                ['label' => 'Cookie Policy', 'url' => route('cookie-policy')],
+            ],
+        ];
+
+        return view('seo.site-map', compact('groups'));
     }
 
     private function cmsPage(string $key): ?Page

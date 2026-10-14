@@ -113,6 +113,8 @@ class AdminPageController extends Controller
             'hero_alignment' => ['required', 'in:left,center,right'],
             'seo_title' => ['nullable', 'string', 'max:190'],
             'seo_description' => ['nullable', 'string', 'max:300'],
+            'primary_keyword' => ['nullable', 'string', 'max:190'],
+            'secondary_keywords' => ['nullable', 'string', 'max:1000'],
             'canonical_url' => ['nullable', 'url', 'max:500'],
             'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'],
             'og_title' => ['nullable', 'string', 'max:190'],

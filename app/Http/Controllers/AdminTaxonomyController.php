@@ -42,7 +42,7 @@ class AdminTaxonomyController extends Controller
 
     private function categoryData(Request $request, ?ArticleCategory $category = null): array
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'slug' => ['nullable', 'string', 'max:140'], 'description' => ['nullable', 'string', 'max:1000'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'sort_order' => ['nullable', 'integer', 'min:0'], 'is_active' => ['nullable', 'boolean']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'slug' => ['nullable', 'string', 'max:140'], 'description' => ['nullable', 'string', 'max:1000'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'sort_order' => ['nullable', 'integer', 'min:0'], 'is_active' => ['nullable', 'boolean']]);
         $data['slug'] = Str::slug($data['slug'] ?? $data['name']);
         validator(['slug' => $data['slug']], ['slug' => [Rule::unique('article_categories', 'slug')->ignore($category?->id)]])->validate();
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
@@ -52,7 +52,7 @@ class AdminTaxonomyController extends Controller
 
     private function tagData(Request $request, ?Tag $tag = null): array
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'slug' => ['nullable', 'string', 'max:140'], 'description' => ['nullable', 'string', 'max:1000']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'slug' => ['nullable', 'string', 'max:140'], 'description' => ['nullable', 'string', 'max:1000'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255']]);
         $data['name'] = trim($data['name']);
         $duplicate = Tag::whereRaw('lower(name) = ?', [strtolower($data['name'])])->when($tag, fn ($query) => $query->where('id', '!=', $tag->id))->exists();
         if ($duplicate) throw ValidationException::withMessages(['name' => 'A tag with this name already exists. Use the existing tag instead.']);

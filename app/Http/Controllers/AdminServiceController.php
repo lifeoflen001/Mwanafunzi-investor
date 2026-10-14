@@ -65,7 +65,7 @@ class AdminServiceController extends Controller
             'starting_price' => ['nullable', 'numeric', 'min:0'], 'pricing_label' => ['nullable', 'string', 'max:120'], 'currency' => ['nullable', 'string', 'size:3'], 'pricing_type' => ['required', Rule::in(['fixed', 'starting_from', 'hourly', 'project_based', 'custom_quote'])], 'delivery_estimate' => ['nullable', 'string', 'max:120'], 'included_features' => ['nullable', 'string', 'max:10000'],
             'cta_label' => ['nullable', 'string', 'max:120'], 'cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'], 'sort_order' => ['required', 'integer', 'min:0'], 'is_featured' => ['nullable', 'boolean'], 'is_active' => ['nullable', 'boolean'],
             'project_ids' => ['nullable', 'array'], 'project_ids.*' => ['integer', 'exists:projects,id'],
-            'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_image' => ['nullable', 'string', 'max:255'],
+            'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'],
         ]);
     }
 }

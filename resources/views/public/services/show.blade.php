@@ -4,12 +4,14 @@
 @section('title', $service->seo_title ?: $service->title.' — Mwanafunzi Investor')
 @section('description', $service->seo_description ?: $service->short_description)
 @section('canonical', $service->canonical_url ?: route('services.show', $service))
-@section('og_title', $service->seo_title ?: $service->title)
-@section('og_description', $service->seo_description ?: $service->short_description)
+@section('og_title', $service->og_title ?: ($service->seo_title ?: $service->title))
+@section('og_description', $service->og_description ?: ($service->seo_description ?: $service->short_description))
 @if($heroImage) @section('og_image', $heroImage['url']) @endif
+@section('robots', $service->robots ?: 'index,follow')
+@section('structured_data')<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'Service', 'name' => $service->title, 'description' => $service->short_description, 'url' => $service->canonical_url ?: route('services.show', $service), 'provider' => ['@type' => 'Organization', 'name' => \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor'), 'url' => \App\Support\Seo::siteUrl()]], JSON_UNESCAPED_SLASHES) !!}</script>@endsection
 
 @section('content')
-    <x-public-hero class="public-page-hero service-detail-hero" :eyebrow="$service->icon ?: 'Service'" :title="$service->title" :summary="$service->short_description" :image="$service->featured_image" :overlay="'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
+    <x-public-hero class="public-page-hero service-detail-hero" :eyebrow="$service->icon ?: 'Service'" :title="$service->title" :summary="$service->short_description" :image="$service->featured_image" :overlay="'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')" :breadcrumbs="[['label' => 'Services', 'url' => route('services')], ['label' => $service->title]]">
         <a class="button button-accent" href="{{ $service->cta_url ?: route('contact', ['module' => 'development', 'service' => $service->slug]) }}">{{ $service->cta_label ?: 'Discuss your project' }} <span aria-hidden="true">↗</span></a>
     </x-public-hero>
     <section class="platform-section"><div class="container service-detail-grid"><div class="editorial-copy">@if($service->detailed_description)<div class="rich-copy">{!! \App\Support\RichText::render($service->detailed_description) !!}</div>@endif @if($service->included_features)<h2>What is included</h2><ul class="detail-list">@foreach($service->included_features as $feature)<li>{{ $feature }}</li>@endforeach</ul>@endif</div><aside class="service-detail-aside"><div><span>Pricing</span><strong>{{ $service->pricingText() }}</strong></div>@if($service->delivery_estimate)<div><span>Typical delivery</span><strong>{{ $service->delivery_estimate }}</strong></div>@endif<a class="button button-dark" href="{{ $service->cta_url ?: route('contact', ['module' => 'development', 'service' => $service->slug]) }}">{{ $service->cta_label ?: 'Discuss your project' }} <span aria-hidden="true">↗</span></a></aside></div></section>

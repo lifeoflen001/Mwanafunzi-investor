@@ -15,7 +15,7 @@ class TeamMember extends Model
         'portrait', 'portrait_focal_point', 'linkedin_url', 'instagram_url', 'x_url',
         'facebook_url', 'youtube_url', 'tiktok_url', 'github_url', 'website_url',
         'public_email', 'sort_order', 'is_active', 'is_featured', 'seo_title',
-        'seo_description', 'canonical_url', 'robots', 'og_image',
+        'seo_description', 'primary_keyword', 'secondary_keywords', 'canonical_url', 'robots', 'og_title', 'og_description', 'og_image',
     ];
 
     protected function casts(): array

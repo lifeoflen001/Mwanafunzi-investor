@@ -26,7 +26,7 @@ class Article extends Model
         'opinion' => 'Opinion / commentary',
     ];
 
-    protected $fillable = ['article_category_id', 'user_id', 'team_member_id', 'title', 'slug', 'excerpt', 'content', 'content_type', 'featured_image', 'hero_focal_point', 'author', 'published_at', 'reading_time', 'status', 'is_featured', 'feature_priority', 'feature_start_at', 'feature_end_at', 'seo_title', 'seo_description', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description'];
+    protected $fillable = ['article_category_id', 'user_id', 'team_member_id', 'title', 'slug', 'excerpt', 'content', 'content_type', 'featured_image', 'hero_focal_point', 'author', 'published_at', 'reading_time', 'status', 'is_featured', 'feature_priority', 'feature_start_at', 'feature_end_at', 'seo_title', 'seo_description', 'primary_keyword', 'secondary_keywords', 'og_image', 'canonical_url', 'robots', 'og_title', 'og_description'];
     protected function casts(): array { return ['published_at' => 'datetime', 'feature_start_at' => 'datetime', 'feature_end_at' => 'datetime', 'is_featured' => 'boolean', 'feature_priority' => 'integer']; }
     public function getRouteKeyName() { return 'slug'; }
     public function category() { return $this->belongsTo(ArticleCategory::class, 'article_category_id'); }

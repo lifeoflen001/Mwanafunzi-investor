@@ -46,7 +46,12 @@
     $configuredImage = $setting ? \App\Models\SiteSetting::getValue($setting) : null;
     $defaultImage = \App\Models\SiteSetting::getValue('default_public_hero');
     $hero = \App\Support\PublicHero::resolve([$cmsPage?->hero_image, $image, $configuredImage, $fallbackImage, $defaultImage, config('public.hero_defaults.default')]);
+    $breadcrumbItems = collect($breadcrumbs)->filter(fn ($item) => filled($item['label'] ?? null))->values()->all();
+    if ($breadcrumbItems && ($breadcrumbItems[array_key_last($breadcrumbItems)]['label'] ?? null) !== $title) {
+        $breadcrumbItems[] = ['label' => $title, 'url' => \App\Support\Seo::canonical(request()->path())];
+    }
 @endphp
+@if(count($breadcrumbItems) > 1)<script type="application/ld+json">{!! json_encode(\App\Support\Seo::breadcrumbSchema($breadcrumbItems), JSON_UNESCAPED_SLASHES) !!}</script>@endif
 <section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $focalPoint }}; --hero-overlay-strength: {{ $overlay }};">
     @if($hero)
         <picture class="public-hero-media" aria-hidden="true">

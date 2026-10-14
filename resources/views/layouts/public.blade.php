@@ -22,10 +22,10 @@
     };
     $seoPage = $seoPageKey ? \App\Models\Page::published()->where('key', $seoPageKey)->first() : null;
     if (! $seoPage && request()->routeIs('pages.show')) $seoPage = \App\Models\Page::published()->where('slug', request()->route('slug'))->first();
-    $headTitle = trim($__env->yieldContent('title')) ?: ($seoPage?->seo_title ?: $brandName);
-    $headDescription = trim($__env->yieldContent('description')) ?: ($seoPage?->seo_description ?: \App\Models\SiteSetting::getValue('default_seo_description', 'Financial education for systematic trading, probability, risk management and disciplined portfolio thinking.'));
-    $headCanonical = trim($__env->yieldContent('canonical')) ?: ($seoPage?->canonical_url ?: url()->current());
-    $headRobots = trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: 'index,follow');
+    $headTitle = \App\Support\Seo::title(trim($__env->yieldContent('title')), $seoPage?->seo_title ?: $brandName);
+    $headDescription = \App\Support\Seo::description(trim($__env->yieldContent('description')), $seoPage?->seo_description ?: \App\Models\SiteSetting::getValue('default_seo_description', config('seo.default_description')));
+    $headCanonical = trim($__env->yieldContent('canonical')) ?: ($seoPage?->canonical_url ?: \App\Support\Seo::canonical(request()->path()));
+    $headRobots = \App\Support\Seo::robots(trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: null), !empty($preview));
     $headOgTitle = trim($__env->yieldContent('og_title')) ?: ($seoPage?->og_title ?: $headTitle);
     $headOgDescription = trim($__env->yieldContent('og_description')) ?: ($seoPage?->og_description ?: $headDescription);
     $faviconUrl = asset('favicon.svg').'?v=favicon4';
@@ -35,6 +35,8 @@
     $socialImageData = \App\Support\PublicHero::candidate($socialImage);
     $socialImageUrl = $socialImageData['url'] ?? asset(config('public.hero_defaults.default'));
     $headOgImage = trim($__env->yieldContent('og_image')) ?: $socialImageUrl;
+    $googleVerification = \App\Models\SiteSetting::getValue('google_site_verification');
+    $bingVerification = \App\Models\SiteSetting::getValue('bing_site_verification');
     $businessUnits = \App\Support\PublicSiteData::businessUnits();
     $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
     $serviceContext = trim($__env->yieldContent('service_context'));
@@ -50,7 +52,7 @@
     $socialLinks = \App\Support\PublicSiteData::socialLinks();
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-TZ">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,8 +75,15 @@
     <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Blog" href="{{ route('feed') }}">
     <title>{{ $headTitle }}</title>
     @yield('article_meta')
+    <meta property="og:site_name" content="{{ $brandName }}">
+    <meta property="og:locale" content="{{ config('seo.locale', 'en_TZ') }}">
+    @if($googleVerification)<meta name="google-site-verification" content="{{ $googleVerification }}">@endif
+    @if($bingVerification)<meta name="msvalidate.01" content="{{ $bingVerification }}">@endif
     @php($schemaContext = chr(64).'context')
-    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => url('/'), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
+    @php($organizationSchema = [$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']])
+    @php($websiteSchema = [$schemaContext => 'https://schema.org', '@type' => 'WebSite', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'inLanguage' => 'en-TZ', 'publisher' => ['@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl()]])
+    <script type="application/ld+json">{!! json_encode($organizationSchema, JSON_UNESCAPED_SLASHES) !!}</script>
+    @if(request()->routeIs('home'))<script type="application/ld+json">{!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES) !!}</script>@endif
     @yield('structured_data')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php($recaptcha = app(\App\Services\RecaptchaService::class))

@@ -35,6 +35,8 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\AdminNewsletterController;
 use App\Http\Controllers\AdminPrivacyController;
 use App\Http\Controllers\AdminComplianceController;
+use App\Http\Controllers\AdminSeoController;
+use App\Support\Seo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +91,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::post('/journal/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('journal.comments.store');
     Route::post('/comments/{comment}/report', [EditorialInteractionController::class, 'report'])->middleware(['auth', 'throttle:10,10'])->name('comments.report');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
+    Route::get('/site-map', 'htmlSiteMap')->name('site-map');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
     Route::get('/cookie-policy', 'cookiePolicy')->name('cookie-policy');
 });
@@ -113,7 +116,12 @@ Route::get('/health', function () {
 })->name('health');
 
 Route::get('/robots.txt', function () {
-    return response("User-agent: *\nDisallow:\nSitemap: ".url('/sitemap.xml')."\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+    $production = app()->environment('production') && ! config('app.debug');
+    $body = $production
+        ? "User-agent: *\nDisallow:\nSitemap: ".Seo::productionSitemapUrl()."\n"
+        : "User-agent: *\nDisallow: /\nSitemap: ".(app()->environment('testing') ? route('sitemap') : Seo::productionSitemapUrl())."\n";
+
+    return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 })->name('robots');
 
 Route::get('/login', [CustomerAuthController::class, 'login'])->name('login');
@@ -177,6 +185,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware(['auth', 'admin', 'admin.mfa'])->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/seo', [AdminSeoController::class, 'index'])->name('seo');
         Route::get('/preview/{type}/{id}', [PublicSiteController::class, 'preview'])->middleware('signed')->name('preview');
         Route::get('/courses', [AdminController::class, 'courses'])->name('courses');
         Route::get('/courses/create', [AdminController::class, 'courseCreate'])->name('courses.create');

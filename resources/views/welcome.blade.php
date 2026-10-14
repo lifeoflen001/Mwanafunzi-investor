@@ -44,7 +44,7 @@ $homeHeroAside = $homePage?->hero_aside;
 $homeHeroAsideIndex = $homePage?->hero_aside_index;
 $homeSeoTitle = $homePage?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title');
 $homeSeoDescription = $homePage?->seo_description ?: $seoDescription;
-$homeCanonical = $homePage?->canonical_url ?: route('home');
+$homeCanonical = $homePage?->canonical_url ?: \App\Support\Seo::canonical('/');
 $homeRobots = $homePage?->robots ?: 'index,follow';
 $homeOgTitle = $homePage?->og_title ?: $homeSeoTitle;
 $homeOgDescription = $homePage?->og_description ?: $homeSeoDescription;
@@ -52,29 +52,37 @@ $homeOgImage = $homePage?->og_image ? \App\Support\PublicHero::candidate($homePa
 $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-TZ">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ $homeSeoDescription }}">
-    <meta name="robots" content="{{ $homeRobots }}">
+    <meta name="description" content="{{ \App\Support\Seo::description($homeSeoDescription) }}">
+    <meta name="robots" content="{{ \App\Support\Seo::robots($homeRobots) }}">
     <link rel="canonical" href="{{ $homeCanonical }}">
     <meta name="theme-color" content="#171817">
     <meta property="og:title" content="{{ $homeOgTitle }}">
     <meta property="og:description" content="{{ $homeOgDescription }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_TZ">
+    <meta property="og:site_name" content="{{ $brandName }}">
+    <meta property="og:url" content="{{ $homeCanonical }}">
     <meta property="og:image" content="{{ $homeOgImageUrl }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $homeOgTitle }}">
     <meta name="twitter:description" content="{{ $homeOgDescription }}">
     <meta name="twitter:image" content="{{ $homeOgImageUrl }}">
+    @if($googleVerification = \App\Models\SiteSetting::getValue('google_site_verification'))<meta name="google-site-verification" content="{{ $googleVerification }}">@endif
+    @if($bingVerification = \App\Models\SiteSetting::getValue('bing_site_verification'))<meta name="msvalidate.01" content="{{ $bingVerification }}">@endif
     <link rel="icon" href="{{ $faviconPngUrl }}" type="image/png" sizes="96x96">
     <link rel="icon" href="{{ $faviconUrl }}" type="image/svg+xml" sizes="any">
     <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl }}" sizes="180x180">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
+    <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Blog" href="{{ route('feed') }}">
     <title>{{ $homeSeoTitle }}</title>
+    @php($schemaContext = chr(64).'context')
+    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
+    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'WebSite', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'inLanguage' => 'en-TZ', 'publisher' => ['@type' => 'Organization', 'name' => $brandName]], JSON_UNESCAPED_SLASHES) !!}</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
 </head>

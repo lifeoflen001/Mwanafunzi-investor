@@ -85,9 +85,9 @@ class AdminTeamMemberController extends Controller
             'public_email' => ['nullable', 'email', 'max:190'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'], 'is_featured' => ['nullable', 'boolean'],
-            'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'],
+            'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'],
             'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'],
-            'og_image' => ['nullable', 'string', 'max:255'],
+            'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'],
         ]);
     }
 }

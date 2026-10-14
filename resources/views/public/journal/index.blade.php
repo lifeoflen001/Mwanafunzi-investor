@@ -3,9 +3,17 @@
     $intro = $page?->section('intro');
     $introPayload = $intro?->payload ?? [];
     $pageTitle = $category?->name ?: ($tag ? '#'.$tag->name : ($author ? 'Notes by '.$author->name : 'News, notes & market education'));
+    $taxonomy = $category ?: $tag;
+    $taxonomyCanonical = $taxonomy?->canonical_url ?: ($category ? route('blog.category', $category) : ($tag ? route('blog.tag', $tag) : route('blog')));
 @endphp
-@section('title', $page?->seo_title ?: $pageTitle.' — Mwanafunzi Investor')
-@section('description', $page?->seo_description ?: ($intro?->body ?: 'Daily updates, market education, trading reviews and practical notes from Mwanafunzi Investor.'))
+@section('title', $taxonomy?->seo_title ?: ($page?->seo_title ?: $pageTitle.' — Mwanafunzi Investor'))
+@section('description', $taxonomy?->seo_description ?: ($page?->seo_description ?: ($intro?->body ?: 'Daily updates, market education, trading reviews and practical notes from Mwanafunzi Investor.')))
+@section('canonical', $taxonomyCanonical)
+@section('robots', ($search !== '' ? 'noindex,follow' : ($taxonomy?->robots ?: 'index,follow')))
+@section('og_title', $taxonomy?->og_title ?: ($page?->seo_title ?: $pageTitle.' — Mwanafunzi Investor'))
+@section('og_description', $taxonomy?->og_description ?: ($page?->seo_description ?: ($intro?->body ?: 'Daily updates, market education, trading reviews and practical notes from Mwanafunzi Investor.')))
+@if($taxonomy?->og_image) @section('og_image', \App\Support\PublicHero::candidate($taxonomy->og_image)['url'] ?? asset('storage/'.$taxonomy->og_image)) @endif
+@section('structured_data')<script type="application/ld+json">{!! json_encode(\App\Support\Seo::breadcrumbSchema([['label' => 'Blog', 'url' => route('blog')], ['label' => $pageTitle]]), JSON_UNESCAPED_SLASHES) !!}</script>@endsection
 @section('content')
     <x-public-hero class="public-page-hero" :eyebrow="$introPayload['eyebrow'] ?? 'Blog / News & updates'" :title="$pageTitle" :summary="$intro?->body ?? 'A living record of market education, platform updates and ideas worth returning to. No invented headlines. No made-up results.'" setting="hero_journal_image" :fallback-image="config('public.hero_defaults.journal')" />
 <section class="platform-section editorial-index-section"><div class="container">

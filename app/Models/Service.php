@@ -10,7 +10,7 @@ class Service extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'business_unit_id', 'short_description', 'detailed_description', 'icon', 'featured_image', 'starting_price', 'pricing_label', 'currency', 'pricing_type', 'delivery_estimate', 'included_features', 'cta_label', 'cta_url', 'sort_order', 'is_featured', 'is_active', 'seo_title', 'seo_description', 'canonical_url', 'robots', 'og_image'];
+    protected $fillable = ['title', 'slug', 'business_unit_id', 'short_description', 'detailed_description', 'icon', 'featured_image', 'starting_price', 'pricing_label', 'currency', 'pricing_type', 'delivery_estimate', 'included_features', 'cta_label', 'cta_url', 'sort_order', 'is_featured', 'is_active', 'seo_title', 'seo_description', 'primary_keyword', 'secondary_keywords', 'canonical_url', 'robots', 'og_title', 'og_description', 'og_image'];
 
     protected function casts(): array
     {

@@ -5049,6 +5049,11 @@ body input:focus-visible, body select:focus-visible, body textarea:focus-visible
     border-color:var(--copper) !important;
     color:#fff !important;
 }
+
+.site-map-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; }
+.site-map-group { padding-top:18px; border-top:1px solid var(--line); }
+.site-map-group ul { display:grid; gap:8px; margin:18px 0 0; padding:0; list-style:none; }
+@media (max-width:760px) { .site-map-grid { grid-template-columns:1fr; gap:22px; } }
 .button:hover,
 .student-button:hover {
     background:var(--night) !important;
