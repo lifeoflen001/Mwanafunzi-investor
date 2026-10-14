@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Article;
 use App\Models\Course;
+use App\Models\Page;
 use App\Models\User;
 use App\Support\HeroFocalPoint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,6 +52,27 @@ class SeoTest extends TestCase
     public function test_public_html_site_map_is_crawlable(): void
     {
         $this->get('/site-map')->assertOk()->assertSee('Find your way around.')->assertSee(route('blog'))->assertSee(route('legal', 'privacy-policy'));
+    }
+
+    public function test_seo_dashboard_and_sitemap_cover_the_same_public_urls(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.seo'))->assertOk();
+
+        $dashboard = collect($this->app->make(\App\Http\Controllers\AdminSeoController::class)->index()->getData()['pages'])
+            ->pluck('url')->map(fn (string $url) => rtrim($url, '/'))->sort()->values();
+        preg_match_all('/<loc>(.*?)<\\/loc>/', $this->get('/sitemap.xml')->getContent(), $matches);
+        $sitemap = collect($matches[1])->map(fn (string $url) => rtrim($url, '/'))->sort()->values();
+
+        $this->assertSame($sitemap->all(), $dashboard->all());
+        $builtInPageUrls = Page::whereIn('key', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])
+            ->pluck('id')->map(fn ($id) => rtrim(route('pages.show', ['slug' => $id]), '/'));
+        foreach ($builtInPageUrls as $url) {
+            $this->assertFalse($dashboard->contains($url));
+        }
+        $this->assertTrue($sitemap->contains(fn (string $url) => str_ends_with($url, '/financial-academy')));
+        $this->assertTrue($sitemap->contains(fn (string $url) => str_ends_with($url, '/site-map')));
+        $this->assertFalse($sitemap->contains(fn (string $url) => str_ends_with($url, '/studio')));
     }
 
     public function test_admin_seo_health_view_is_protected_and_renders(): void

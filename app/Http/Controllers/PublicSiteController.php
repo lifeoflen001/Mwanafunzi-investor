@@ -349,7 +349,10 @@ class PublicSiteController extends Controller
             if (! $page || $isIndexable($page)) $add($url, $page?->updated_at);
         }
 
-        BusinessUnit::active()->whereNotNull('route_name')->where('route_name', '!=', 'home')->get()->each(fn ($unit) => $add(route($unit->route_name), $unit->updated_at));
+        // The legacy /studio route renders the same public page as /creative-studio.
+        // Keep the canonical route in the sitemap and expose the legacy route only
+        // through its canonical link.
+        BusinessUnit::active()->whereNotNull('route_name')->whereNotIn('route_name', ['home', 'studio'])->get()->each(fn ($unit) => $add(route($unit->route_name), $unit->updated_at));
         TeamMember::active()->get()->filter($isIndexable)->each(fn ($member) => $add($member->canonical_url ?: route('team.show', $member->slug), $member->updated_at));
         LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(fn ($topic) => $add($topic->canonical_url ?: route('learn.show', $topic), $topic->updated_at));
         Course::published()->get()->filter($isIndexable)->each(fn ($course) => $add($course->canonical_url ?: route('courses.show', $course), $course->updated_at));
@@ -360,7 +363,7 @@ class PublicSiteController extends Controller
         TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($member) => $add(route('blog.author', $member), $member->updated_at));
         Service::active()->get()->filter($isIndexable)->each(fn ($service) => $add($service->canonical_url ?: route('services.show', $service), $service->updated_at));
         Project::published()->get()->filter($isIndexable)->each(fn ($project) => $add($project->canonical_url ?: route('projects.show', $project), $project->updated_at ?: $project->published_at));
-        Page::published()->whereNotNull('slug')->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', $page), $page->updated_at));
+        Page::published()->whereNotNull('slug')->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', ['slug' => $page->slug]), $page->updated_at));
 
         $xml = view('seo.sitemap', ['entries' => $entries])->render();
         return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');

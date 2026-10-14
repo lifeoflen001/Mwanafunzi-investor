@@ -24,6 +24,7 @@ class AdminSeoController extends Controller
 
         foreach ([
             ['home', 'Home', route('home'), 'Mwanafunzi Investor — Become a Student of Money', 'Financial education, digital software and creative systems for clearer decisions, disciplined work and useful progress.', 'Home'],
+            ['academy', 'Financial Academy', route('forex-academy'), 'Financial Academy — Mwanafunzi Investor', 'Structured forex education for probability, risk planning, mechanical analysis and disciplined execution.', 'Academy landing'],
             ['learn', 'Learn', route('learn'), 'Learn — Mwanafunzi Investor', 'Practical learning paths for market structure, probability, risk management and disciplined trading.', 'Learning index'],
             ['courses', 'Courses', route('courses'), 'Courses — Mwanafunzi Investor', 'Structured financial education courses for deliberate trading practice.', 'Course catalogue'],
             ['tools', 'Tools', route('tools'), 'Tools — Mwanafunzi Investor', 'Focused digital tools for journaling, calculation and risk-first trading decisions.', 'Tool catalogue'],
@@ -41,13 +42,18 @@ class AdminSeoController extends Controller
             ['refund-policy', 'Refund Policy', route('legal', 'refund-policy'), 'Refund Policy — Mwanafunzi Investor', 'Refund terms for eligible Mwanafunzi Investor products and courses.', 'Policy'],
             ['disclaimer', 'Disclaimer', route('legal', 'disclaimer'), 'Disclaimer — Mwanafunzi Investor', 'Educational and informational disclaimer for Mwanafunzi Investor content.', 'Policy'],
             ['cookie-policy', 'Cookie Policy', route('cookie-policy'), 'Cookie Policy — Mwanafunzi Investor', 'How Mwanafunzi Investor uses cookies and manages consent.', 'Policy'],
+            ['site-map', 'Site map', route('site-map'), 'Site map — Mwanafunzi Investor', 'Browse the public pages, learning resources, services and policies available from Mwanafunzi Investor.', 'Utility page'],
         ] as [$key, $label, $url, $title, $description, $type]) {
-            $target = Seo::keywordTargets($key);
-            $page = Page::published()->where('key', $key)->first();
+            $pageKey = $key === 'academy' ? 'learn' : $key;
+            $target = Seo::keywordTargets($pageKey);
+            $page = Page::published()->where('key', $pageKey)->first();
             $add($label, $url, $page?->seo_title ?: $title, $page?->seo_description ?: $description, $page?->robots, $page?->canonical_url ?: $url, $page?->primary_keyword ?: ($target['primary'] ?? null), $page ? route('admin.pages.edit', $page) : null, $type, $page?->hero_image);
         }
 
-        Page::published()->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio'])->get()->each(fn ($page) => $add($page->name, route('pages.show', $page), $page->seo_title ?: $page->name.' — Mwanafunzi Investor', $page->seo_description ?: $page->hero_summary, $page->robots, $page->canonical_url ?: route('pages.show', $page), $page->primary_keyword, route('admin.pages.edit', $page), 'Standalone page', $page->hero_image));
+        Page::published()->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->each(function ($page) use ($add): void {
+            $url = route('pages.show', ['slug' => $page->slug]);
+            $add($page->name, $url, $page->seo_title ?: $page->name.' — Mwanafunzi Investor', $page->seo_description ?: $page->hero_summary, $page->robots, $page->canonical_url ?: $url, $page->primary_keyword, route('admin.pages.edit', $page), 'Standalone page', $page->hero_image);
+        });
         Course::published()->get()->each(fn ($item) => $add($item->title, route('courses.show', $item), $item->seo_title ?: $item->title.' — Mwanafunzi Investor', $item->seo_description ?: $item->short_description, $item->robots, $item->canonical_url ?: route('courses.show', $item), $item->primary_keyword, route('admin.courses.edit', $item), 'Course', $item->featured_image));
         Product::available()->get()->each(fn ($item) => $add($item->name, route('tools.show', $item), $item->seo_title ?: $item->name.' — Mwanafunzi Investor', $item->seo_description ?: $item->short_description, $item->robots, $item->canonical_url ?: route('tools.show', $item), $item->primary_keyword, route('admin.products.edit', $item), 'Tool / resource', $item->thumbnail));
         LearningTopic::where('is_published', true)->where('status', 'published')->get()->each(fn ($item) => $add($item->title, route('learn.show', $item), $item->seo_title ?: $item->title.' — Mwanafunzi Investor', $item->seo_description ?: $item->short_description, $item->robots, $item->canonical_url ?: route('learn.show', $item), $item->primary_keyword, route('admin.topics.edit', $item), 'Learning topic', $item->hero_image ?: $item->image));
@@ -58,7 +64,8 @@ class AdminSeoController extends Controller
 
         $pages = $pages->unique('url')->values()->map(function (array $page): array {
             $page['canonicalConflict'] = filled($page['canonical']) && rtrim($page['canonical'], '/') !== rtrim($page['expectedCanonical'], '/');
-            $page['issues'] = collect([blank($page['title']) ? 'Missing SEO title' : null, blank($page['description']) ? 'Missing meta description' : null, blank($page['keyword']) ? 'No primary keyword target' : null, $page['canonicalConflict'] ? 'Canonical differs from public URL' : null, filled($page['image']) && ! Media::where('path', $page['image'])->whereNotNull('alt_text')->where('alt_text', '!=', '')->exists() ? 'Featured image needs alt text' : null])->filter()->values()->all();
+            $media = filled($page['image']) ? Media::where('path', $page['image'])->first() : null;
+            $page['issues'] = collect([blank($page['title']) ? 'Missing SEO title' : null, blank($page['description']) ? 'Missing meta description' : null, blank($page['keyword']) ? 'No primary keyword target' : null, $page['canonicalConflict'] ? 'Canonical differs from public URL' : null, $media && blank($media->alt_text) ? 'Featured image needs alt text' : null])->filter()->values()->all();
             return $page;
         });
 

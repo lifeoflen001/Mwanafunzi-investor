@@ -15,6 +15,7 @@
 
 @section('title', $page->seo_title ?: $module->name.' — Mwanafunzi Investor')
 @section('description', $page->seo_description ?: $module->description)
+@section('canonical', route('digital-systems'))
 
 @section('content')
     <x-public-hero class="development-hero" :eyebrow="$page->hero_eyebrow ?: 'Mwanafunzi Investor / Digital Software'" :title="$page->hero_title ?: $module->name" :title-html="$heroTitleHtml" :summary="$page->hero_summary ?: $module->description" :image="$page->hero_image" :focal-point="$page->hero_focal_point" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
