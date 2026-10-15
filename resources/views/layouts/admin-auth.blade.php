@@ -29,6 +29,7 @@
         </section>
         <section class="admin-auth-panel">
             <div class="admin-auth-panel-head"><p class="admin-eyebrow">Mwanafunzi Investor</p><span class="admin-status-dot"><i></i> Secure access</span></div>
+            @if(session('success'))<div class="admin-alert admin-alert-success" role="status"><strong>Success</strong><span>{{ session('success') }}</span></div>@endif
             @if($errors->any())<div class="admin-alert admin-alert-danger" role="alert"><strong>Sign in unsuccessful</strong><span>{{ $errors->first() }}</span></div>@endif
             @yield('content')
         </section>

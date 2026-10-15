@@ -11,6 +11,7 @@
         <label class="admin-check"><input type="checkbox" name="remember" value="1"> <span>Keep me signed in</span></label>
         <button class="button button-primary button-wide" type="submit">Sign in <span aria-hidden="true">↗</span></button>
     </form>
+    <p class="admin-auth-prompt"><a href="{{ route('admin.password.request') }}">Forgot password?</a></p>
     <a class="admin-auth-back" href="{{ route('home') }}">← Return to public site</a>
 </div>
 @endsection

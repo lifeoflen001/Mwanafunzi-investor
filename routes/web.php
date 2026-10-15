@@ -175,6 +175,10 @@ Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->gr
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
     Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
+    Route::get('/forgot-password', [AdminAuthController::class, 'forgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AdminAuthController::class, 'sendPasswordReset'])->middleware('throttle:3,10')->name('password.email');
+    Route::get('/reset-password/{token}', [AdminAuthController::class, 'resetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AdminAuthController::class, 'updatePasswordFromReset'])->middleware('throttle:5,10')->name('password.update');
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('logout');
     Route::middleware(['auth', 'admin'])->prefix('mfa')->name('mfa.')->group(function () {
         Route::get('/setup', [AdminMfaController::class, 'setup'])->name('setup');

@@ -20,12 +20,16 @@ use App\Models\SocialLink;
 use App\Models\ArticleSocialLink;
 use App\Models\Comment;
 use App\Models\Tag;
+use App\Notifications\AdminResetPasswordNotification;
 use App\Support\PublicSiteData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class PlatformRoutesTest extends TestCase
@@ -109,6 +113,74 @@ class PlatformRoutesTest extends TestCase
             ->assertSessionHasErrors(['email', 'password']);
     }
 
+    public function test_admin_login_exposes_a_separate_admin_password_reset_flow(): void
+    {
+        Notification::fake();
+
+        $admin = User::factory()->create([
+            'email' => 'admin-reset@example.com',
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+        $customer = User::factory()->create([
+            'email' => 'customer-reset@example.com',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->get(route('admin.login'))
+            ->assertOk()
+            ->assertSee('Forgot password?');
+
+        $this->get(route('admin.password.request'))
+            ->assertOk()
+            ->assertSee('Reset administrator access.')
+            ->assertSee('Send reset link');
+
+        $this->post(route('admin.password.email'), ['email' => $admin->email])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Notification::assertSentTo($admin, AdminResetPasswordNotification::class);
+        Notification::assertNotSentTo($customer, AdminResetPasswordNotification::class);
+
+        $this->get(route('admin.password.reset', ['token' => 'test-token']))
+            ->assertOk()
+            ->assertSee('Choose a new password.');
+    }
+
+    public function test_admin_password_reset_updates_an_admin_and_rejects_client_tokens(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $customer = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $adminToken = Password::broker()->createToken($admin);
+
+        $this->post(route('admin.password.update'), [
+            'token' => $adminToken,
+            'email' => $admin->email,
+            'password' => 'new-admin-password',
+            'password_confirmation' => 'new-admin-password',
+        ])->assertRedirect(route('admin.login'));
+
+        $this->get(route('admin.login'))
+            ->assertOk()
+            ->assertSee('Your administrator password has been reset. Sign in with the new password.');
+
+        $this->assertTrue(Hash::check('new-admin-password', $admin->fresh()->password));
+
+        $customerToken = Password::broker()->createToken($customer);
+
+        $this->post(route('admin.password.update'), [
+            'token' => $customerToken,
+            'email' => $customer->email,
+            'password' => 'should-not-be-applied',
+            'password_confirmation' => 'should-not-be-applied',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertTrue(Hash::check('password', $customer->fresh()->password));
+    }
+
     public function test_health_endpoint_returns_only_public_status(): void
     {
         $this->get('/health')->assertOk()->assertExactJson(['status' => 'ok']);
@@ -171,7 +243,17 @@ class PlatformRoutesTest extends TestCase
         SocialLink::create(['label' => 'Instagram', 'url' => 'https://instagram.com/mwanafunziinvestor', 'sort_order' => 1, 'is_visible' => true]);
         PublicSiteData::forgetCache();
 
-        $this->get(route('about'))->assertOk()->assertSee('aria-label="Instagram"', false)->assertSee('<svg viewBox="0 0 24 24"', false);
+        $this->get(route('about'))->assertOk()->assertSee('aria-label="Visit our Instagram"', false)->assertSee('<svg viewBox="0 0 24 24"', false);
+    }
+
+    public function test_visible_social_links_render_when_newsletter_footer_is_hidden(): void
+    {
+        SocialLink::create(['label' => 'LinkedIn', 'url' => 'https://www.linkedin.com/company/mwanafunzi', 'sort_order' => 1, 'is_visible' => true]);
+        SiteSetting::updateOrCreate(['key' => 'newsletter.footer_visible'], ['value' => '0', 'type' => 'boolean']);
+        SiteSetting::forgetCache();
+        PublicSiteData::forgetCache();
+
+        $this->get(route('about'))->assertOk()->assertSee('aria-label="Visit our LinkedIn"', false)->assertSee('<svg viewBox="0 0 24 24"', false);
     }
 
     public function test_published_and_coming_soon_content_resolves_by_slug(): void

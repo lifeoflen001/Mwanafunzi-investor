@@ -73,6 +73,25 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // These reproducible demo accounts are local-only and must never be seeded in testing or production.
+        if (app()->environment('local')) {
+            User::updateOrCreate(['email' => 'admin@demo.mwanafunziinvestor.test'], [
+                'name' => 'Demo Admin',
+                'password' => 'Adm!379ba7205a4eaf42',
+                'is_admin' => true,
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]);
+
+            User::updateOrCreate(['email' => 'client@demo.mwanafunziinvestor.test'], [
+                'name' => 'Demo Client',
+                'password' => 'Cli!1492b69083f31ee8',
+                'is_admin' => false,
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]);
+        }
+
         $topics = [
             ['title' => 'Forex Core Basics — No BS', 'slug' => 'forex-core-basics', 'icon' => '◒', 'short_description' => 'Understand the language of the market, from currency pairs to the forces that move them.', 'full_description' => 'Start with a grounded understanding of market structure, currency pairs, context and the habits of a careful student.', 'skill_level' => 'Foundation', 'study_time' => '2–4 weeks', 'sort_order' => 1],
             ['title' => 'Mechanical Analysis Concepts, Rules & Execution', 'slug' => 'mechanical-analysis', 'icon' => '⌁', 'short_description' => 'Translate an idea into a repeatable, testable decision process.', 'full_description' => 'Move from a market idea to clear rules that can be tested, repeated and reviewed without relying on impulse.', 'skill_level' => 'Intermediate', 'study_time' => '4–6 weeks', 'sort_order' => 2],

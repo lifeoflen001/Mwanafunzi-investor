@@ -36,6 +36,35 @@
                 </a>
                 <p class="footer-tagline">{{ $footerCopy }}</p>
                 <p class="footer-brand-context">Clear, practical lessons on markets, risk and probability.</p>
+                @if($socialLinks->isNotEmpty())
+                    <nav class="footer-social" aria-label="Social links">
+                        <span>Follow</span>
+                        <div class="footer-social-links">
+                            @foreach($socialLinks as $social)
+                                @php($socialLabel = strtolower($social->label))
+                                <a class="footer-social-link" href="{{ $social->url }}" target="_blank" rel="noopener noreferrer" aria-label="Visit our {{ $social->label }}" title="Visit our {{ $social->label }}">
+                                    <span class="footer-social-icon" aria-hidden="true">
+                                        @if(str_contains($socialLabel, 'instagram'))
+                                            <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.4" cy="6.8" r=".8" class="fill"></circle></svg>
+                                        @elseif(str_contains($socialLabel, 'youtube'))
+                                            <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="4"></rect><path d="m10 9 5 3-5 3z" class="fill-stroke"></path></svg>
+                                        @elseif(str_contains($socialLabel, 'linkedin'))
+                                            <svg viewBox="0 0 24 24"><path d="M6 9v9M6 6.2v.1M10 18v-5a4 4 0 0 1 8 0v5M10 9v9"></path></svg>
+                                        @elseif(str_contains($socialLabel, 'facebook'))
+                                            <svg viewBox="0 0 24 24"><path d="M14 20v-8h2.7l.4-3H14V7.2c0-.9.3-1.5 1.6-1.5h1.7V3a22 22 0 0 0-2.5-.1C12.3 2.9 10 4.5 10 7.4V9H7.5v3H10v8"></path></svg>
+                                        @elseif(str_contains($socialLabel, 'tiktok'))
+                                            <svg viewBox="0 0 24 24"><path d="M14 4v10.2a4.3 4.3 0 1 1-3.2-4.1M14 4c.6 2.2 2 3.5 4.2 3.8"></path></svg>
+                                        @elseif(str_contains($socialLabel, 'twitter') || trim($social->label) === 'X')
+                                            <svg viewBox="0 0 24 24"><path d="m5 4 14 16M19 4 5 20"></path></svg>
+                                        @else
+                                            <span>{{ mb_strtoupper(mb_substr($social->label, 0, 2)) }}</span>
+                                        @endif
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </nav>
+                @endif
             </div>
 
             <div class="footer-links">
@@ -87,35 +116,6 @@
                     <p class="eyebrow">Stay connected</p>
                     <h2 id="footer-newsletter-heading">{{ $newsletterSettings['heading'] }}</h2>
                     <p class="footer-newsletter-description">{{ $newsletterSettings['description'] }}</p>
-                    @if($socialLinks->isNotEmpty())
-                        <nav class="footer-social" aria-label="Social links">
-                            <span>Follow</span>
-                            <div class="footer-social-links">
-                                @foreach($socialLinks as $social)
-                                    @php($socialLabel = strtolower($social->label))
-                                    <a class="footer-social-link" href="{{ $social->url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social->label }}" title="{{ $social->label }}">
-                                        <span class="footer-social-icon" aria-hidden="true">
-                                            @if(str_contains($socialLabel, 'instagram'))
-                                                <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.4" cy="6.8" r=".8" class="fill"></circle></svg>
-                                            @elseif(str_contains($socialLabel, 'youtube'))
-                                                <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="4"></rect><path d="m10 9 5 3-5 3z" class="fill-stroke"></path></svg>
-                                            @elseif(str_contains($socialLabel, 'linkedin'))
-                                                <svg viewBox="0 0 24 24"><path d="M6 9v9M6 6.2v.1M10 18v-5a4 4 0 0 1 8 0v5M10 9v9"></path></svg>
-                                            @elseif(str_contains($socialLabel, 'facebook'))
-                                                <svg viewBox="0 0 24 24"><path d="M14 20v-8h2.7l.4-3H14V7.2c0-.9.3-1.5 1.6-1.5h1.7V3a22 22 0 0 0-2.5-.1C12.3 2.9 10 4.5 10 7.4V9H7.5v3H10v8"></path></svg>
-                                            @elseif(str_contains($socialLabel, 'tiktok'))
-                                                <svg viewBox="0 0 24 24"><path d="M14 4v10.2a4.3 4.3 0 1 1-3.2-4.1M14 4c.6 2.2 2 3.5 4.2 3.8"></path></svg>
-                                            @elseif(str_contains($socialLabel, 'twitter') || trim($social->label) === 'X')
-                                                <svg viewBox="0 0 24 24"><path d="m5 4 14 16M19 4 5 20"></path></svg>
-                                            @else
-                                                <span>{{ mb_strtoupper(mb_substr($social->label, 0, 2)) }}</span>
-                                            @endif
-                                        </span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </nav>
-                    @endif
                 </div>
                 <form class="footer-newsletter-form" method="post" action="{{ route('newsletter.subscribe') }}" data-newsletter-form>
                     @csrf
