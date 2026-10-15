@@ -47,7 +47,7 @@ final class PublicSiteData
             'businessUnits' => BusinessUnit::query()->active()->orderBy('sort_order')->get(),
             'headerNavigation' => NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get(),
             'footerNavigation' => NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group'),
-            'socialLinks' => SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get(),
+            'socialLinks' => static::uniqueSocialLinks(),
         ];
 
         static::$runtimeData = app()->environment('testing')
@@ -55,5 +55,33 @@ final class PublicSiteData
             : Cache::remember(static::CACHE_KEY, now()->addMinutes(5), $loader);
 
         return static::$runtimeData;
+    }
+
+    private static function uniqueSocialLinks()
+    {
+        return SocialLink::query()
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->get()
+            // Prefer the last configured link when an old and new record use the same platform.
+            ->reverse()
+            ->unique(fn (SocialLink $link): string => static::socialPlatformKey($link->label))
+            ->reverse()
+            ->values();
+    }
+
+    private static function socialPlatformKey(string $label): string
+    {
+        $label = strtolower(trim($label));
+
+        return match (true) {
+            str_contains($label, 'instagram') => 'instagram',
+            str_contains($label, 'facebook') => 'facebook',
+            str_contains($label, 'linkedin') => 'linkedin',
+            str_contains($label, 'youtube') => 'youtube',
+            str_contains($label, 'tiktok') => 'tiktok',
+            str_contains($label, 'twitter') || $label === 'x' => 'x',
+            default => $label,
+        };
     }
 }

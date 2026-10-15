@@ -115,6 +115,30 @@ Route::get('/health', function () {
     }
 })->name('health');
 
+Route::get('/health/live', fn () => response()->json([
+    'status' => 'ok',
+    'check' => 'liveness',
+]))->name('health.live');
+
+Route::get('/health/ready', function () {
+    try {
+        DB::select('select 1');
+
+        return response()->json([
+            'status' => 'ok',
+            'check' => 'readiness',
+            'dependencies' => ['database' => 'ok'],
+        ]);
+    } catch (Throwable $exception) {
+        report($exception);
+
+        return response()->json([
+            'status' => 'unavailable',
+            'check' => 'readiness',
+        ], 503);
+    }
+})->name('health.ready');
+
 Route::get('/robots.txt', function () {
     $production = app()->environment('production') && ! config('app.debug');
     $body = $production

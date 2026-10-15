@@ -23,7 +23,7 @@ $businessUnits = \App\Models\BusinessUnit::query()->active()->orderBy('sort_orde
 $headerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'header')->whereNull('parent_id')->get();
 $globalHeaderNavigation = $headerNavigation->reject(fn ($item) => $item->publicRouteName() === 'blog')->values();
 $footerNavigation = \App\Models\NavigationItem::with('children')->visible()->where('location', 'footer')->whereNull('parent_id')->orderBy('menu_group')->get()->groupBy('menu_group');
-$socialLinks = \App\Models\SocialLink::query()->where('is_visible', true)->orderBy('sort_order')->get();
+$socialLinks = \App\Support\PublicSiteData::socialLinks();
 $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
 $brandIntro = $homeSections->get('philosophy');
 $framework = $homeSections->get('framework');

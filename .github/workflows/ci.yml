@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, fileinfo, mbstring, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Validate Composer manifest
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Check PHP formatting
+        run: vendor/bin/pint --test app/Http/Middleware/RequestContext.php
+
+      - name: Run application tests
+        run: php artisan test
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Audit dependencies
+        run: |
+          composer audit --no-interaction
+          npm audit --omit=dev --audit-level=high

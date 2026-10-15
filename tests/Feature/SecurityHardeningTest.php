@@ -112,6 +112,30 @@ class SecurityHardeningTest extends TestCase
         $this->get('/storage/commerce/private.pdf')->assertNotFound();
     }
 
+    public function test_health_checks_separate_liveness_and_database_readiness(): void
+    {
+        $this->get(route('health.live'))
+            ->assertOk()
+            ->assertJson(['status' => 'ok', 'check' => 'liveness'])
+            ->assertHeader('X-Request-Id');
+
+        $this->withHeaders(['X-Request-Id' => 'health-check-123'])
+            ->get(route('health.ready'))
+            ->assertOk()
+            ->assertJsonPath('dependencies.database', 'ok')
+            ->assertHeader('X-Request-Id', 'health-check-123');
+    }
+
+    public function test_invalid_request_ids_are_not_reflected_to_responses(): void
+    {
+        $response = $this->withHeaders(['X-Request-Id' => "bad id\nwith-control-character"])
+            ->get(route('health.live'))
+            ->assertOk()
+            ->assertHeader('X-Request-Id');
+
+        $this->assertNotSame("bad id\nwith-control-character", $response->headers->get('X-Request-Id'));
+    }
+
     public function test_recaptcha_is_disabled_in_testing_and_does_not_call_google(): void
     {
         config()->set('recaptcha.enabled', true);
