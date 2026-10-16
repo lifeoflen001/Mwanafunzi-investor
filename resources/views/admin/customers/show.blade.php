@@ -26,6 +26,7 @@
             <div><dt>Phone</dt><dd>{{ $customer->phone ?: 'Not provided' }}</dd></div>
             <div><dt>Country</dt><dd>{{ $customer->country ?: 'Not provided' }}</dd></div>
             <div><dt>Email verified</dt><dd>{{ $customer->email_verified_at?->format('M j, Y') ?: 'Not verified' }}</dd></div>
+            <div><dt>Sign-in methods</dt><dd>{{ $customer->socialIdentities->isNotEmpty() ? $customer->socialIdentities->pluck('provider')->map(fn ($provider) => str($provider)->title())->join(', ').' + local account' : 'Email / password' }}</dd></div>
             <div><dt>Last sign in</dt><dd>{{ $customer->last_login_at?->format('M j, Y H:i') ?: 'Not recorded' }}</dd></div>
         </dl>
     </section>

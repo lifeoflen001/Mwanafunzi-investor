@@ -80,7 +80,7 @@ class CustomerAccountController extends Controller
 
         return back()->with('success', 'Lesson marked complete.');
     }
-    public function profile(Request $request) { return view('account.profile', ['user' => $request->user()]); }
+    public function profile(Request $request) { return view('account.profile', ['user' => $request->user()->load('socialIdentities')]); }
     public function updateProfile(Request $request) { $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'phone' => ['nullable', 'string', 'max:40'], 'country' => ['nullable', 'string', 'size:2']]); $request->user()->update([...$data, 'country' => strtoupper($data['country'] ?? '')]); return back()->with('success', 'Profile updated.'); }
     public function updateAvatar(Request $request)
     {
@@ -97,8 +97,15 @@ class CustomerAccountController extends Controller
         $user->update(['avatar_path' => null]);
         return back()->with('success', 'Profile photo removed.');
     }
-    public function security() { return view('account.security'); }
-    public function updatePassword(Request $request) { $data = $request->validate(['current_password' => ['required', 'current_password'], 'password' => ['required', 'confirmed', 'min:10']]); $request->user()->update(['password' => $data['password']]); return back()->with('success', 'Password updated.'); }
+    public function security(Request $request) { return view('account.security', ['user' => $request->user()->load('socialIdentities')]); }
+    public function updatePassword(Request $request)
+    {
+        $currentPasswordRules = $request->user()->password === null ? ['nullable'] : ['required', 'current_password'];
+        $data = $request->validate(['current_password' => $currentPasswordRules, 'password' => ['required', 'confirmed', 'min:10']]);
+        $request->user()->update(['password' => $data['password']]);
+
+        return back()->with('success', 'Password updated.');
+    }
     public function receipt(Order $order) { $this->owner($order); return view('commerce.receipt', compact('order')); }
     private function authorizeEnrollment(Request $request, Enrollment $enrollment): void
     {

@@ -42,6 +42,7 @@ class MediaController extends Controller
             'url' => $media->url,
             'label' => $media->filename.($media->width ? ' · '.$media->width.'×'.$media->height : ''),
             'alt_text' => $media->alt_text,
+            'mime_type' => $media->mime_type,
         ])->values());
     }
 
@@ -61,6 +62,29 @@ class MediaController extends Controller
         $media->update(['uploaded_by' => $request->user()->id, ...collect($data)->except('file')->all(), 'attribution_required' => $request->boolean('attribution_required'), 'rights_verified' => $request->boolean('rights_verified')]);
         AdminAudit::record('media.created', 'Uploaded media '.$media->filename, $media);
         return back()->with('success', 'Media uploaded.');
+    }
+
+    public function inlineStore(Request $request, MediaService $mediaService)
+    {
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif,mp4,webm,mov,ogv,m4v', 'max:51200'],
+            'title' => ['nullable', 'string', 'max:190'],
+            'alt_text' => ['nullable', 'string', 'max:190'],
+        ]);
+
+        $media = $mediaService->store($data['file'], 'media', $data['alt_text'] ?? null, $data['title'] ?? null);
+        $media->update(['uploaded_by' => $request->user()->id]);
+        AdminAudit::record('media.created', 'Uploaded media '.$media->filename, $media);
+
+        return response()->json([
+            'path' => $media->path,
+            'url' => $media->url,
+            'filename' => $media->filename,
+            'mime_type' => $media->mime_type,
+            'size' => $media->size,
+            'width' => $media->width,
+            'height' => $media->height,
+        ], 201);
     }
 
     public function update(Request $request, Media $media)

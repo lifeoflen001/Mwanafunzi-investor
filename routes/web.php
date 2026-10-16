@@ -8,6 +8,7 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\SiteSettingsController;
 use App\Http\Controllers\AdminTaxonomyController;
 use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CommerceController;
 use App\Http\Controllers\DownloadController;
@@ -152,6 +153,8 @@ Route::get('/login', [CustomerAuthController::class, 'login'])->name('login');
 Route::post('/login', [CustomerAuthController::class, 'storeLogin'])->middleware('throttle:5,1')->name('login.store');
 Route::get('/register', [CustomerAuthController::class, 'register'])->name('register');
 Route::post('/register', [CustomerAuthController::class, 'storeRegister'])->middleware('throttle:5,1')->name('register.store');
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:10,1')->name('auth.google.callback');
 Route::get('/forgot-password', [CustomerAuthController::class, 'forgotPassword'])->name('password.request');
 Route::post('/forgot-password', [CustomerAuthController::class, 'sendPasswordReset'])->middleware('throttle:3,10')->name('password.email');
 Route::get('/reset-password/{token}', [CustomerAuthController::class, 'resetPassword'])->name('password.reset');
@@ -194,6 +197,8 @@ Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->gr
     Route::delete('/profile/avatar', [CustomerAccountController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::get('/security', [CustomerAccountController::class, 'security'])->name('security');
     Route::put('/security/password', [CustomerAccountController::class, 'updatePassword'])->name('security.password');
+    Route::get('/security/google/redirect', [GoogleAuthController::class, 'linkRedirect'])->middleware('throttle:10,1')->name('security.google.redirect');
+    Route::post('/security/google/disconnect', [GoogleAuthController::class, 'disconnect'])->name('security.google.disconnect');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -279,6 +284,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/media/search', [MediaController::class, 'search'])->name('media.search');
         Route::get('/media', [MediaController::class, 'index'])->name('media');
         Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+        Route::post('/media/inline', [MediaController::class, 'inlineStore'])->name('media.inline.store');
         Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');

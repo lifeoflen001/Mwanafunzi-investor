@@ -11,20 +11,30 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
         const option = select.selectedOptions[0];
         preview.replaceChildren();
         if (!option?.dataset.url) { preview.hidden = true; return; }
-        const image = document.createElement('img');
-        image.src = option.dataset.url;
-        image.alt = 'Selected media preview';
-        image.loading = 'lazy';
-        preview.append(image);
+        if (option.dataset.mime?.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = option.dataset.url;
+            video.controls = true;
+            video.preload = 'metadata';
+            video.setAttribute('aria-label', 'Selected media preview');
+            preview.append(video);
+        } else {
+            const image = document.createElement('img');
+            image.src = option.dataset.url;
+            image.alt = 'Selected media preview';
+            image.loading = 'lazy';
+            preview.append(image);
+        }
         preview.hidden = false;
     };
     const renderResults = (items) => {
         const selected = select.value;
         const selectedUrl = select.selectedOptions[0]?.dataset.url;
-        select.replaceChildren(new Option('No image selected', ''));
+        select.replaceChildren(new Option('No media selected', ''));
         items.forEach((item) => {
             const option = new Option(item.label, item.path, false, item.path === selected);
             option.dataset.url = item.url;
+            option.dataset.mime = item.mime_type || '';
             select.append(option);
         });
         if (selected && !items.some((item) => item.path === selected)) {
@@ -72,6 +82,85 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
         searchMedia();
     });
     select?.addEventListener('change', updatePreview);
+
+    const uploadInput = picker.querySelector('[data-media-upload-input]');
+    const uploadButton = picker.querySelector('[data-media-upload-button]');
+    const uploadProgress = picker.querySelector('[data-media-upload-progress]');
+    const uploadProgressBar = picker.querySelector('[data-media-upload-progress-bar]');
+    const uploadProgressLabel = picker.querySelector('[data-media-upload-progress-label]');
+    const uploadUrl = picker.dataset.mediaUploadAction;
+
+    if (uploadInput && uploadButton && uploadUrl) {
+        const defaultButtonLabel = uploadButton.textContent;
+        const setProgress = (percent) => {
+            const value = Math.max(0, Math.min(100, Math.round(percent)));
+            uploadProgress?.removeAttribute('hidden');
+            if (uploadProgressBar) uploadProgressBar.style.width = `${value}%`;
+            if (uploadProgressLabel) uploadProgressLabel.textContent = `${value}%`;
+            uploadButton.textContent = `Uploading ${value}%`;
+        };
+
+        uploadButton.addEventListener('click', () => uploadInput.click());
+        uploadInput.addEventListener('change', () => {
+            const file = uploadInput.files?.[0];
+            if (!file) return;
+
+            uploadButton.disabled = true;
+            uploadInput.disabled = true;
+            if (status) status.textContent = `Uploading ${file.name}.`;
+            setProgress(0);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            const csrf = picker.closest('form')?.querySelector('input[name="_token"]')?.value;
+            if (csrf) formData.append('_token', csrf);
+
+            const request = new XMLHttpRequest();
+            request.open('POST', uploadUrl);
+            request.setRequestHeader('Accept', 'application/json');
+            request.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) setProgress((event.loaded / event.total) * 100);
+            });
+            request.addEventListener('load', () => {
+                let payload = null;
+                try { payload = JSON.parse(request.responseText); } catch (error) { /* handled below */ }
+                if (request.status < 200 || request.status >= 300 || !payload?.path) {
+                    const message = payload?.message || Object.values(payload?.errors || {}).flat()[0] || 'The media could not be uploaded.';
+                    if (status) status.textContent = message;
+                    uploadButton.textContent = defaultButtonLabel;
+                    uploadProgress?.setAttribute('hidden', 'hidden');
+                    uploadButton.disabled = false;
+                    uploadInput.disabled = false;
+                    uploadInput.value = '';
+                    return;
+                }
+
+                const existing = [...select.options].find((option) => option.value === payload.path);
+                existing?.remove();
+                const option = new Option(`${payload.filename} · uploaded`, payload.path, true, true);
+                option.dataset.url = payload.url;
+                option.dataset.mime = payload.mime_type || file.type || '';
+                select.append(option);
+                select.value = payload.path;
+                updatePreview();
+                setProgress(100);
+                uploadButton.textContent = 'Uploaded';
+                if (status) status.textContent = `${payload.filename} uploaded and selected.`;
+                uploadButton.disabled = false;
+                uploadInput.disabled = false;
+                uploadInput.value = '';
+            });
+            request.addEventListener('error', () => {
+                if (status) status.textContent = 'The media could not be uploaded. Check the connection and try again.';
+                uploadButton.textContent = defaultButtonLabel;
+                uploadProgress?.setAttribute('hidden', 'hidden');
+                uploadButton.disabled = false;
+                uploadInput.disabled = false;
+                uploadInput.value = '';
+            });
+            request.send(formData);
+        });
+    }
 });
 
 document.querySelectorAll('[data-rich-editor-wrapper]').forEach((wrapper) => {

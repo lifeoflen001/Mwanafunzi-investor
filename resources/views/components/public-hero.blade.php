@@ -54,15 +54,19 @@
 @if(count($breadcrumbItems) > 1)<script type="application/ld+json">{!! json_encode(\App\Support\Seo::breadcrumbSchema($breadcrumbItems), JSON_UNESCAPED_SLASHES) !!}</script>@endif
 <section {{ $attributes->class(['public-hero', 'public-hero-compact' => $compact, 'public-hero-'.$alignment, 'public-hero-'.$textColor]) }} style="--hero-image-position: {{ $focalPoint }}; --hero-overlay-strength: {{ $overlay }};">
     @if($hero)
-        <picture class="public-hero-media" aria-hidden="true">
-            @if($hero['srcset'])<img src="{{ $hero['url'] }}" srcset="{{ $hero['srcset'] }}" sizes="100vw" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@else<img src="{{ $hero['url'] }}" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@endif
-        </picture>
+        @if($hero['is_video'] ?? false)
+            <video class="public-hero-media" src="{{ $hero['url'] }}" autoplay muted loop playsinline controls aria-label="{{ $title }}"></video>
+        @else
+            <picture class="public-hero-media" aria-hidden="true">
+                @if($hero['srcset'])<img src="{{ $hero['url'] }}" srcset="{{ $hero['srcset'] }}" sizes="100vw" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@else<img src="{{ $hero['url'] }}" @if($hero['width'] ?? null) width="{{ $hero['width'] }}" height="{{ $hero['height'] }}" @endif alt="" fetchpriority="high">@endif
+            </picture>
+        @endif
     @endif
     <div class="public-hero-overlay" aria-hidden="true"></div>
     <div class="container public-hero-inner">
-        @if($breadcrumbs)
+        @if($breadcrumbItems)
             <nav class="public-hero-breadcrumbs" aria-label="Breadcrumb">
-                @foreach($breadcrumbs as $breadcrumb)
+                @foreach($breadcrumbItems as $breadcrumb)
                     @if(! $loop->first)<span aria-hidden="true">/</span>@endif
                     @if(! empty($breadcrumb['url']))<a href="{{ $breadcrumb['url'] }}">{{ $breadcrumb['label'] }}</a>@else<span>{{ $breadcrumb['label'] }}</span>@endif
                 @endforeach

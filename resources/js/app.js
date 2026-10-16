@@ -40,6 +40,25 @@ document.addEventListener('click', (event) => {
     if (mobileMenu?.classList.contains('is-open') && !mobileMenu.contains(event.target) && !menuToggle?.contains(event.target)) closeMobileMenu();
 });
 
+const publicAccount = document.querySelector('[data-public-account]');
+const publicAccountToggle = document.querySelector('[data-public-account-toggle]');
+const publicAccountPopover = document.querySelector('[data-public-account-popover]');
+const closePublicAccount = () => {
+    if (!publicAccountPopover || !publicAccountToggle) return;
+    publicAccountPopover.hidden = true;
+    publicAccountToggle.setAttribute('aria-expanded', 'false');
+};
+publicAccountToggle?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!publicAccountPopover) return;
+    const isOpen = !publicAccountPopover.hidden;
+    publicAccountPopover.hidden = isOpen;
+    publicAccountToggle.setAttribute('aria-expanded', String(!isOpen));
+});
+publicAccount?.addEventListener('click', (event) => event.stopPropagation());
+document.addEventListener('click', closePublicAccount);
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePublicAccount(); });
+
 const adminShell = document.querySelector('[data-admin-shell]');
 const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
 const adminSidebar = document.querySelector('[data-admin-sidebar]');
@@ -676,3 +695,30 @@ document.querySelectorAll('[data-copy-link]').forEach((button) => button.addEven
     }
     window.setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3500);
 }));
+
+const journalViewGrid = document.querySelector('.editorial-article-grid');
+const journalViewButtons = [...document.querySelectorAll('[data-journal-view]')];
+const journalViewInput = document.querySelector('[data-journal-view-input]');
+if (journalViewGrid && journalViewButtons.length) {
+    const journalViewKey = 'mwanafunzi-journal-view';
+    const applyJournalView = (view, persist = true) => {
+        const selectedView = view === 'list' ? 'list' : 'grid';
+        journalViewGrid.classList.toggle('is-list-view', selectedView === 'list');
+        journalViewButtons.forEach((button) => {
+            const selected = button.dataset.journalView === selectedView;
+            button.classList.toggle('is-active', selected);
+            button.setAttribute('aria-pressed', String(selected));
+        });
+        if (journalViewInput) journalViewInput.value = selectedView;
+        if (persist) {
+            try { window.localStorage.setItem(journalViewKey, selectedView); } catch { /* Storage can be unavailable. */ }
+        }
+    };
+    const queryView = new URLSearchParams(window.location.search).get('view');
+    let savedJournalView = queryView === 'list' || queryView === 'grid' ? queryView : 'grid';
+    if (!queryView) {
+        try { savedJournalView = window.localStorage.getItem(journalViewKey) || 'grid'; } catch { /* Storage can be unavailable. */ }
+    }
+    applyJournalView(savedJournalView, false);
+    journalViewButtons.forEach((button) => button.addEventListener('click', () => applyJournalView(button.dataset.journalView)));
+}

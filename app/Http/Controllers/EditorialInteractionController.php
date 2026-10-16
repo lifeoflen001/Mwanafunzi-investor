@@ -46,7 +46,7 @@ class EditorialInteractionController extends Controller
 
         $data = $request->validate([
             'body' => ['required', 'string', 'min:2', 'max:3000'],
-            'parent_id' => ['nullable', 'integer', Rule::exists('comments', 'id')->where(fn ($query) => $query->where('article_id', $article->id)->whereNull('parent_id')->where('status', 'approved'))],
+            'parent_id' => ['nullable', 'integer', Rule::exists('comments', 'id')->where(fn ($query) => $query->where('article_id', $article->id)->where('status', 'approved')->whereNull('deleted_at'))],
             'website' => ['prohibited'],
             'recaptcha_token' => Recaptcha::rules('comments'),
         ]);

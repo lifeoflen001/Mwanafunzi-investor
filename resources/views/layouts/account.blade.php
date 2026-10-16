@@ -48,7 +48,7 @@
         <div class="portal-main">
             <header class="portal-topbar account-topbar">
                 <button class="admin-sidebar-toggle" type="button" aria-label="Toggle student navigation" aria-controls="account-sidebar" aria-expanded="true" data-admin-sidebar-toggle><span aria-hidden="true">☰</span></button>
-                <div class="portal-topbar-title"><span class="portal-mobile-label">Student portal</span><strong>@yield('portal-heading', 'Overview')</strong></div>
+                <span class="sr-only">Student portal navigation</span>
                 <div class="portal-topbar-actions">
                     <a class="account-topbar-link" href="{{ route('home') }}" target="_blank" rel="noopener">Visit website <span aria-hidden="true">↗</span></a>
                     <div class="portal-profile" data-admin-profile>

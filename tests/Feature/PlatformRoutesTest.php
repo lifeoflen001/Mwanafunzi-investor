@@ -58,12 +58,15 @@ class PlatformRoutesTest extends TestCase
         $this->get('/disclaimer')->assertSee('<title>Educational Disclaimer — Mwanafunzi Investor</title>', false);
     }
 
-    public function test_administrators_cannot_open_customer_account_routes(): void
+    public function test_active_administrators_can_open_client_account_routes(): void
     {
-        $administrator = User::factory()->create(['is_admin' => true]);
+        $administrator = User::factory()->create(['is_admin' => true, 'status' => 'active']);
 
-        $this->actingAs($administrator)->get(route('account.dashboard'))->assertForbidden();
-        $this->actingAs($administrator)->get(route('account.orders'))->assertForbidden();
+        $this->actingAs($administrator)->get(route('account.dashboard'))->assertOk()->assertSee('Student portal');
+        $this->actingAs($administrator)->get(route('account.orders'))->assertOk()->assertSee('Student portal');
+
+        $suspendedAdministrator = User::factory()->create(['is_admin' => true, 'status' => 'suspended']);
+        $this->actingAs($suspendedAdministrator)->get(route('account.dashboard'))->assertForbidden();
     }
 
     public function test_service_sites_keep_scoped_navigation_and_shared_footer(): void
@@ -272,7 +275,7 @@ class PlatformRoutesTest extends TestCase
             'title' => 'Why risk belongs before entries',
             'slug' => 'why-risk-belongs-before-entries',
             'excerpt' => 'A practical note on process and risk.',
-            'content' => '<p>Risk is part of the process.</p>',
+            'content' => '<p>Risk is part of the process. #InternalTag</p><h2>Build the plan</h2><p>Use a repeatable framework before taking action.</p><h3>Start with risk</h3><p>Define the downside before the entry.</p>',
             'content_type' => 'risk_management',
             'status' => 'published',
             'published_at' => now()->subHour(),
@@ -282,12 +285,138 @@ class PlatformRoutesTest extends TestCase
         $article->tags()->attach($tag);
         ArticleSocialLink::create(['article_id' => $article->id, 'platform' => 'instagram', 'url' => 'https://instagram.com/p/example', 'label' => 'Watch the original update']);
 
-        $this->get(route('journal'))->assertOk()->assertSee('Why risk belongs before entries')->assertSee('Featured update')->assertSee('>Blog<', false);
-        $this->get(route('journal.category', $category))->assertOk()->assertSee('Why risk belongs before entries');
+        $journalResponse = $this->get(route('journal'));
+        $journalResponse->assertOk()
+            ->assertSee('Why risk belongs before entries')
+            ->assertSee('1 article')
+            ->assertDontSee('The next entry is being studied.')
+            ->assertSee('>Blog<', false);
+        $journalContent = $journalResponse->getContent();
+        $this->assertLessThan(strpos($journalContent, 'Why risk belongs before entries'), strpos($journalContent, 'The latest notes.'));
+        $this->get(route('journal.category', $category))->assertOk()->assertSee('Why risk belongs before entries')->assertSee('data-journal-view="grid"', false)->assertSee('data-journal-view="list"', false);
         $this->get(route('journal.tag', $tag))->assertOk()->assertSee('Why risk belongs before entries');
         $this->get(route('journal.author', $member))->assertOk()->assertSee('Why risk belongs before entries');
-        $this->get(route('journal.show', $article))->assertOk()->assertSee('Related social content')->assertSee('instagram.com/p/example');
+        $this->get(route('journal.show', $article))->assertOk()
+            ->assertSee('Related social content')
+            ->assertSee('instagram.com/p/example')
+            ->assertSee('Risk Management')
+            ->assertSee('aria-label="Breadcrumb"', false)
+            ->assertSee('In this note')
+            ->assertSee('id="build-the-plan"', false)
+            ->assertSee('id="start-with-risk"', false)
+            ->assertSee('application/ld+json')
+            ->assertDontSee('#InternalTag');
         $this->get(route('feed'))->assertOk()->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8')->assertSee('Why risk belongs before entries');
+    }
+
+    public function test_blog_listing_filters_sort_and_view_state_use_published_records(): void
+    {
+        $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
+        $category = ArticleCategory::where('is_active', true)->firstOrFail();
+        $tag = Tag::create(['name' => 'Risk Process', 'slug' => 'risk-process-listing']);
+
+        $oldArticle = Article::create([
+            'article_category_id' => $category->id,
+            'team_member_id' => $member->id,
+            'title' => 'Alpha risk note',
+            'slug' => 'alpha-risk-note',
+            'excerpt' => 'An older risk process note.',
+            'content' => '<p>Risk process and planning for a disciplined trading workflow.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(3),
+        ]);
+        $newArticle = Article::create([
+            'article_category_id' => $category->id,
+            'team_member_id' => $member->id,
+            'title' => 'Beta risk note',
+            'slug' => 'beta-risk-note',
+            'excerpt' => 'A newer risk process note.',
+            'content' => '<p>Risk process and execution for a disciplined trading workflow.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDay(),
+        ]);
+        $oldArticle->tags()->attach($tag);
+        $newArticle->tags()->attach($tag);
+        Article::create([
+            'article_category_id' => $category->id,
+            'team_member_id' => $member->id,
+            'title' => 'Draft risk note',
+            'slug' => 'draft-risk-note',
+            'content' => '<p>This draft must never appear on the public listing.</p>',
+            'status' => 'draft',
+        ]);
+
+        $response = $this->get(route('blog', [
+            'search' => 'risk',
+            'category' => $category->slug,
+            'tag' => $tag->slug,
+            'sort' => 'oldest',
+            'view' => 'list',
+        ]));
+
+        $response->assertOk()
+            ->assertSee('Alpha risk note')
+            ->assertSee('Beta risk note')
+            ->assertDontSee('Draft risk note')
+            ->assertSee('name="sort"', false)
+            ->assertSee('aria-label="List view"', false)
+            ->assertSee('noindex,nofollow', false);
+
+        $content = $response->getContent();
+        $this->assertLessThan(strpos($content, 'Beta risk note'), strpos($content, 'Alpha risk note'));
+
+        for ($index = 1; $index <= 11; $index++) {
+            $article = Article::create([
+                'article_category_id' => $category->id,
+                'team_member_id' => $member->id,
+                'title' => 'Additional risk note '.$index,
+                'slug' => 'additional-risk-note-'.$index,
+                'excerpt' => 'A risk process note for pagination.',
+                'content' => '<p>Risk process and planning for a disciplined trading workflow.</p>',
+                'status' => 'published',
+                'published_at' => now()->subDays(10 + $index),
+            ]);
+            $article->tags()->attach($tag);
+        }
+
+        $this->get(route('blog', ['search' => 'risk', 'tag' => $tag->slug]))
+            ->assertOk()
+            ->assertDontSee('Draft risk note')
+            ->assertSee('Blog pagination', false)
+            ->assertSee('page=2', false);
+
+        $this->get(route('blog', ['category' => $category->slug]))
+            ->assertOk()
+            ->assertSee($category->name)
+            ->assertSee('noindex,nofollow', false);
+        $this->get(route('blog.tag', $tag))->assertOk()->assertSee('Alpha risk note');
+    }
+
+    public function test_video_posts_use_a_listing_fallback_without_loading_a_player(): void
+    {
+        Storage::fake('public');
+        $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
+        Storage::disk('public')->put('media/journal-video.mp4', 'video-bytes');
+        Media::create(['disk' => 'public', 'path' => 'media/journal-video.mp4', 'filename' => 'journal-video.mp4', 'mime_type' => 'video/mp4', 'size' => 11]);
+        $article = Article::create([
+            'team_member_id' => $member->id,
+            'title' => 'A featured video note',
+            'slug' => 'a-featured-video-note',
+            'excerpt' => 'A media-backed journal update.',
+            'content' => '<p>Video content.</p>',
+            'featured_image' => 'media/journal-video.mp4',
+            'status' => 'published',
+            'published_at' => now(),
+            'is_featured' => true,
+            'feature_priority' => 100,
+        ]);
+
+        $response = $this->get(route('journal'));
+        $response->assertOk()
+            ->assertDontSee('<video', false)
+            ->assertSee('Video')
+            ->assertDontSee(asset('storage/media/journal-video.mp4'), false);
+        $this->assertSame(3, substr_count($response->getContent(), route('blog.show', $article)));
     }
 
     public function test_authenticated_reactions_and_comments_are_moderated_and_safe(): void
@@ -304,9 +433,27 @@ class PlatformRoutesTest extends TestCase
         $comment = Comment::firstOrFail();
         $this->assertSame('pending', $comment->status);
         $this->assertDatabaseHas('comments', ['id' => $comment->id, 'body' => '<script>alert(1)</script> A useful thought']);
+        $commentPage = $this->actingAs($user)->get(route('journal.show', $article));
+        $commentPage->assertSee('A useful thought')->assertSee('Awaiting moderation');
+        $this->assertLessThan(strpos($commentPage->getContent(), 'comment-form-card'), strpos($commentPage->getContent(), 'A useful thought'));
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->patch(route('admin.comments.update', $comment), ['status' => 'approved'])->assertRedirect();
         $this->get(route('journal.show', $article))->assertOk()->assertSee('&lt;script&gt;alert(1)&lt;/script&gt; A useful thought', false)->assertDontSee('<script>alert(1)</script>', false);
+
+        $otherUser = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($otherUser)->post(route('journal.comments.store', $article), ['parent_id' => $comment->id, 'body' => 'A reply from another reader'])->assertRedirect();
+        $reply = Comment::where('body', 'A reply from another reader')->firstOrFail();
+        $this->assertSame($comment->id, $reply->parent_id);
+
+        $this->actingAs($admin)->patch(route('admin.comments.update', $reply), ['status' => 'approved'])->assertRedirect();
+        $thirdUser = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($thirdUser)->post(route('journal.comments.store', $article), ['parent_id' => $reply->id, 'body' => 'A reply to the reply'])->assertRedirect();
+        $nestedReply = Comment::where('body', 'A reply to the reply')->firstOrFail();
+        $this->assertSame($reply->id, $nestedReply->parent_id);
+
+        $this->actingAs($otherUser)->get(route('journal.show', $article))
+            ->assertSee('A reply from another reader')
+            ->assertSee('Reply');
     }
 
     public function test_admin_managed_open_graph_media_reaches_detail_metadata(): void
@@ -580,6 +727,33 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->post(route('admin.courses.store'), ['title' => 'Duplicate course', 'slug' => 'forex-foundations', 'status' => 'draft', 'short_description' => 'Should fail'])->assertSessionHasErrors('slug');
         $this->assertDatabaseMissing('courses', ['title' => 'Duplicate course']);
         $this->assertDatabaseHas('site_settings', ['key' => 'contact_email', 'value' => 'desk@example.com']);
+    }
+
+    public function test_new_post_media_field_can_upload_and_preview_images_or_videos(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.create'))
+            ->assertOk()
+            ->assertDontSee('Featured image or video')
+            ->assertDontSee('data-media-upload-input', false)
+            ->assertDontSee('data-media-upload-progress', false);
+
+        $imageResponse = $this->actingAs($admin)->postJson(route('admin.media.inline.store'), [
+            'file' => UploadedFile::fake()->image('inline-editorial.jpg', 640, 360),
+        ])->assertCreated();
+        $imagePath = $imageResponse->json('path');
+        $this->assertDatabaseHas('media', ['path' => $imagePath, 'mime_type' => 'image/jpeg', 'uploaded_by' => $admin->id]);
+        Storage::disk('public')->assertExists($imagePath);
+
+        $videoResponse = $this->actingAs($admin)->postJson(route('admin.media.inline.store'), [
+            'file' => UploadedFile::fake()->create('inline-editorial.mp4', 10, 'video/mp4'),
+        ])->assertCreated();
+        $videoPath = $videoResponse->json('path');
+        $this->assertDatabaseHas('media', ['path' => $videoPath, 'mime_type' => 'video/mp4', 'uploaded_by' => $admin->id]);
+        Storage::disk('public')->assertExists($videoPath);
     }
 
     public function test_module_enquiries_are_saved_with_business_unit(): void

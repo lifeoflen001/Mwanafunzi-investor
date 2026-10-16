@@ -51,4 +51,28 @@ class Article extends Model
     {
         return $this->authorMember?->name ?: $this->author ?: $this->authorUser?->name ?: 'Mwanafunzi Investor';
     }
+
+    public function displayCategory(): string
+    {
+        return $this->category?->name ?: (self::CONTENT_TYPES[$this->content_type] ?? 'Article');
+    }
+
+    public function readingTimeMinutes(): int
+    {
+        preg_match_all('/[\p{L}\p{N}]+/u', strip_tags((string) $this->content), $matches);
+
+        return max(1, (int) ceil(count($matches[0] ?? []) / 200));
+    }
+
+    public function hasMeaningfulUpdate(): bool
+    {
+        return $this->published_at && $this->updated_at && $this->updated_at->gt($this->published_at->copy()->addMinute());
+    }
+
+    public function publicExcerpt(): string
+    {
+        $excerpt = preg_replace('/(?<!\S)#[\p{L}\p{N}_-]+/u', '', (string) $this->excerpt) ?? (string) $this->excerpt;
+
+        return trim(preg_replace('/\s+/u', ' ', $excerpt) ?? $excerpt);
+    }
 }

@@ -14,7 +14,6 @@ class EnsureCustomer
 
         abort_unless(
             $user !== null
-                && ! $user->is_admin
                 && in_array($user->status ?: 'active', ['active'], true),
             403,
         );

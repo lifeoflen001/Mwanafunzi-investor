@@ -78,10 +78,19 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordC
     public function waitlists() { return $this->hasMany(CourseWaitlist::class); }
     public function articleReactions() { return $this->hasMany(ArticleReaction::class); }
     public function comments() { return $this->hasMany(Comment::class); }
+    public function socialIdentities() { return $this->hasMany(SocialIdentity::class); }
 
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar_path ? asset('storage/'.$this->avatar_path) : null;
+        if ($this->avatar_path) {
+            return asset('storage/'.$this->avatar_path);
+        }
+
+        $googleIdentity = $this->relationLoaded('socialIdentities')
+            ? $this->socialIdentities->firstWhere('provider', 'google')
+            : $this->socialIdentities()->where('provider', 'google')->first();
+
+        return $googleIdentity?->avatar_url;
     }
 
     public function initials(): string

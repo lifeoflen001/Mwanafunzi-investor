@@ -19,6 +19,7 @@ class AdminCustomerController extends Controller
 
         $customers = User::query()
             ->where('is_admin', false)
+            ->with('socialIdentities')
             ->withCount(['orders', 'enrollments', 'entitlements'])
             ->when($term !== '', fn ($query) => $query->where(fn ($search) => $search
                 ->where('name', 'like', '%'.$term.'%')
@@ -53,6 +54,7 @@ class AdminCustomerController extends Controller
         abort_unless(! $customer->is_admin, 404);
 
         $customer->load([
+            'socialIdentities',
             'orders' => fn ($query) => $query->withCount('items')->latest()->limit(10),
             'enrollments.course',
             'entitlements.product',

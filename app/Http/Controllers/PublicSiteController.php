@@ -4,25 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\ArticleCategory;
-use App\Models\Tag;
-use App\Models\Comment;
 use App\Models\BusinessUnit;
+use App\Models\Comment;
 use App\Models\ContactMessage;
 use App\Models\Course;
 use App\Models\LearningTopic;
-use App\Models\Product;
 use App\Models\Page;
+use App\Models\Product;
 use App\Models\Project;
-use App\Models\Service;
-use App\Models\Testimonial;
-use App\Models\TeamMember;
 use App\Models\Redirect;
+use App\Models\Service;
+use App\Models\Tag;
+use App\Models\TeamMember;
+use App\Models\Testimonial;
 use App\Rules\Recaptcha;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Validation\Rule;
 use App\Support\PublicHero;
 use App\Support\Seo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class PublicSiteController extends Controller
 {
@@ -108,6 +108,7 @@ class PublicSiteController extends Controller
         abort_unless($service->is_active, 404);
         $service->load(['projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
         PublicHero::preloadMedia([$service->featured_image, ...$service->projects->pluck('featured_image')->all()]);
+
         return view('public.services.show', ['service' => $service, 'relatedServices' => Service::active()->whereKeyNot($service->id)->orderBy('sort_order')->limit(3)->get()]);
     }
 
@@ -115,6 +116,7 @@ class PublicSiteController extends Controller
     {
         $projects = Project::published()->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12);
         PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
+
         return view('public.projects.index', ['projects' => $projects, 'page' => $this->cmsPage('projects')]);
     }
 
@@ -124,6 +126,7 @@ class PublicSiteController extends Controller
         $project->load(['services', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
         $relatedProjects = Project::published()->whereKeyNot($project->id)->with('services')->orderBy('display_order')->limit(3)->get();
         PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
+
         return view('public.projects.show', ['project' => $project, 'relatedProjects' => $relatedProjects]);
     }
 
@@ -144,6 +147,7 @@ class PublicSiteController extends Controller
     public function learn()
     {
         $topics = LearningTopic::with('courses')->where('is_published', true)->orderBy('sort_order')->get();
+
         return view('public.learn', ['topics' => $topics, 'page' => $this->cmsPage('learn')]);
     }
 
@@ -151,6 +155,7 @@ class PublicSiteController extends Controller
     {
         abort_unless($topic->is_published && $topic->status === 'published', 404);
         $topic->load(['courses' => fn ($query) => $query->published()->orderBy('sort_order'), 'articles' => fn ($query) => $query->published()->latest('published_at')->limit(3), 'products' => fn ($query) => $query->available()->orderBy('sort_order')->limit(3), 'faqs']);
+
         return view('public.learn-show', compact('topic'));
     }
 
@@ -161,6 +166,7 @@ class PublicSiteController extends Controller
             ->withCount('modules')
             ->orderBy('sort_order')
             ->paginate(12);
+
         return view('public.courses.index', ['courses' => $courses, 'page' => $this->cmsPage('courses')]);
     }
 
@@ -168,6 +174,7 @@ class PublicSiteController extends Controller
     {
         abort_unless(in_array($course->status, ['published', 'open', 'coming_soon'], true), 404);
         $course->load(['modules.lessons', 'faqs']);
+
         return view('public.courses.show', compact('course'));
     }
 
@@ -175,22 +182,27 @@ class PublicSiteController extends Controller
     {
         if ($type === 'course') {
             $course = Course::withTrashed()->with(['modules.lessons', 'faqs'])->findOrFail($id);
+
             return view('public.courses.show', compact('course'))->with('preview', true);
         }
         if ($type === 'product') {
             $product = Product::withTrashed()->with(['features', 'images', 'versions', 'faqs'])->findOrFail($id);
+
             return view('public.tools.show', ['product' => $product, 'relatedProducts' => collect(), 'preview' => true]);
         }
         if ($type === 'article') {
-            $article = Article::withTrashed()->with(['category', 'tags', 'socialLinks', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->findOrFail($id);
-            return view('public.journal.show', ['article' => $article, 'relatedArticles' => collect(), 'comments' => collect(), 'userHasLiked' => false, 'preview' => true]);
+            $article = Article::withTrashed()->with(['category', 'tags', 'socialLinks', 'authorMember', 'learningTopics'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->findOrFail($id);
+
+            return view('public.journal.show', ['article' => $article, 'relatedArticles' => collect(), 'comments' => collect(), 'userHasLiked' => false, 'previousArticle' => null, 'nextArticle' => null, 'preview' => true]);
         }
         if ($type === 'topic') {
             $topic = LearningTopic::withTrashed()->findOrFail($id);
+
             return view('public.learn-preview', compact('topic'))->with('preview', true);
         }
         if ($type === 'page') {
             $page = Page::withTrashed()->with(['sections', 'faqs'])->findOrFail($id);
+
             return view('public.pages.cms', compact('page'))->with('preview', true);
         }
         abort(404);
@@ -201,11 +213,14 @@ class PublicSiteController extends Controller
         $page = Page::where('slug', $slug)->first();
         if (! $page) {
             $redirect = Redirect::where('source_path', '/pages/'.$slug)->where('is_enabled', true)->first();
-            if ($redirect) return redirect()->to($redirect->destination_path, $redirect->status_code);
+            if ($redirect) {
+                return redirect()->to($redirect->destination_path, $redirect->status_code);
+            }
             abort(404);
         }
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
         $page->load(['sections', 'faqs']);
+
         return view('public.pages.cms', compact('page'));
     }
 
@@ -216,6 +231,7 @@ class PublicSiteController extends Controller
             ->with('features:id,product_id,title,description,sort_order')
             ->orderBy('sort_order')
             ->paginate(12);
+
         return view('public.tools.index', ['products' => $products, 'page' => $this->cmsPage('tools')]);
     }
 
@@ -224,6 +240,7 @@ class PublicSiteController extends Controller
         abort_unless(in_array($product->availability, ['available', 'coming_soon', 'waitlist'], true), 404);
         $product->load(['features', 'images', 'versions', 'faqs']);
         $relatedProducts = Product::available()->whereKeyNot($product->id)->orderBy('sort_order')->limit(3)->get();
+
         return view('public.tools.show', compact('product', 'relatedProducts'));
     }
 
@@ -245,21 +262,51 @@ class PublicSiteController extends Controller
     public function journalAuthor(Request $request, TeamMember $member)
     {
         abort_unless($member->is_active, 404);
+
         return $this->editorialIndex($request, null, null, $member);
     }
 
     public function article(Article $article)
     {
         abort_unless(in_array($article->status, ['published', 'scheduled'], true) && $article->published_at?->isPast(), 404);
-        $article->load(['category', 'tags', 'socialLinks', 'authorMember']);
+        $article->load(['category', 'tags', 'socialLinks', 'authorMember', 'learningTopics' => fn ($query) => $query->where('is_published', true)->where('status', 'published')->orderBy('sort_order')]);
         $article->loadCount(['reactions as likes_count', 'approvedComments as comments_count']);
-        $comments = $article->comments()->approved()->whereNull('parent_id')->with(['user', 'replies' => fn ($query) => $query->approved()->with('user')->latest()])->latest()->get();
-        $relatedArticles = Article::published()->with(['category', 'authorMember'])->whereKeyNot($article->id)
-            ->when($article->article_category_id, fn ($query) => $query->where('article_category_id', $article->article_category_id))
-            ->latest('published_at')->limit(3)->get();
+        $visibleComments = $article->comments()
+            ->where(function ($query) {
+                $query->where('status', 'approved');
+                if (auth()->check()) {
+                    $query->orWhere(fn ($pending) => $pending->where('status', 'pending')->where('user_id', auth()->id()));
+                }
+            })
+            ->with('user')
+            ->latest()
+            ->get();
+        $commentsByParent = $visibleComments->groupBy(fn (Comment $comment) => $comment->parent_id ?: 0);
+        $comments = $this->commentTree($commentsByParent);
+        $tagIds = $article->tags->modelKeys();
+        $relatedArticles = Article::published()->with(['category', 'authorMember'])->withCount(['approvedComments as comments_count'])
+            ->whereKeyNot($article->id)
+            ->where(function ($query) use ($article, $tagIds) {
+                if ($article->article_category_id) {
+                    $query->where('article_category_id', $article->article_category_id);
+                }
+                if ($tagIds) {
+                    $query->orWhereHas('tags', fn ($tags) => $tags->whereIn('tags.id', $tagIds));
+                }
+            })
+            ->latest('published_at')->latest('id')->limit(3)->get();
+        $previousArticle = Article::published()->where(function ($query) use ($article) {
+            $query->where('published_at', '<', $article->published_at)->orWhere(fn ($sameDate) => $sameDate->where('published_at', $article->published_at)->where('id', '<', $article->id));
+        })->latest('published_at')->latest('id')->first();
+        $nextArticle = Article::published()->where(function ($query) use ($article) {
+            $query->where('published_at', '>', $article->published_at)->orWhere(fn ($sameDate) => $sameDate->where('published_at', $article->published_at)->where('id', '>', $article->id));
+        })->oldest('published_at')->oldest('id')->first();
+
         return view('public.journal.show', [
             'article' => $article,
             'relatedArticles' => $relatedArticles,
+            'previousArticle' => $previousArticle,
+            'nextArticle' => $nextArticle,
             'comments' => $comments,
             'userHasLiked' => auth()->check() && $article->reactions()->where('user_id', auth()->id())->where('type', 'like')->exists(),
         ]);
@@ -268,7 +315,17 @@ class PublicSiteController extends Controller
     public function feed()
     {
         $articles = Article::published()->with(['category', 'authorMember'])->latest('published_at')->limit(30)->get();
+
         return response()->view('public.feed', compact('articles'))->header('Content-Type', 'application/rss+xml; charset=UTF-8');
+    }
+
+    private function commentTree(Collection $commentsByParent, int $parentId = 0): Collection
+    {
+        return $commentsByParent->get($parentId, collect())->map(function (Comment $comment) use ($commentsByParent) {
+            $comment->setRelation('replies', $this->commentTree($commentsByParent, $comment->id));
+
+            return $comment;
+        });
     }
 
     public function contact()
@@ -293,6 +350,7 @@ class PublicSiteController extends Controller
             'recaptcha_token' => Recaptcha::rules('contact'),
         ]);
         ContactMessage::create([...$validated, 'consented_at' => now()]);
+
         return to_route('contact')->with('success', 'Thank you. Your message has been received by the Mwanafunzi desk.');
     }
 
@@ -301,7 +359,10 @@ class PublicSiteController extends Controller
         abort_unless(in_array($page, ['about', 'student-of-money', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'], true), 404);
         $cmsPage = $this->cmsPage($page);
         $data = ['page' => $cmsPage];
-        if ($page === 'about') $data['teamMembers'] = $this->teamMembers();
+        if ($page === 'about') {
+            $data['teamMembers'] = $this->teamMembers();
+        }
+
         return view("public.pages.{$page}", $data);
     }
 
@@ -321,12 +382,16 @@ class PublicSiteController extends Controller
     {
         $entries = collect();
         $add = function (?string $url, mixed $lastModified = null) use (&$entries): void {
-            if (blank($url)) return;
+            if (blank($url)) {
+                return;
+            }
 
             if (filter_var($url, FILTER_VALIDATE_URL)) {
                 $host = strtolower((string) parse_url($url, PHP_URL_HOST));
                 $siteHost = strtolower((string) parse_url(Seo::siteUrl(), PHP_URL_HOST));
-                if ($host && $siteHost && $host !== $siteHost) return;
+                if ($host && $siteHost && $host !== $siteHost) {
+                    return;
+                }
             }
 
             $path = Seo::routePath($url);
@@ -346,7 +411,9 @@ class PublicSiteController extends Controller
             ['cookie-policy', route('cookie-policy')],
         ] as [$key, $url]) {
             $page = Page::published()->where('key', $key)->first();
-            if (! $page || $isIndexable($page)) $add($url, $page?->updated_at);
+            if (! $page || $isIndexable($page)) {
+                $add($url, $page?->updated_at);
+            }
         }
 
         // The legacy /studio route renders the same public page as /creative-studio.
@@ -366,6 +433,7 @@ class PublicSiteController extends Controller
         Page::published()->whereNotNull('slug')->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', ['slug' => $page->slug]), $page->updated_at));
 
         $xml = view('seo.sitemap', ['entries' => $entries])->render();
+
         return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 
@@ -404,8 +472,11 @@ class PublicSiteController extends Controller
     private function cmsPage(string $key): ?Page
     {
         $page = Page::where('key', $key)->first();
-        if (! $page) return null;
+        if (! $page) {
+            return null;
+        }
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
+
         return $page->load(['sections', 'faqs']);
     }
 
@@ -417,10 +488,26 @@ class PublicSiteController extends Controller
     private function editorialIndex(Request $request, ?ArticleCategory $category = null, ?Tag $tag = null, ?TeamMember $author = null)
     {
         $search = trim((string) ($request->input('search') ?: $request->input('q')));
-        $categories = ArticleCategory::withCount(['articles as published_articles_count' => fn ($query) => $query->published()])->orderBy('name')->get();
-        $articleListColumns = ['id', 'article_category_id', 'team_member_id', 'title', 'slug', 'excerpt', 'featured_image', 'author', 'published_at', 'reading_time', 'status'];
+        $search = mb_substr($search, 0, 120);
+        $sort = in_array($request->input('sort'), ['oldest', 'updated'], true) ? $request->input('sort') : 'newest';
+        $queryCategory = trim((string) $request->input('category'));
+        $queryTag = trim((string) $request->input('tag'));
+        if (! $category && $queryCategory !== '') {
+            $category = ArticleCategory::where('slug', $queryCategory)->where('is_active', true)->firstOrFail();
+        }
+        if (! $tag && $queryTag !== '') {
+            $tag = Tag::where('slug', $queryTag)->first();
+        }
+        if ($category) {
+            abort_unless($category->is_active, 404);
+        }
+        $categories = ArticleCategory::where('is_active', true)
+            ->whereHas('articles', fn ($query) => $query->published())
+            ->withCount(['articles as published_articles_count' => fn ($query) => $query->published()])
+            ->orderBy('sort_order')->orderBy('name')->get();
+        $tags = Tag::whereHas('articles', fn ($query) => $query->published())->orderBy('name')->get();
+        $articleListColumns = ['id', 'article_category_id', 'user_id', 'team_member_id', 'title', 'slug', 'excerpt', 'content', 'featured_image', 'og_image', 'author', 'published_at', 'updated_at', 'status'];
         $articlesQuery = Article::published()->select($articleListColumns)->with(['category', 'authorMember'])
-            ->withCount(['reactions as likes_count', 'approvedComments as comments_count'])
             ->when($category, fn ($query) => $query->where('article_category_id', $category->id))
             ->when($tag, fn ($query) => $query->whereHas('tags', fn ($tags) => $tags->whereKey($tag->id)))
             ->when($author, fn ($query) => $query->where('team_member_id', $author->id))
@@ -428,17 +515,23 @@ class PublicSiteController extends Controller
                 ->where('title', 'like', '%'.$search.'%')
                 ->orWhere('excerpt', 'like', '%'.$search.'%')
                 ->orWhere('content', 'like', '%'.$search.'%')
+                ->orWhere('content_type', 'like', '%'.$search.'%')
                 ->orWhereHas('category', fn ($categoryQuery) => $categoryQuery->where('name', 'like', '%'.$search.'%'))
-                ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'like', '%'.$search.'%'))));
+                ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'like', '%'.$search.'%'))
+                ->orWhereHas('authorMember', fn ($authorQuery) => $authorQuery->where('name', 'like', '%'.$search.'%'))));
 
-        $articles = $articlesQuery->latest('published_at')->paginate(12)->withQueryString();
-        $featured = $search === '' && ! $category && ! $tag && ! $author
-            ? Article::featured()->select($articleListColumns)->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->limit(1)->first()
-            : null;
-        $trending = $search === '' && ! $category && ! $tag && ! $author
-            ? Article::published()->select($articleListColumns)->with(['category', 'authorMember'])->withCount(['reactions as likes_count', 'approvedComments as comments_count'])->orderByDesc('likes_count')->orderByDesc('comments_count')->latest('published_at')->limit(8)->get()->filter(fn ($article) => ($article->likes_count + $article->comments_count) > 0)->take(3)->values()
-            : collect();
+        if ($sort === 'oldest') {
+            $articlesQuery->orderBy('published_at')->orderBy('id');
+        } elseif ($sort === 'updated') {
+            $articlesQuery->orderByDesc('updated_at')->orderByDesc('id');
+        } else {
+            $articlesQuery->latest('published_at')->latest('id');
+        }
 
-        return view('public.journal.index', compact('articles', 'categories', 'featured', 'trending', 'category', 'tag', 'author', 'search'))->with('page', $this->cmsPage('journal'));
+        $articles = $articlesQuery->paginate(12)->withQueryString();
+        $view = $request->input('view') === 'list' ? 'list' : 'grid';
+        $hasDiscoveryQuery = $search !== '' || $sort !== 'newest' || $request->filled('view') || $queryCategory !== '' || $queryTag !== '';
+
+        return view('public.journal.index', compact('articles', 'categories', 'tags', 'category', 'tag', 'author', 'search', 'sort', 'view', 'hasDiscoveryQuery'))->with('page', $this->cmsPage('journal'));
     }
 }

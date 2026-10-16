@@ -30,10 +30,20 @@ class PublicHero
         return null;
     }
 
+    public static function resolveImage(array $candidates): ?array
+    {
+        foreach (array_filter($candidates) as $candidate) {
+            $resolved = static::candidate((string) $candidate);
+            if ($resolved && ! ($resolved['is_video'] ?? false)) return $resolved;
+        }
+
+        return null;
+    }
+
     public static function candidate(string $path): ?array
     {
         if (Str::startsWith($path, ['https://', 'http://', '//'])) {
-            return ['url' => $path, 'srcset' => null, 'position' => 'center center'];
+            return ['url' => $path, 'srcset' => null, 'position' => 'center center', 'is_video' => false, 'mime_type' => null];
         }
 
         $path = ltrim($path, '/');
@@ -68,6 +78,8 @@ class PublicHero
             'position' => 'center center',
             'width' => $dimensions[0],
             'height' => $dimensions[1],
+            'mime_type' => $media?->mime_type,
+            'is_video' => Str::startsWith((string) $media?->mime_type, 'video/') || (bool) preg_match('/\.(?:mp4|webm|mov|ogv|m4v)$/i', $path),
         ];
     }
 

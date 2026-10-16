@@ -27,6 +27,9 @@
                 @include('partials.form-feedback')
                 @include('components.recaptcha', ['action' => 'register'])
 
+                <x-google-sign-in :redirect="request('redirect')" />
+                <div class="auth-divider"><span>or continue with email</span></div>
+
                 <label class="client-register-field-wide" for="client-name">Name
                     <input id="client-name" type="text" name="name" value="{{ old('name') }}" required autocomplete="name" aria-describedby="client-name-error">
                     @error('name')<small class="client-field-error" id="client-name-error">{{ $message }}</small>@enderror
