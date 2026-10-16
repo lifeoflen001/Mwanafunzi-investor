@@ -449,6 +449,44 @@ document.querySelectorAll('[data-auth-form]').forEach((form) => form.addEventLis
     if (label) label.textContent = form.querySelector('[name="password_confirmation"]') ? 'Creating account…' : 'Signing in…';
 }));
 
+document.querySelectorAll('[data-auth-showcase]').forEach((showcase) => {
+    const panels = [...showcase.querySelectorAll('[data-auth-slide-panel]')];
+    const dots = [...showcase.querySelectorAll('[data-auth-slide]')];
+    if (panels.length < 2 || dots.length !== panels.length) return;
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let activeIndex = panels.findIndex((panel) => panel.classList.contains('is-active'));
+    let timer = null;
+
+    const showSlide = (index) => {
+        activeIndex = (index + panels.length) % panels.length;
+        panels.forEach((panel, panelIndex) => {
+            const active = panelIndex === activeIndex;
+            panel.classList.toggle('is-active', active);
+            panel.setAttribute('aria-hidden', String(!active));
+        });
+        dots.forEach((dot, dotIndex) => {
+            const active = dotIndex === activeIndex;
+            dot.classList.toggle('is-active', active);
+            dot.setAttribute('aria-selected', String(active));
+        });
+    };
+
+    const stop = () => { if (timer) { window.clearInterval(timer); timer = null; } };
+    const start = () => {
+        if (reducedMotion || timer) return;
+        timer = window.setInterval(() => showSlide(activeIndex + 1), 6000);
+    };
+
+    dots.forEach((dot, index) => dot.addEventListener('click', () => { showSlide(index); stop(); start(); }));
+    showcase.addEventListener('mouseenter', stop);
+    showcase.addEventListener('mouseleave', start);
+    showcase.addEventListener('focusin', stop);
+    showcase.addEventListener('focusout', (event) => { if (!showcase.contains(event.relatedTarget)) start(); });
+    showSlide(activeIndex < 0 ? 0 : activeIndex);
+    start();
+});
+
 const adminDetailsMenus = [...document.querySelectorAll('.admin-action-menu, .admin-quick-actions')];
 const closeAdminDetailsMenus = (except = null) => adminDetailsMenus.forEach((menu) => {
     if (menu !== except) menu.removeAttribute('open');

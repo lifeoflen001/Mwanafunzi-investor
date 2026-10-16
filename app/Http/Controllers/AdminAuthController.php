@@ -82,6 +82,7 @@ class AdminAuthController extends Controller
     public function store(Request $request)
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string'], 'recaptcha_token' => Recaptcha::rules('admin_login')]);
+        unset($credentials['recaptcha_token']);
         if (Auth::attempt([...$credentials, 'is_admin' => true, 'status' => 'active'], $request->boolean('remember'))) {
             $request->session()->regenerate();
             $request->user()->forceFill(['last_login_at' => now()])->saveQuietly();

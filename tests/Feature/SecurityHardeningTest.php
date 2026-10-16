@@ -174,6 +174,57 @@ class SecurityHardeningTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_enabled_recaptcha_token_is_not_used_as_an_authentication_column(): void
+    {
+        config()->set([
+            'recaptcha.enforce_in_testing' => true,
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.secret_key' => 'secret-key',
+        ]);
+        Http::fake(['https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'login',
+            'score' => 0.9,
+        ])]);
+
+        $customer = User::factory()->create(['email' => 'recaptcha-login@example.com', 'password' => 'correct-password']);
+
+        $this->post(route('login.store'), [
+            'email' => $customer->email,
+            'password' => 'correct-password',
+            'recaptcha_token' => 'valid-token',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticatedAs($customer);
+    }
+
+    public function test_enabled_recaptcha_token_is_not_used_as_an_admin_authentication_column(): void
+    {
+        config()->set([
+            'security.admin_mfa_required' => false,
+            'recaptcha.enforce_in_testing' => true,
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.secret_key' => 'secret-key',
+        ]);
+        Http::fake(['https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'admin_login',
+            'score' => 0.9,
+        ])]);
+
+        $admin = User::factory()->create(['email' => 'recaptcha-admin@example.com', 'password' => 'correct-password', 'is_admin' => true]);
+
+        $this->post(route('admin.login.store'), [
+            'email' => $admin->email,
+            'password' => 'correct-password',
+            'recaptcha_token' => 'valid-token',
+        ])->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
     public function test_admin_security_panel_encrypts_recaptcha_secret_and_is_admin_only(): void
     {
         config()->set('security.admin_mfa_required', false);

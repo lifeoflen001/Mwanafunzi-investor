@@ -33,6 +33,8 @@ class Media extends Model
             + Service::where(fn ($query) => $query->where('featured_image', $this->path)->orWhere('og_image', $this->path))->count()
             + Testimonial::where(fn ($query) => $query->where('client_photo', $this->path)->orWhere('company_logo', $this->path))->count()
             + TeamMember::where(fn ($query) => $query->where('portrait', $this->path)->orWhere('og_image', $this->path))->count()
+            + ArticleCategory::where('og_image', $this->path)->count()
+            + Tag::where('og_image', $this->path)->count()
             + SiteSetting::where('value', $this->path)->count()
         );
     }

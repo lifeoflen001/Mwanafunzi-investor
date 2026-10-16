@@ -93,24 +93,38 @@ class PlatformRoutesTest extends TestCase
 
     public function test_client_login_surface_uses_accessible_auth_controls(): void
     {
-        $this->get(route('login'))
+        $login = $this->get(route('login'))
             ->assertOk()
             ->assertSee('Client portal')
-            ->assertSee('Back to website')
+            ->assertSee('Primary navigation')
+            ->assertSee('Contact us')
             ->assertSee('client-password', false)
             ->assertSee('data-password-toggle', false)
+            ->assertSee('client-auth-layout', false)
+            ->assertSee('client-auth-panel', false)
+            ->assertSee('client-auth-showcase', false)
+            ->assertSee('data-auth-slide', false)
             ->assertSee('Create an account')
             ->assertSee('site-footer', false)
-            ->assertSee('Forgot password');
+            ->assertSee('Forgot password')
+            ->assertSeeInOrder(['id="client-email"', 'id="client-password"', 'data-auth-submit', 'or continue with', 'Continue with Google'], false);
 
         $this->get(route('register'))
             ->assertOk()
-            ->assertSee('Create your account.')
+            ->assertSee('Create your free account.')
             ->assertSee('client-password-confirmation', false)
             ->assertSee('data-password-toggle', false)
+            ->assertSee('client-auth-layout', false)
+            ->assertSee('client-auth-panel', false)
+            ->assertSee('client-auth-showcase', false)
+            ->assertSee('data-auth-slide', false)
             ->assertSee('I accept the')
-            ->assertSee('Back to website')
-            ->assertSee('site-footer', false);
+            ->assertSee('Primary navigation')
+            ->assertSee('Contact us')
+            ->assertSee('site-footer', false)
+            ->assertDontSee('client-phone', false)
+            ->assertDontSee('client-country', false)
+            ->assertSeeInOrder(['id="client-name"', 'id="client-email"', 'id="client-password"', 'data-auth-submit', 'or continue with', 'Continue with Google'], false);
 
         $this->post(route('login.store'), ['email' => 'not-an-email', 'password' => ''])
             ->assertSessionHasErrors(['email', 'password']);
@@ -737,9 +751,9 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.articles.create'))
             ->assertOk()
-            ->assertDontSee('Featured image or video')
-            ->assertDontSee('data-media-upload-input', false)
-            ->assertDontSee('data-media-upload-progress', false);
+            ->assertSee('Featured image or video')
+            ->assertSee('data-media-upload-input', false)
+            ->assertSee('data-media-upload-progress', false);
 
         $imageResponse = $this->actingAs($admin)->postJson(route('admin.media.inline.store'), [
             'file' => UploadedFile::fake()->image('inline-editorial.jpg', 640, 360),
@@ -754,6 +768,27 @@ class PlatformRoutesTest extends TestCase
         $videoPath = $videoResponse->json('path');
         $this->assertDatabaseHas('media', ['path' => $videoPath, 'mime_type' => 'video/mp4', 'uploaded_by' => $admin->id]);
         Storage::disk('public')->assertExists($videoPath);
+    }
+
+    public function test_media_cannot_be_deleted_while_referenced_by_team_or_taxonomy_metadata(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
+        $media = Media::create([
+            'disk' => 'public',
+            'path' => 'media/team-portrait.jpg',
+            'filename' => 'team-portrait.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+            'alt_text' => 'Team portrait',
+        ]);
+        $member->update(['portrait' => $media->path]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.media.destroy', $media))
+            ->assertRedirect()
+            ->assertSessionHasErrors('media');
+        $this->assertDatabaseHas('media', ['id' => $media->id]);
     }
 
     public function test_module_enquiries_are_saved_with_business_unit(): void

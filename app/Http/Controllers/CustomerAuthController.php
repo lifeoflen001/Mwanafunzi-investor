@@ -45,6 +45,7 @@ class CustomerAuthController extends Controller
     public function storeLogin(Request $request)
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string'], 'recaptcha_token' => Recaptcha::rules('login')]);
+        unset($credentials['recaptcha_token']);
         if (! Auth::attempt([...$credentials, 'is_admin' => false, 'status' => 'active'], $request->boolean('remember'))) return back()->withErrors(['email' => 'The email or password is incorrect.'])->onlyInput('email');
         $request->session()->regenerate();
         $request->user()->forceFill(['last_login_at' => now()])->saveQuietly();

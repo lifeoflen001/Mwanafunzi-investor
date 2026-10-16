@@ -7,6 +7,9 @@ use App\Models\ProductImage;
 use App\Models\Course;
 use App\Models\Product;
 use App\Models\Article;
+use App\Models\ArticleCategory;
+use App\Models\Tag;
+use App\Models\TeamMember;
 use App\Models\LearningTopic;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
@@ -142,6 +145,9 @@ class MediaController extends Controller
             || \App\Models\Service::where(fn ($query) => $query->where('featured_image', $media->path)->orWhere('og_image', $media->path))->exists()
             || \App\Models\Testimonial::where(fn ($query) => $query->where('client_photo', $media->path)->orWhere('company_logo', $media->path))->exists()
             || LearningTopic::where(fn ($query) => $query->where('image', $media->path)->orWhere('hero_image', $media->path)->orWhere('og_image', $media->path))->exists()
+            || TeamMember::where(fn ($query) => $query->where('portrait', $media->path)->orWhere('og_image', $media->path))->exists()
+            || ArticleCategory::where('og_image', $media->path)->exists()
+            || Tag::where('og_image', $media->path)->exists()
             || SiteSetting::where('value', $media->path)->exists();
         if ($inUse) {
             return back()->withErrors(['media' => 'This asset is still assigned to published or draft content. Replace the reference first.']);
