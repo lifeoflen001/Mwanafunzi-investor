@@ -24,7 +24,7 @@
     if (! $seoPage && request()->routeIs('pages.show')) $seoPage = \App\Models\Page::published()->where('slug', request()->route('slug'))->first();
     $headTitle = \App\Support\Seo::title(trim($__env->yieldContent('title')), $seoPage?->seo_title ?: $brandName);
     $headDescription = \App\Support\Seo::description(trim($__env->yieldContent('description')), $seoPage?->seo_description ?: \App\Models\SiteSetting::getValue('default_seo_description', config('seo.default_description')));
-    $headCanonical = trim($__env->yieldContent('canonical')) ?: ($seoPage?->canonical_url ?: \App\Support\Seo::canonical(request()->path()));
+    $headCanonical = \App\Support\Seo::resolve(trim($__env->yieldContent('canonical')) ?: ($seoPage?->canonical_url ?: null), \App\Support\Seo::canonical(request()->path()));
     $headRobots = \App\Support\Seo::robots(trim($__env->yieldContent('robots')) ?: ($seoPage?->robots ?: null), !empty($preview));
     $headOgTitle = trim($__env->yieldContent('og_title')) ?: ($seoPage?->og_title ?: $headTitle);
     $headOgDescription = trim($__env->yieldContent('og_description')) ?: ($seoPage?->og_description ?: $headDescription);

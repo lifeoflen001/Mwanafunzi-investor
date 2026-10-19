@@ -3,6 +3,11 @@
 @section('portal-heading', 'Enquiries')
 @section('content')
 <x-admin.page-header eyebrow="CMS / Inbox" title="Contact messages" description="Keep each enquiry moving without turning the CMS into a CRM." />
+<div class="admin-stat-grid" aria-label="Enquiry status counts">
+    @foreach(['new' => 'New', 'in_progress' => 'In progress', 'resolved' => 'Resolved', 'spam' => 'Spam'] as $key => $label)
+        <x-admin.stat-card :label="$label" :value="$statusCounts[$key] ?? 0" />
+    @endforeach
+</div>
 <x-admin.filter-toolbar method="get" action="{{ route('admin.messages') }}">
     <label class="sr-only" for="message-search">Search enquiries</label><input id="message-search" name="q" value="{{ $term }}" placeholder="Search sender, email or message">
     <label class="sr-only" for="message-status-filter">Filter enquiry status</label><select id="message-status-filter" name="status"><option value="">All statuses</option><option value="new" @selected(request('status') === 'new')>New</option><option value="in_progress" @selected(request('status') === 'in_progress')>In progress</option><option value="resolved" @selected(request('status') === 'resolved')>Resolved</option><option value="spam" @selected(request('status') === 'spam')>Spam</option></select>
@@ -12,7 +17,7 @@
     <div class="admin-table-head"><span>Sender</span><span>Email / phone</span><span>Category</span><span>Module</span><span>Received</span><span>Status</span></div>
     @forelse($messages as $message)
         <div class="admin-table-row">
-            <div><strong><a href="{{ route('admin.messages.show', $message) }}">{{ $message->name }}</a> @if(!$message->read_at)<span class="unread-dot" title="Unread">●</span>@endif</strong><small>{{ \Illuminate\Support\Str::limit($message->message, 90) }}</small></div>
+            <div><strong><a href="{{ route('admin.messages.show', $message) }}">{{ $message->name }}</a> @if(!$message->read_at)<span class="unread-dot" title="Unread">●</span>@endif</strong><small>{{ $message->preview() }}</small></div>
             <div><a href="mailto:{{ $message->email }}">{{ $message->email }}</a><small>{{ $message->phone ?: 'No phone provided' }}</small></div>
             <span class="message-category">{{ str_replace('_', ' ', $message->category) }}</span>
             <span>{{ $message->businessUnit?->name ?: 'General desk' }}</span>

@@ -1,9 +1,6 @@
 @php
     $cookieSettings = \App\Support\CookieConsentSettings::all();
-    $resolvePublicUrl = static function (string $path): string {
-        if (preg_match('/^https?:\/\//i', $path)) return $path;
-        return rtrim(request()->getSchemeAndHttpHost().request()->getBaseUrl(), '/').'/'.ltrim($path, '/');
-    };
+    $resolvePublicUrl = static fn (string $path): string => \App\Support\Seo::resolve($path, '#') ?: '#';
     $optionalCategories = [
         ['key' => 'analytics', 'label' => 'Analytics Cookies', 'icon' => '▥', 'description' => $cookieSettings['analytics_description']],
         ['key' => 'marketing', 'label' => 'Marketing Cookies', 'icon' => '↗', 'description' => $cookieSettings['marketing_description']],

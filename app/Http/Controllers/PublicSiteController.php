@@ -56,8 +56,14 @@ class PublicSiteController extends Controller
 
         $module = BusinessUnit::query()->active()->where('slug', $slug)->firstOrFail();
         $page = $this->cmsPage($slug);
+        $services = collect();
         $projects = collect();
         $testimonials = collect();
+
+        if ($collection === 'services') {
+            $services = Service::active()->where('business_unit_id', $module->id)->with('projects')->orderBy('sort_order')->orderBy('title')->get();
+            PublicHero::preloadMedia($services->pluck('featured_image'));
+        }
 
         if ($collection === 'projects') {
             $projects = Project::published()->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12);
@@ -68,7 +74,7 @@ class PublicSiteController extends Controller
             $testimonials = Testimonial::published()->whereHas('project.services', fn ($query) => $query->where('business_unit_id', $module->id))->with('project')->orderBy('sort_order')->paginate(12);
         }
 
-        return view('public.modules.collection', compact('module', 'page', 'collection', 'projects', 'testimonials'));
+        return view('public.modules.collection', compact('module', 'page', 'collection', 'services', 'projects', 'testimonials'));
     }
 
     public function home()
@@ -106,10 +112,21 @@ class PublicSiteController extends Controller
     public function service(Service $service)
     {
         abort_unless($service->is_active, 404);
-        $service->load(['projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
+        $service->load(['businessUnit', 'projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
         PublicHero::preloadMedia([$service->featured_image, ...$service->projects->pluck('featured_image')->all()]);
 
-        return view('public.services.show', ['service' => $service, 'relatedServices' => Service::active()->whereKeyNot($service->id)->orderBy('sort_order')->limit(3)->get()]);
+        return view('public.services.show', ['service' => $service, 'relatedServices' => Service::active()->whereKeyNot($service->id)->when($service->business_unit_id, fn ($query, $businessUnitId) => $query->where('business_unit_id', $businessUnitId))->orderBy('sort_order')->limit(3)->get()]);
+    }
+
+    public function serviceForModule(Service $service)
+    {
+        $module = BusinessUnit::query()->active()->where('slug', request()->route('module_slug', 'studio'))->firstOrFail();
+        abort_unless($service->is_active && $service->business_unit_id === $module->id, 404);
+        $service->load(['businessUnit', 'projects' => fn ($query) => $query->published()->with('services')->orderBy('display_order')]);
+        $relatedServices = Service::active()->where('business_unit_id', $module->id)->whereKeyNot($service->id)->orderBy('sort_order')->limit(3)->get();
+        PublicHero::preloadMedia([$service->featured_image, ...$service->projects->pluck('featured_image')->all()]);
+
+        return view('public.services.show', compact('service', 'relatedServices', 'module'));
     }
 
     public function projects()
@@ -123,11 +140,19 @@ class PublicSiteController extends Controller
     public function project(Project $project)
     {
         abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
-        $project->load(['services', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
-        $relatedProjects = Project::published()->whereKeyNot($project->id)->with('services')->orderBy('display_order')->limit(3)->get();
+        $project->load(['services.businessUnit', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
+        $studioService = $project->services->first(fn ($service) => $service->businessUnit?->slug === 'studio');
+        $isStudioProject = $studioService !== null;
+        $relatedProjects = Project::published()
+            ->whereKeyNot($project->id)
+            ->when($isStudioProject, fn ($query) => $query->whereHas('services.businessUnit', fn ($businessUnits) => $businessUnits->where('slug', 'studio')))
+            ->with(['services.businessUnit'])
+            ->orderBy('display_order')
+            ->limit(3)
+            ->get();
         PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
 
-        return view('public.projects.show', ['project' => $project, 'relatedProjects' => $relatedProjects]);
+        return view('public.projects.show', compact('project', 'relatedProjects', 'isStudioProject', 'studioService'));
     }
 
     public function academy()

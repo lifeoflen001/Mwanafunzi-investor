@@ -7,6 +7,7 @@ use App\Models\CourseLesson;
 use App\Models\CourseLessonCompletion;
 use App\Models\Enrollment;
 use App\Models\Order;
+use App\Models\StudioInquiry;
 use App\Services\CustomerDashboardService;
 use App\Services\DownloadService;
 use Illuminate\Http\Request;
@@ -20,6 +21,16 @@ class CustomerAccountController extends Controller
     }
     public function orders(Request $request) { return view('account.orders', ['orders' => $request->user()->orders()->withCount('items')->latest()->paginate(15)]); }
     public function order(Order $order) { $this->owner($order); return view('account.order', compact('order')); }
+    public function studioInquiries(Request $request)
+    {
+        return view('account.studio-inquiries', ['inquiries' => $request->user()->studioInquiries()->with('service')->latest()->paginate(12)]);
+    }
+    public function studioInquiry(Request $request, StudioInquiry $inquiry)
+    {
+        abort_unless($inquiry->user_id === $request->user()->id && $inquiry->businessUnit?->slug === 'studio', 404);
+        $inquiry->load('service');
+        return view('account.studio-inquiry', compact('inquiry'));
+    }
     public function downloads(Request $request) { return view('account.downloads', ['entitlements' => $request->user()->entitlements()->where('type', 'product')->where('status', 'active')->with(['product.assets', 'version'])->latest()->get(), 'downloads' => app(DownloadService::class)]); }
     public function courses(Request $request)
     {

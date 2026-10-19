@@ -13,6 +13,7 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\Service;
+use App\Models\StudioInquiry;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class AdminSearchController extends Controller
         if ($include('Comment')) $results = $results->merge(Comment::select(['id', 'body', 'name', 'email', 'status', 'article_id'])->where(fn ($query) => $query->where('body', 'like', $like)->orWhere('name', 'like', $like)->orWhere('email', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Comment', \Illuminate\Support\Str::limit($item->body, 80), route('admin.comments.show', $item), $item->status)));
         if ($include('Order')) $results = $results->merge(Order::select(['id', 'order_number', 'customer_email', 'payment_status'])->where(fn ($query) => $query->where('order_number', 'like', $like)->orWhere('customer_email', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Order', $item->order_number, route('admin.commerce.orders.show', $item), $item->payment_status)));
         if ($include('Enquiry')) $results = $results->merge(ContactMessage::select(['id', 'name', 'email', 'message', 'status'])->where(fn ($query) => $query->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('message', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Enquiry', $item->name, route('admin.messages.show', $item), $item->status)));
+        if ($include('Enquiry')) $results = $results->merge(StudioInquiry::studio()->select(['id', 'reference', 'name', 'email', 'description', 'status'])->where(fn ($query) => $query->where('reference', 'like', $like)->orWhere('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('description', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Enquiry', $item->reference.' · '.$item->name, route('admin.studio.inquiries.show', $item), $item->status)));
         if ($include('Customer')) $results = $results->merge(User::select(['id', 'name', 'email', 'phone', 'status'])->where('is_admin', false)->where(fn ($query) => $query->where('name', 'like', $like)->orWhere('email', 'like', $like)->orWhere('phone', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Customer', $item->name, route('admin.customers.show', $item), $item->status)));
         if ($include('Topic')) $results = $results->merge(LearningTopic::select(['id', 'title', 'slug', 'status'])->where(fn ($query) => $query->where('title', 'like', $like)->orWhere('slug', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Topic', $item->title, route('admin.topics.edit', $item), $item->status)));
         if ($include('Media')) $results = $results->merge(Media::select(['id', 'path', 'filename', 'title', 'alt_text', 'mime_type'])->where(fn ($query) => $query->where('filename', 'like', $like)->orWhere('title', 'like', $like)->orWhere('alt_text', 'like', $like))->limit($limit)->get()->map(fn ($item) => $this->result('Media', $item->title ?: $item->filename, route('admin.media', ['q' => $term]), $item->mime_type)));

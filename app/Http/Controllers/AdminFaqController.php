@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Support\AdminAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class AdminFaqController extends Controller
 {
@@ -39,7 +40,9 @@ class AdminFaqController extends Controller
         $paginator = DB::query()->fromSub($rows, 'faq_rows')
             ->orderByDesc('updated_at')
             ->paginate(30)
-            ->through(fn ($row) => (array) $row);
+            ->through(fn ($row) => array_merge((array) $row, [
+                'updated_at' => $row->updated_at ? Carbon::parse($row->updated_at) : null,
+            ]));
 
         return view('admin.faqs.index', [
             'faqs' => $paginator,

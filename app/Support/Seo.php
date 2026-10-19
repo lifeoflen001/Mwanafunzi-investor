@@ -8,15 +8,33 @@ class Seo
 {
     public static function siteUrl(?string $path = null): string
     {
-        $base = app()->environment(['local', 'testing'])
-            ? (string) config('app.url', 'http://localhost')
-            : (string) config('seo.site_url');
+        $request = (! app()->runningInConsole() || app()->environment('testing')) && app()->bound('request') ? request() : null;
+        $base = $request
+            ? $request->getSchemeAndHttpHost().$request->getBaseUrl()
+            : (string) (app()->environment(['local', 'testing']) ? config('app.url', 'http://localhost') : config('seo.site_url'));
 
         $base = rtrim($base, '/');
 
         if ($path === null || $path === '') return $base;
 
         return $base.'/'.ltrim($path, '/');
+    }
+
+    public static function resolve(?string $url, ?string $fallback = null): ?string
+    {
+        if (blank($url)) return $fallback;
+        $url = trim($url);
+        if (Str::startsWith($url, ['mailto:', 'tel:', '#'])) return $url;
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+            $request = (! app()->runningInConsole() || app()->environment('testing')) && app()->bound('request') ? request() : null;
+            $currentHost = $request ? strtolower((string) $request->getHost()) : null;
+            if ($currentHost && $host !== $currentHost && $host !== 'localhost') return $url;
+            $path = (string) (parse_url($url, PHP_URL_PATH) ?: '/');
+            $query = parse_url($url, PHP_URL_QUERY);
+            return static::siteUrl($path).($query ? '?'.$query : '');
+        }
+        return static::siteUrl($url);
     }
 
     public static function absolute(?string $url): ?string

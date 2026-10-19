@@ -10,9 +10,9 @@ class Project extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'client_name', 'industry', 'project_type', 'short_description', 'full_introduction', 'challenge', 'role', 'approach', 'solution', 'timeline', 'platform', 'status', 'project_date', 'live_url', 'repository_url', 'featured_image', 'technologies', 'features', 'results', 'display_order', 'is_featured', 'published_at', 'seo_title', 'seo_description', 'primary_keyword', 'secondary_keywords', 'canonical_url', 'robots', 'og_title', 'og_description', 'og_image'];
+    protected $fillable = ['title', 'slug', 'client_name', 'industry', 'project_type', 'media_type', 'creative_category', 'photography_type', 'services_provided', 'location', 'event_date', 'short_description', 'full_introduction', 'challenge', 'role', 'approach', 'solution', 'timeline', 'platform', 'status', 'project_date', 'live_url', 'repository_url', 'featured_image', 'featured_focal_point', 'technologies', 'features', 'results', 'display_order', 'is_featured', 'published_at', 'seo_title', 'seo_description', 'primary_keyword', 'secondary_keywords', 'canonical_url', 'robots', 'og_title', 'og_description', 'og_image'];
 
-    protected function casts(): array { return ['technologies' => 'array', 'features' => 'array', 'results' => 'array', 'is_featured' => 'boolean', 'published_at' => 'datetime', 'project_date' => 'date']; }
+    protected function casts(): array { return ['technologies' => 'array', 'features' => 'array', 'results' => 'array', 'services_provided' => 'array', 'is_featured' => 'boolean', 'published_at' => 'datetime', 'project_date' => 'date', 'event_date' => 'date']; }
 
     public function services() { return $this->belongsToMany(Service::class)->orderBy('sort_order'); }
     public function gallery() { return $this->belongsToMany(Media::class, 'project_media')->withPivot(['alt_text', 'caption', 'sort_order'])->orderBy('project_media.sort_order'); }

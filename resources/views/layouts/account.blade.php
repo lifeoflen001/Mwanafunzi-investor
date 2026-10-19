@@ -34,6 +34,7 @@
                     <a class="{{ request()->routeIs('account.courses*') ? 'is-active' : '' }}" href="{{ route('account.courses') }}"><span class="portal-nav-icon" aria-hidden="true">▤</span><span>My courses</span></a>
                     <a class="{{ request()->routeIs('account.downloads') ? 'is-active' : '' }}" href="{{ route('account.downloads') }}"><span class="portal-nav-icon" aria-hidden="true">↓</span><span>My tools</span></a>
                     <a class="{{ request()->routeIs('account.orders*') ? 'is-active' : '' }}" href="{{ route('account.orders') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span><span>Orders &amp; receipts</span></a>
+                    <a class="{{ request()->routeIs('account.studio.inquiries*') ? 'is-active' : '' }}" href="{{ route('account.studio.inquiries') }}"><span class="portal-nav-icon" aria-hidden="true">◫</span><span>Studio enquiries</span></a>
                 </nav>
                 <p class="portal-section-label">Account</p>
                 <nav class="portal-nav" aria-label="Account navigation">

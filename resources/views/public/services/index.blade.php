@@ -7,7 +7,7 @@
 
 @section('content')
 <x-public-hero class="public-page-hero services-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Services'" :title="$page?->hero_title ?: 'Services built around real business needs'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Services').'<br><em>'.e($page->hero_highlight).'</em>' : null" :summary="$page?->hero_summary ?: 'Digital software, websites and operational tools shaped around the way your business actually works.'" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'strong'" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
-    <a class="button button-accent" href="{{ $page?->hero_primary_url ?: route('contact', ['module' => 'development']) }}">{{ $page?->hero_primary_label ?: 'Start a project' }} <span aria-hidden="true">↗</span></a>
+    <a class="button button-accent" href="{{ \App\Support\Seo::resolve($page?->hero_primary_url, route('contact', ['module' => 'development'])) }}">{{ $page?->hero_primary_label ?: 'Start a project' }} <span aria-hidden="true">↗</span></a>
 </x-public-hero>
 
 @if($businessUnits->isNotEmpty())

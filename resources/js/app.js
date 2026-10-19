@@ -688,10 +688,7 @@ document.querySelectorAll('[data-social-repeater]').forEach((repeater) => {
         const match = field?.name.match(/social_links\[(\d+)\]/);
         return Math.max(max, match ? Number(match[1]) : -1);
     }, -1) + 1;
-    const bindRemove = (row) => row.querySelector('[data-remove-social]')?.addEventListener('click', () => {
-        if (repeater.querySelectorAll('[data-social-row]').length > 1) row.remove();
-        else row.querySelectorAll('input').forEach((input) => { input.value = ''; });
-    });
+    const bindRemove = (row) => row.querySelector('[data-remove-social]')?.addEventListener('click', () => row.remove());
     repeater.querySelectorAll('[data-social-row]').forEach(bindRemove);
     add?.addEventListener('click', () => {
         if (!template) return;
@@ -733,6 +730,96 @@ document.querySelectorAll('[data-copy-link]').forEach((button) => button.addEven
     }
     window.setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3500);
 }));
+
+document.querySelectorAll('[data-gallery-viewer]').forEach((viewer) => {
+    let items = [];
+    try { items = JSON.parse(viewer.querySelector('[data-gallery-items-json]')?.textContent || '[]'); } catch { items = []; }
+    const triggers = [...document.querySelectorAll('[data-gallery-trigger]')];
+    const mediaStage = viewer.querySelector('[data-gallery-media]');
+    const count = viewer.querySelector('[data-gallery-count]');
+    const caption = viewer.querySelector('[data-gallery-caption]');
+    const previous = viewer.querySelector('[data-gallery-prev]');
+    const next = viewer.querySelector('[data-gallery-next]');
+    const closeButton = viewer.querySelector('[data-gallery-close]');
+    let activeIndex = 0;
+    let returnFocus = null;
+    let touchStartX = null;
+    if (!mediaStage || !items.length) return;
+
+    const normaliseIndex = (index) => (index + items.length) % items.length;
+    const preloadAdjacent = () => [normaliseIndex(activeIndex - 1), normaliseIndex(activeIndex + 1)].forEach((index) => {
+        const item = items[index];
+        if (item?.type === 'image' && item.fullUrl) { const image = new Image(); image.src = item.fullUrl; }
+    });
+    const render = (index) => {
+        activeIndex = normaliseIndex(index);
+        const item = items[activeIndex];
+        mediaStage.replaceChildren();
+        if (item.type === 'video') {
+            const video = document.createElement('video');
+            video.controls = true;
+            video.preload = 'metadata';
+            video.setAttribute('aria-label', item.alt || 'Project video');
+            if (item.poster) video.poster = item.poster;
+            const source = document.createElement('source');
+            source.src = item.fullUrl || item.url;
+            source.type = item.mime || 'video/mp4';
+            video.append(source);
+            mediaStage.append(video);
+        } else {
+            const image = document.createElement('img');
+            image.src = item.fullUrl || item.url;
+            if (item.srcset) image.srcset = item.srcset;
+            image.sizes = 'min(100vw, 1200px)';
+            image.width = item.width || '';
+            image.height = item.height || '';
+            image.alt = item.alt || '';
+            mediaStage.append(image);
+        }
+        count.textContent = `${activeIndex + 1} / ${items.length}`;
+        caption.textContent = item.caption || item.alt || '';
+        preloadAdjacent();
+    };
+    const open = (index, trigger) => {
+        returnFocus = trigger || document.activeElement;
+        render(index);
+        viewer.hidden = false;
+        document.body.classList.add('studio-gallery-open');
+        closeButton?.focus();
+    };
+    const close = () => {
+        viewer.hidden = true;
+        mediaStage.replaceChildren();
+        document.body.classList.remove('studio-gallery-open');
+        returnFocus?.focus?.();
+        returnFocus = null;
+    };
+    const move = (step) => render(activeIndex + step);
+    triggers.forEach((trigger) => trigger.addEventListener('click', () => open(Number(trigger.dataset.galleryIndex || 0), trigger)));
+    previous?.addEventListener('click', () => move(-1));
+    next?.addEventListener('click', () => move(1));
+    closeButton?.addEventListener('click', close);
+    viewer.addEventListener('click', (event) => { if (event.target === viewer) close(); });
+    viewer.addEventListener('touchstart', (event) => { touchStartX = event.changedTouches[0]?.clientX ?? null; }, { passive: true });
+    viewer.addEventListener('touchend', (event) => {
+        if (touchStartX === null) return;
+        const delta = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
+        if (Math.abs(delta) > 45) move(delta < 0 ? 1 : -1);
+        touchStartX = null;
+    }, { passive: true });
+    viewer.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+        if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); return; }
+        if (event.key === 'ArrowRight') { event.preventDefault(); move(1); return; }
+        if (event.key !== 'Tab') return;
+        const focusable = focusablesWithin(viewer);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+});
 
 const journalViewGrid = document.querySelector('.editorial-article-grid');
 const journalViewButtons = [...document.querySelectorAll('[data-journal-view]')];

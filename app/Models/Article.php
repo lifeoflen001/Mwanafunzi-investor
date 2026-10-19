@@ -44,7 +44,7 @@ class Article extends Model
 
     public function canonicalUrl(): string
     {
-        return $this->canonical_url ?: route('blog.show', $this);
+        return \App\Support\Seo::resolve($this->canonical_url, route('blog.show', $this)) ?: route('blog.show', $this);
     }
 
     public function displayAuthor(): string

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
+use App\Models\Media;
+use App\Models\BusinessUnit;
 use App\Models\Service;
 use App\Models\Testimonial;
 use App\Models\User;
@@ -54,5 +56,39 @@ class PortfolioTest extends TestCase
 
         Testimonial::create(['client_name' => 'Approved client', 'testimonial' => 'A supplied and approved perspective.', 'is_published' => true, 'is_featured' => true, 'sort_order' => 1]);
         $this->get(route('home'))->assertOk()->assertSee('A supplied and approved perspective.');
+    }
+
+    public function test_creative_studio_project_uses_editorial_gallery_without_repeating_featured_image(): void
+    {
+        $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
+        $studioService = Service::create(['title' => 'Studio coverage', 'slug' => 'studio-coverage-test', 'business_unit_id' => $studio->id, 'short_description' => 'Confirmed studio coverage.', 'pricing_type' => 'custom_quote', 'is_active' => true]);
+        $featured = Media::create(['disk' => 'public', 'path' => 'test/featured.webp', 'filename' => 'featured.webp', 'mime_type' => 'image/webp', 'width' => 1600, 'height' => 1067, 'alt_text' => 'A confirmed featured frame']);
+        $gallery = Media::create(['disk' => 'public', 'path' => 'test/gallery.webp', 'filename' => 'gallery.webp', 'mime_type' => 'image/webp', 'width' => 800, 'height' => 1200, 'alt_text' => 'A confirmed gallery frame']);
+        $project = Project::create([
+            'title' => 'Studio collection', 'slug' => 'studio-collection', 'project_type' => 'Event photography',
+            'creative_category' => 'Event photography', 'media_type' => 'photography', 'short_description' => 'A confirmed studio collection.',
+            'status' => 'published', 'published_at' => now(), 'featured_image' => $featured->path, 'photography_type' => 'Selected work',
+        ]);
+        $project->services()->attach($studioService);
+        $project->gallery()->attach($featured->id, ['sort_order' => 0]);
+        $project->gallery()->attach($gallery->id, ['sort_order' => 1, 'alt_text' => 'A confirmed gallery frame']);
+
+        $response = $this->get(route('projects.show', $project));
+        $response->assertOk()->assertSee('A confirmed gallery frame')->assertSee('data-gallery-viewer')->assertSee('Start an enquiry');
+        $response->assertSee('1 photographs.');
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->put(route('admin.projects.update', $project), [
+            'title' => 'Studio collection edited', 'slug' => 'studio-collection-edited', 'project_type' => 'Event photography',
+            'creative_category' => 'Event photography', 'media_type' => 'photography', 'photography_type' => 'Selected work',
+            'services_provided' => "Event photography\nPortraits", 'short_description' => 'An edited confirmed studio collection.',
+            'featured_image' => $featured->path, 'featured_focal_point' => 'center top', 'status' => 'published', 'published_at' => now()->toDateTimeString(),
+            'display_order' => 2, 'service_ids' => [$studioService->id], 'gallery' => [
+                ['media_id' => $gallery->id, 'alt_text' => 'A confirmed gallery frame', 'caption' => 'Edited order', 'sort_order' => 0],
+                ['media_id' => $featured->id, 'alt_text' => 'A confirmed featured frame', 'caption' => '', 'sort_order' => 1],
+            ],
+        ])->assertRedirect();
+        $this->assertDatabaseHas('projects', ['id' => $project->id, 'slug' => 'studio-collection-edited', 'featured_focal_point' => 'center top']);
+        $this->assertDatabaseHas('project_media', ['project_id' => $project->id, 'media_id' => $gallery->id, 'sort_order' => 0, 'caption' => 'Edited order']);
     }
 }

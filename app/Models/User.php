@@ -79,6 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordC
     public function articleReactions() { return $this->hasMany(ArticleReaction::class); }
     public function comments() { return $this->hasMany(Comment::class); }
     public function socialIdentities() { return $this->hasMany(SocialIdentity::class); }
+    public function studioInquiries() { return $this->hasMany(StudioInquiry::class); }
 
     public function getAvatarUrlAttribute(): ?string
     {

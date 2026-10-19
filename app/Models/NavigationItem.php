@@ -21,7 +21,7 @@ class NavigationItem extends Model
         $routeName = $this->publicRouteName();
         if ($routeName === 'legal' && $this->url) return route('legal', $this->url);
         if ($routeName && \Illuminate\Support\Facades\Route::has($routeName)) return route($routeName);
-        return $this->url ?: '#';
+        return \App\Support\Seo::resolve($this->url, '#') ?: '#';
     }
 
     public function publicRouteName(): ?string

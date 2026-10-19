@@ -35,6 +35,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
+use Carbon\CarbonInterface;
 
 class AdminController extends Controller
 {
@@ -53,7 +54,7 @@ class AdminController extends Controller
         $recentEnquiries = ContactMessage::with('businessUnit')->latest()->limit(5)->get()->map(fn ($message) => [
             'message' => $message,
             'waiting' => in_array($message->status, ['new', 'in_progress'], true)
-                ? $message->created_at?->diffForHumans(now(), ['parts' => 2, 'short' => true])
+                ? now()->diffForHumans($message->created_at, ['parts' => 2, 'short' => true, 'syntax' => CarbonInterface::DIFF_ABSOLUTE])
                 : null,
         ]);
         $recentAudit = collect(AdminAuditLog::latest()->limit(6)->get()->map(fn ($log) => [
@@ -137,14 +138,14 @@ class AdminController extends Controller
                 'products' => Product::count(),
                 'students' => User::where('is_admin', false)->count(),
                 'orders' => Order::count(),
-                'unread_messages' => ContactMessage::whereNull('read_at')->count(),
+                'unread_messages' => ContactMessage::whereNull('read_at')->whereIn('status', ['new', 'in_progress'])->count(),
                 'confirmed_revenue' => Order::whereIn('payment_status', ['paid', 'partially_refunded'])->sum('total'),
                 'media_count' => Media::count(),
                 'media_storage' => Media::sum('size'),
                 'pending_orders' => Order::whereIn('status', ['pending_payment', 'processing'])->count(),
                 'failed_payments' => Payment::where('status', 'failed')->count(),
                 'draft_pages' => Page::where('status', 'draft')->count(),
-                'unavailable_products' => Product::whereIn('availability', ['waitlist', 'coming_soon'])->count(),
+                'unavailable_products' => Product::where('availability', '!=', 'available')->count(),
                 'pages' => Page::count(),
                 'articles' => Article::count(),
                 'published_articles' => Article::where('status', 'published')->count(),
@@ -250,7 +251,7 @@ class AdminController extends Controller
 
     public function products(Request $request)
     {
-        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'availability' => ['nullable', 'in:available,waitlist,coming_soon']]);
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'availability' => ['nullable', 'in:draft,available,waitlist,coming_soon,unavailable,archived']]);
         $products = Product::withTrashed()->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('name', 'like', '%'.$term.'%')->orWhere('slug', 'like', '%'.$term.'%')))->when($data['availability'] ?? null, fn ($query, $availability) => $query->where('availability', $availability))->latest()->paginate(20)->withQueryString();
         return view('admin.products.index', compact('products'));
     }
@@ -349,8 +350,10 @@ class AdminController extends Controller
             ->latest()
             ->paginate(30)
             ->withQueryString();
+        $statusCounts = collect(['new', 'in_progress', 'resolved', 'spam'])
+            ->mapWithKeys(fn ($status) => [$status => ContactMessage::where('status', $status)->count()]);
 
-        return view('admin.messages.index', compact('messages', 'term'));
+        return view('admin.messages.index', compact('messages', 'term', 'statusCounts'));
     }
     public function messageShow(ContactMessage $message)
     {
@@ -448,7 +451,13 @@ class AdminController extends Controller
     private function saveArticle(Request $request, Article $article)
     {
         $request->merge(['slug' => $request->input('slug') ?: Str::slug($request->input('title')), 'content_type' => $request->input('content_type', 'article'), 'hero_focal_point' => $request->input('hero_focal_point', HeroFocalPoint::DEFAULT)]);
-        $data = $request->validate(['article_category_id' => ['nullable', 'exists:article_categories,id'], 'team_member_id' => ['nullable', 'exists:team_members,id'], 'content_type' => ['required', Rule::in(array_keys(Article::CONTENT_TYPES))], 'featured_image' => ['nullable', 'string', 'max:255'], 'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())], 'title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('articles', 'slug')->ignore($article->id)], 'excerpt' => ['nullable', 'string'], 'content' => ['required', 'string'], 'author' => ['nullable', 'string', 'max:120'], 'reading_time' => ['nullable', 'integer', 'min:1', 'max:240'], 'status' => ['required', 'in:draft,published,scheduled,archived'], 'published_at' => [Rule::requiredIf($request->input('status') === 'scheduled'), 'nullable', 'date'], 'is_featured' => ['nullable', 'boolean'], 'feature_priority' => ['nullable', 'integer', 'min:0', 'max:999'], 'feature_start_at' => ['nullable', 'date'], 'feature_end_at' => ['nullable', 'date', 'after_or_equal:feature_start_at'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'tags' => ['nullable', 'string', 'max:500'], 'learning_topic_ids' => ['nullable', 'array'], 'learning_topic_ids.*' => ['integer', 'exists:learning_topics,id'], 'social_links' => ['nullable', 'array', 'max:12'], 'social_links.*.platform' => ['required_with:social_links.*.url', 'string', 'in:instagram,facebook,tiktok,youtube,x,linkedin'], 'social_links.*.url' => ['required_with:social_links.*.platform', 'url', 'max:500'], 'social_links.*.label' => ['nullable', 'string', 'max:190']]);
+        $socialLinks = collect($request->input('social_links', []))
+            ->map(fn ($link) => is_array($link) ? collect($link)->map(fn ($value) => is_string($value) ? trim($value) : $value)->all() : [])
+            ->filter(fn ($link) => filled($link['platform'] ?? null) || filled($link['url'] ?? null) || filled($link['label'] ?? null))
+            ->values()
+            ->all();
+        $request->merge(['social_links' => $socialLinks]);
+        $data = $request->validate(['article_category_id' => ['nullable', 'exists:article_categories,id'], 'team_member_id' => ['nullable', 'exists:team_members,id'], 'content_type' => ['required', Rule::in(array_keys(Article::CONTENT_TYPES))], 'featured_image' => ['nullable', 'string', 'max:255'], 'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())], 'title' => ['required', 'string', 'max:190'], 'slug' => ['required', 'alpha_dash', 'max:190', Rule::unique('articles', 'slug')->ignore($article->id)], 'excerpt' => ['nullable', 'string'], 'content' => ['required', 'string'], 'author' => ['nullable', 'string', 'max:120'], 'reading_time' => ['nullable', 'integer', 'min:1', 'max:240'], 'status' => ['required', 'in:draft,published,scheduled,archived'], 'published_at' => [Rule::requiredIf($request->input('status') === 'scheduled'), 'nullable', 'date'], 'is_featured' => ['nullable', 'boolean'], 'feature_priority' => ['nullable', 'integer', 'min:0', 'max:999'], 'feature_start_at' => ['nullable', 'date'], 'feature_end_at' => ['nullable', 'date', 'after_or_equal:feature_start_at'], 'seo_title' => ['nullable', 'string', 'max:190'], 'seo_description' => ['nullable', 'string', 'max:300'], 'primary_keyword' => ['nullable', 'string', 'max:190'], 'secondary_keywords' => ['nullable', 'string', 'max:1000'], 'canonical_url' => ['nullable', 'url', 'max:500'], 'robots' => ['nullable', 'regex:/^(index|noindex),(follow|nofollow)$/'], 'og_title' => ['nullable', 'string', 'max:190'], 'og_description' => ['nullable', 'string', 'max:300'], 'og_image' => ['nullable', 'string', 'max:255'], 'tags' => ['nullable', 'string', 'max:500'], 'learning_topic_ids' => ['nullable', 'array'], 'learning_topic_ids.*' => ['integer', 'exists:learning_topics,id'], 'social_links' => ['nullable', 'array', 'max:12'], 'social_links.*.platform' => ['required', 'string', 'in:instagram,facebook,tiktok,youtube,x,linkedin'], 'social_links.*.url' => ['required', 'url', 'max:500'], 'social_links.*.label' => ['nullable', 'string', 'max:190']]);
         $data['slug'] = Str::slug($data['slug'] ?? '') ?: Str::slug($data['title']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['feature_priority'] = (int) ($data['feature_priority'] ?? 0);
