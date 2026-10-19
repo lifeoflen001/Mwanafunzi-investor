@@ -2,13 +2,14 @@
 @section('title', 'Contact messages')
 @section('portal-heading', 'Enquiries')
 @section('content')
+<div class="admin-messages-page">
 <x-admin.page-header eyebrow="CMS / Inbox" title="Contact messages" description="Keep each enquiry moving without turning the CMS into a CRM." />
 <div class="admin-stat-grid" aria-label="Enquiry status counts">
     @foreach(['new' => 'New', 'in_progress' => 'In progress', 'resolved' => 'Resolved', 'spam' => 'Spam'] as $key => $label)
         <x-admin.stat-card :label="$label" :value="$statusCounts[$key] ?? 0" />
     @endforeach
 </div>
-<x-admin.filter-toolbar method="get" action="{{ route('admin.messages') }}">
+<x-admin.filter-toolbar class="admin-message-filters" method="get" action="{{ route('admin.messages') }}">
     <label class="sr-only" for="message-search">Search enquiries</label><input id="message-search" name="q" value="{{ $term }}" placeholder="Search sender, email or message">
     <label class="sr-only" for="message-status-filter">Filter enquiry status</label><select id="message-status-filter" name="status"><option value="">All statuses</option><option value="new" @selected(request('status') === 'new')>New</option><option value="in_progress" @selected(request('status') === 'in_progress')>In progress</option><option value="resolved" @selected(request('status') === 'resolved')>Resolved</option><option value="spam" @selected(request('status') === 'spam')>Spam</option></select>
     <button class="button button-secondary button-small" type="submit">Filter</button>@if($term || request('status'))<a class="admin-back-link" href="{{ route('admin.messages') }}">Clear</a>@endif
@@ -29,4 +30,5 @@
     @endforelse
 </div></x-admin.card>
 {{ $messages->links() }}
+</div>
 @endsection

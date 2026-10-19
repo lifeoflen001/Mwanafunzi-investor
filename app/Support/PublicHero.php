@@ -60,6 +60,7 @@ class PublicHero
                 static::$preloadedMedia[$path] = Media::query()->where('path', $path)->first();
             }
             $media = static::$preloadedMedia[$path];
+            if (! $media || $media->status !== 'published') return null;
         }
         $variants = $isPublicAsset
             ? collect([480, 768, 1200])->map(fn (int $width) => [

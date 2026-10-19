@@ -30,11 +30,20 @@ class MediaService
         return $media;
     }
 
-    public function delete(Media $media): void
+    /**
+     * Remove a media record and, optionally, the stored file and responsive variants.
+     *
+     * Keeping the database record and stored contents as one operation is the safe
+     * default. Admins can explicitly keep the files when removing an asset from the
+     * media catalogue, for example while legacy content still points at its path.
+     */
+    public function delete(Media $media, bool $deleteFiles = true): void
     {
-        Storage::disk($media->disk ?: 'public')->delete($media->path);
-        foreach ($media->variants ?? [] as $variant) {
-            if (! empty($variant['path'])) Storage::disk($media->disk ?: 'public')->delete($variant['path']);
+        if ($deleteFiles) {
+            Storage::disk($media->disk ?: 'public')->delete($media->path);
+            foreach ($media->variants ?? [] as $variant) {
+                if (! empty($variant['path'])) Storage::disk($media->disk ?: 'public')->delete($variant['path']);
+            }
         }
         $media->delete();
     }

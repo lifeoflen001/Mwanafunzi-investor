@@ -314,7 +314,7 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('Related social content')
             ->assertSee('instagram.com/p/example')
             ->assertSee('Risk Management')
-            ->assertSee('aria-label="Breadcrumb"', false)
+            ->assertDontSee('class="public-hero-breadcrumbs"', false)
             ->assertSee('In this note')
             ->assertSee('id="build-the-plan"', false)
             ->assertSee('id="start-with-risk"', false)
@@ -770,7 +770,7 @@ class PlatformRoutesTest extends TestCase
         Storage::disk('public')->assertExists($videoPath);
     }
 
-    public function test_media_cannot_be_deleted_while_referenced_by_team_or_taxonomy_metadata(): void
+    public function test_media_file_deletion_is_blocked_while_referenced_but_record_only_removal_is_available(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
         $member = TeamMember::where('slug', 'lenkai-mollel')->firstOrFail();
@@ -785,10 +785,88 @@ class PlatformRoutesTest extends TestCase
         $member->update(['portrait' => $media->path]);
 
         $this->actingAs($admin)
-            ->delete(route('admin.media.destroy', $media))
+            ->delete(route('admin.media.destroy', $media), ['delete_files' => '1'])
             ->assertRedirect()
             ->assertSessionHasErrors('media');
         $this->assertDatabaseHas('media', ['id' => $media->id]);
+
+        Storage::fake('public');
+        Storage::disk('public')->put($media->path, 'referenced asset');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.media.destroy', $media), ['delete_files' => '0'])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Media record removed; stored files were kept.');
+
+        $this->assertDatabaseMissing('media', ['id' => $media->id]);
+        Storage::disk('public')->assertExists($media->path);
+        $this->assertDatabaseHas('team_members', ['id' => $member->id, 'portrait' => $media->path]);
+    }
+
+    public function test_admin_can_delete_media_record_and_all_stored_contents_when_unreferenced(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
+        $media = Media::create([
+            'disk' => 'public',
+            'path' => 'media/original.jpg',
+            'filename' => 'original.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+            'alt_text' => 'Original asset',
+            'variants' => [['path' => 'media/variants/original-480.webp']],
+        ]);
+        Storage::disk('public')->put($media->path, 'original');
+        Storage::disk('public')->put('media/variants/original-480.webp', 'variant');
+
+        $this->actingAs($admin)
+            ->get(route('admin.media'))
+            ->assertOk()
+            ->assertSee('Remove record only')
+            ->assertSee('Delete files too');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.media.destroy', $media), ['delete_files' => '1'])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Media and its stored files were deleted.');
+
+        $this->assertDatabaseMissing('media', ['id' => $media->id]);
+        Storage::disk('public')->assertMissing('media/original.jpg');
+        Storage::disk('public')->assertMissing('media/variants/original-480.webp');
+    }
+
+    public function test_admin_can_change_media_status_and_nonpublished_media_is_hidden_publicly(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Storage::fake('public');
+        $media = Media::create([
+            'disk' => 'public',
+            'path' => 'media/status-check.jpg',
+            'filename' => 'status-check.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 100,
+            'alt_text' => 'Status check asset',
+        ]);
+        Storage::disk('public')->put($media->path, 'asset');
+
+        $this->actingAs($admin)
+            ->put(route('admin.media.update', $media), [
+                'status' => 'unpublished',
+                'alt_text' => 'Status check asset',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('media', ['id' => $media->id, 'status' => 'unpublished']);
+        $this->actingAs($admin)->get(route('admin.media', ['status' => 'unpublished']))->assertOk()->assertSee('status-check.jpg');
+        $this->assertNull(\App\Support\PublicHero::candidate($media->path));
+
+        $this->actingAs($admin)
+            ->put(route('admin.media.update', $media), [
+                'status' => 'archived',
+                'alt_text' => 'Status check asset',
+            ])
+            ->assertRedirect();
+        $this->assertDatabaseHas('media', ['id' => $media->id, 'status' => 'archived']);
     }
 
     public function test_module_enquiries_are_saved_with_business_unit(): void

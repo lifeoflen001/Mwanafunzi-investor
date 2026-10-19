@@ -24,6 +24,7 @@ class MediaController extends Controller
         $data = $request->validate([
             'q' => ['nullable', 'string', 'max:120'],
             'type' => ['nullable', 'string', 'max:80'],
+            'status' => ['nullable', 'in:published,unpublished,archived'],
         ]);
 
         $query = Media::query()
@@ -36,6 +37,7 @@ class MediaController extends Controller
                 });
             })
             ->when($data['type'] ?? null, fn ($query, string $type) => $query->where('mime_type', 'like', $type.'%'))
+            ->when($data['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->latest()
             ->limit(40)
             ->get();
@@ -46,6 +48,7 @@ class MediaController extends Controller
             'label' => $media->filename.($media->width ? ' · '.$media->width.'×'.$media->height : ''),
             'alt_text' => $media->alt_text,
             'mime_type' => $media->mime_type,
+            'status' => $media->status,
         ])->values());
     }
 
@@ -54,12 +57,13 @@ class MediaController extends Controller
         $query = Media::with('uploader');
         if ($request->filled('q')) $query->where(fn ($q) => $q->where('filename', 'like', '%'.$request->string('q').'%')->orWhere('title', 'like', '%'.$request->string('q').'%')->orWhere('caption', 'like', '%'.$request->string('q').'%'));
         if ($request->filled('type')) $query->where('mime_type', 'like', $request->string('type').'%');
+        if ($request->filled('status') && in_array($request->string('status')->toString(), Media::STATUSES, true)) $query->where('status', $request->string('status'));
         return view('admin.media.index', ['media' => $query->latest()->paginate(24)->withQueryString()]);
     }
 
     public function store(Request $request, MediaService $mediaService)
     {
-        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000'], 'source' => ['nullable', 'string', 'max:500'], 'copyright_owner' => ['nullable', 'string', 'max:190'], 'license' => ['nullable', 'string', 'max:190'], 'license_url' => ['nullable', 'url', 'max:500'], 'attribution_required' => ['nullable', 'boolean'], 'attribution_text' => ['nullable', 'string', 'max:500'], 'internal_usage_notes' => ['nullable', 'string', 'max:2000'], 'rights_verified' => ['nullable', 'boolean']]);
+        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000'], 'source' => ['nullable', 'string', 'max:500'], 'copyright_owner' => ['nullable', 'string', 'max:190'], 'license' => ['nullable', 'string', 'max:190'], 'license_url' => ['nullable', 'url', 'max:500'], 'attribution_required' => ['nullable', 'boolean'], 'attribution_text' => ['nullable', 'string', 'max:500'], 'internal_usage_notes' => ['nullable', 'string', 'max:2000'], 'rights_verified' => ['nullable', 'boolean'], 'status' => ['nullable', 'in:published,unpublished,archived']]);
         $file = $request->file('file');
         $media = $mediaService->store($file, 'media', $data['alt_text'], $data['title'] ?? null);
         $media->update(['uploaded_by' => $request->user()->id, ...collect($data)->except('file')->all(), 'attribution_required' => $request->boolean('attribution_required'), 'rights_verified' => $request->boolean('rights_verified')]);
@@ -104,6 +108,7 @@ class MediaController extends Controller
             'attribution_text' => ['nullable', 'string', 'max:500'],
             'internal_usage_notes' => ['nullable', 'string', 'max:2000'],
             'rights_verified' => ['nullable', 'boolean'],
+            'status' => ['nullable', 'in:published,unpublished,archived'],
             'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'],
         ]);
         if ($request->hasFile('file')) {
@@ -133,6 +138,7 @@ class MediaController extends Controller
 
     public function destroy(Media $media, MediaService $mediaService)
     {
+        $deleteFiles = request()->boolean('delete_files', true);
         $inUse = ProductImage::where('path', $media->path)->exists()
             || Course::where('featured_image', $media->path)->orWhere('og_image', $media->path)->exists()
             || Product::where('thumbnail', $media->path)->orWhere('og_image', $media->path)->exists()
@@ -149,11 +155,12 @@ class MediaController extends Controller
             || ArticleCategory::where('og_image', $media->path)->exists()
             || Tag::where('og_image', $media->path)->exists()
             || SiteSetting::where('value', $media->path)->exists();
-        if ($inUse) {
-            return back()->withErrors(['media' => 'This asset is still assigned to published or draft content. Replace the reference first.']);
+        if ($deleteFiles && $inUse) {
+            return back()->withErrors(['media' => 'The stored file cannot be deleted while content still references it. Remove or replace those references first, or choose “Remove record only”.']);
         }
-        $mediaService->delete($media);
-        AdminAudit::record('media.deleted', 'Removed media '.$media->filename, $media);
-        return back()->with('success', 'Media removed.');
+        $filename = $media->filename;
+        $mediaService->delete($media, $deleteFiles);
+        AdminAudit::record('media.deleted', ($deleteFiles ? 'Deleted media and stored files ' : 'Removed media record while keeping stored files ').$filename, $media);
+        return back()->with('success', $deleteFiles ? 'Media and its stored files were deleted.' : 'Media record removed; stored files were kept.');
     }
 }

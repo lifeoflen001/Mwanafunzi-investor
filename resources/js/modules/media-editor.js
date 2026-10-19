@@ -32,7 +32,7 @@ document.querySelectorAll('[data-media-picker]').forEach((picker) => {
         const selectedUrl = select.selectedOptions[0]?.dataset.url;
         select.replaceChildren(new Option('No media selected', ''));
         items.forEach((item) => {
-            const option = new Option(item.label, item.path, false, item.path === selected);
+            const option = new Option(`${item.label}${item.status ? ` · ${item.status}` : ''}`, item.path, false, item.path === selected);
             option.dataset.url = item.url;
             option.dataset.mime = item.mime_type || '';
             select.append(option);

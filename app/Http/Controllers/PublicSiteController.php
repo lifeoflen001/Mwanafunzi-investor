@@ -140,16 +140,20 @@ class PublicSiteController extends Controller
     public function project(Project $project)
     {
         abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
-        $project->load(['services.businessUnit', 'gallery', 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
+        $project->load(['services.businessUnit', 'gallery' => fn ($query) => $query->where('media.status', 'published'), 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
         $studioService = $project->services->first(fn ($service) => $service->businessUnit?->slug === 'studio');
         $isStudioProject = $studioService !== null;
-        $relatedProjects = Project::published()
-            ->whereKeyNot($project->id)
-            ->when($isStudioProject, fn ($query) => $query->whereHas('services.businessUnit', fn ($businessUnits) => $businessUnits->where('slug', 'studio')))
-            ->with(['services.businessUnit'])
-            ->orderBy('display_order')
-            ->limit(3)
-            ->get();
+        $relatedProjects = collect();
+
+        if (! $isStudioProject) {
+            $relatedProjects = Project::published()
+                ->whereKeyNot($project->id)
+                ->with(['services.businessUnit'])
+                ->orderBy('display_order')
+                ->limit(3)
+                ->get();
+        }
+
         PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
 
         return view('public.projects.show', compact('project', 'relatedProjects', 'isStudioProject', 'studioService'));

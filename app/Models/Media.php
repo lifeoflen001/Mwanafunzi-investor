@@ -3,13 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class Media extends Model
 {
+    public const STATUSES = ['published', 'unpublished', 'archived'];
+
     protected $table = 'media';
-    protected $fillable = ['disk', 'path', 'filename', 'mime_type', 'size', 'width', 'height', 'alt_text', 'caption', 'title', 'source', 'copyright_owner', 'license', 'license_url', 'attribution_required', 'attribution_text', 'internal_usage_notes', 'rights_verified', 'uploaded_by', 'variants'];
+    protected $fillable = ['disk', 'path', 'filename', 'mime_type', 'size', 'width', 'height', 'alt_text', 'caption', 'title', 'source', 'copyright_owner', 'license', 'license_url', 'attribution_required', 'attribution_text', 'internal_usage_notes', 'rights_verified', 'status', 'uploaded_by', 'variants'];
     protected function casts(): array { return ['variants' => 'array']; }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published');
+    }
 
     public function uploader() { return $this->belongsTo(User::class, 'uploaded_by'); }
 

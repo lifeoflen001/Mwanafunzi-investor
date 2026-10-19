@@ -64,14 +64,6 @@
     @endif
     <div class="public-hero-overlay" aria-hidden="true"></div>
     <div class="container public-hero-inner">
-        @if($breadcrumbItems)
-            <nav class="public-hero-breadcrumbs" aria-label="Breadcrumb">
-                @foreach($breadcrumbItems as $breadcrumb)
-                    @if(! $loop->first)<span aria-hidden="true">/</span>@endif
-                    @if(! empty($breadcrumb['url']))<a href="{{ $breadcrumb['url'] }}">{{ $breadcrumb['label'] }}</a>@else<span>{{ $breadcrumb['label'] }}</span>@endif
-                @endforeach
-            </nav>
-        @endif
         @if($eyebrow)<p class="eyebrow {{ $textColor === 'light' ? 'eyebrow-light' : '' }}"><span class="eyebrow-line"></span>{{ $eyebrow }}</p>@endif
         @if($titleHtml)<h1>{!! $titleHtml !!}</h1>@elseif($title)<h1>{{ $title }}</h1>@endif
         @if($summary)<p class="lede">{{ $summary }}</p>@endif

@@ -74,8 +74,8 @@ class PortfolioTest extends TestCase
         $project->gallery()->attach($gallery->id, ['sort_order' => 1, 'alt_text' => 'A confirmed gallery frame']);
 
         $response = $this->get(route('projects.show', $project));
-        $response->assertOk()->assertSee('A confirmed gallery frame')->assertSee('data-gallery-viewer')->assertSee('Start an enquiry');
-        $response->assertSee('1 photographs.');
+        $response->assertOk()->assertSee('A confirmed gallery frame')->assertSee('data-gallery-viewer')->assertSee('Enquire about event photography');
+        $response->assertSee('1 additional frame.')->assertDontSee('Related work.')->assertSee('Back to creative projects');
 
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->put(route('admin.projects.update', $project), [
