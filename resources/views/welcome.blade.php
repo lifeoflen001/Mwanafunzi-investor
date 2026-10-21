@@ -151,11 +151,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
                     </div>
                     <p class="testimonial-section-description">Approved perspectives from work made with real people, real constraints and a clear purpose.</p>
                 </div>
-                <div class="testimonial-grid testimonial-grid-home">
-                    @foreach($featuredTestimonials as $testimonial)
-                        @include('partials.testimonial-card', ['testimonial' => $testimonial])
-                    @endforeach
-                </div>
+                @include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'home-testimonials'])
             </div>
         </section>
         @endif

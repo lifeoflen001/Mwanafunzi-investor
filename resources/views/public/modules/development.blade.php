@@ -83,11 +83,7 @@
                     </div>
                     <p class="testimonial-section-description">Perspectives connected to Digital Software work.</p>
                 </div>
-                <div class="testimonial-grid testimonial-grid-collection">
-                    @foreach($featuredTestimonials->take(3) as $testimonial)
-                        @include('partials.testimonial-card', ['testimonial' => $testimonial])
-                    @endforeach
-                </div>
+                @include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'development-testimonials'])
                 <a class="text-link" href="{{ route('digital-software.testimonials') }}">Explore software testimonials <span aria-hidden="true">↗</span></a>
             </div>
         </section>

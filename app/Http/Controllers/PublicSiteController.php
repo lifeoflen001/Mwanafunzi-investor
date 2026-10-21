@@ -88,7 +88,7 @@ class PublicSiteController extends Controller
         $homePage = $this->cmsPage('home');
         $featuredProjects = Project::published()->where('is_featured', true)->with(['services', 'gallery'])->orderBy('display_order')->limit(4)->get();
         $featuredServices = Service::active()->where('is_featured', true)->orderBy('sort_order')->limit(4)->get();
-        $featuredTestimonials = Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(3)->get();
+        $featuredTestimonials = Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(8)->get();
         PublicHero::preloadMedia($featuredProjects->pluck('featured_image')->merge($featuredServices->pluck('featured_image')));
         $this->preloadTestimonialMedia($featuredTestimonials);
 

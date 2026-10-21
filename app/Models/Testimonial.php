@@ -18,7 +18,16 @@ class Testimonial extends Model
 
     public function businessUnit() { return $this->belongsTo(BusinessUnit::class); }
 
-    public function scopePublished(Builder $query): Builder { return $query->where('is_published', true); }
+    public function scopePublished(Builder $query): Builder
+    {
+        $query->where('is_published', true);
+
+        if (app()->environment('production')) {
+            $query->where('consent_confirmed', true)->where('client_name', 'not like', '[DEMO]%');
+        }
+
+        return $query;
+    }
 
     public function displayName(): string
     {

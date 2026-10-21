@@ -73,18 +73,30 @@ class PortfolioTest extends TestCase
             'client_name' => 'Confirmed client',
             'client_role' => 'Project lead',
             'company' => 'Example organisation',
-            'testimonial' => 'A considered perspective from a completed project.',
+            'testimonial' => str_repeat('A considered perspective from a completed project. ', 8),
+            'rating' => 4,
             'is_published' => true,
             'is_featured' => true,
             'consent_confirmed' => true,
             'sort_order' => 1,
         ]);
+        Testimonial::create([
+            'client_name' => 'Second confirmed client',
+            'testimonial' => 'A second supplied perspective for carousel navigation.',
+            'is_published' => true,
+            'is_featured' => true,
+            'consent_confirmed' => true,
+            'sort_order' => 2,
+        ]);
 
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('testimonial-card', false)
+            ->assertSee('data-testimonial-carousel', false)
+            ->assertSee('data-carousel-next', false)
             ->assertSee('testimonial-section-heading', false)
-            ->assertSee('A considered perspective from a completed project.')
+            ->assertSee('Rating: 4 out of 5')
+            ->assertSee('Read more')
             ->assertSee('Confirmed client');
     }
 
