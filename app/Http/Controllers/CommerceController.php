@@ -42,6 +42,7 @@ class CommerceController extends Controller
 
     public function sandbox(Payment $payment)
     {
+        abort_unless(config('commerce.sandbox_enabled'), 404);
         $this->owner($payment->order);
         abort_unless($payment->provider === 'sandbox' && $payment->status->value !== 'paid', 404);
         return view('commerce.sandbox', compact('payment'));
@@ -49,6 +50,7 @@ class CommerceController extends Controller
 
     public function completeSandbox(Request $request, Payment $payment, PaymentService $payments)
     {
+        abort_unless(config('commerce.sandbox_enabled'), 404);
         $this->owner($payment->order);
         $data = $request->validate(['result' => ['required', 'in:successful,failed,cancelled']]);
         if ($data['result'] !== 'successful') { $payments->fail($payment, 'Sandbox payment was not completed.'); return to_route('payments.failure', $payment->order); }

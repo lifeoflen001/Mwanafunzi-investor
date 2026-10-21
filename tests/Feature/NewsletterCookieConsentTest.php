@@ -45,6 +45,23 @@ class NewsletterCookieConsentTest extends TestCase
         $this->assertSame(NewsletterSubscriber::UNSUBSCRIBED, $subscriber->fresh()->status);
     }
 
+    public function test_confirmed_newsletter_keeps_a_usable_unsubscribe_token(): void
+    {
+        Mail::fake();
+
+        $this->post(route('newsletter.subscribe'), ['email' => 'token@example.test'])
+            ->assertRedirect();
+
+        $subscriber = NewsletterSubscriber::firstOrFail();
+        $token = 'confirmed-token';
+        $subscriber->forceFill(['confirmation_token_hash' => hash('sha256', $token)])->save();
+
+        $this->get(URL::temporarySignedRoute('newsletter.confirm', now()->addMinutes(10), ['token' => $token]))->assertOk();
+
+        $this->assertNotEmpty($subscriber->fresh()->unsubscribe_token);
+        Mail::assertQueued(\App\Mail\NewsletterConfirmedMail::class);
+    }
+
     public function test_admin_newsletter_and_privacy_surfaces_are_authorized_and_paginated(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

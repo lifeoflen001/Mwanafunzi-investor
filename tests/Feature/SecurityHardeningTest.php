@@ -10,6 +10,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Services\Payments\PaymentGatewayManager;
+use RuntimeException;
 use Tests\TestCase;
 
 class SecurityHardeningTest extends TestCase
@@ -110,6 +113,40 @@ class SecurityHardeningTest extends TestCase
             ->assertHeader('Content-Security-Policy');
 
         $this->get('/storage/commerce/private.pdf')->assertNotFound();
+    }
+
+    public function test_authenticated_surfaces_are_not_cached(): void
+    {
+        $customer = User::factory()->create(['email_verified_at' => now()]);
+
+        $this->actingAs($customer)->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertHeader('Pragma', 'no-cache')
+            ->tap(function ($response): void {
+                $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+            });
+    }
+
+    public function test_sandbox_gateway_is_disabled_when_configuration_marks_it_unsafe(): void
+    {
+        config()->set('commerce.sandbox_enabled', false);
+
+        $this->expectException(RuntimeException::class);
+        app(PaymentGatewayManager::class)->gateway('sandbox');
+    }
+
+    public function test_newsletter_rate_limit_never_redirects_to_an_external_referer(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->withHeaders(['Referer' => 'https://evil.example/phishing'])
+                ->post(route('newsletter.subscribe'), ['email' => 'rate-'.$attempt.'@example.test']);
+        }
+
+        $response = $this->withHeaders(['Referer' => 'https://evil.example/phishing'])
+            ->post(route('newsletter.subscribe'), ['email' => 'rate-final@example.test'])
+            ->assertRedirect();
+
+        $this->assertStringNotContainsString('evil.example', (string) $response->headers->get('Location'));
     }
 
     public function test_health_checks_separate_liveness_and_database_readiness(): void

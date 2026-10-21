@@ -142,24 +142,18 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
         </section>
 
         @if($featuredTestimonials->isNotEmpty())
-        <section class="mother-home-proof section" id="client-perspective">
+        <section class="mother-home-proof section testimonial-section" id="client-perspective" aria-labelledby="client-perspective-heading">
             <div class="container">
-                <div class="split-heading">
+                <div class="testimonial-section-heading">
                     <div>
                         <p class="eyebrow"><span class="eyebrow-line"></span>Client perspective</p>
-                        <h2>What the work felt like from the other side.</h2>
+                        <h2 id="client-perspective-heading">What the work felt like from the other side.</h2>
                     </div>
+                    <p class="testimonial-section-description">Approved perspectives from work made with real people, real constraints and a clear purpose.</p>
                 </div>
-                <div class="portfolio-testimonial-grid">
+                <div class="testimonial-grid testimonial-grid-home">
                     @foreach($featuredTestimonials as $testimonial)
-                        <blockquote>
-                            <p>“{{ $testimonial->testimonial }}”</p>
-                            <footer>
-                                <strong>{{ $testimonial->displayName() }}</strong>
-                                @if($testimonial->client_role)<span>{{ $testimonial->client_role }}</span>@endif
-                                @if($testimonial->company && ! $testimonial->hide_company && ! $testimonial->anonymous_display)<span>{{ $testimonial->company }}</span>@endif
-                            </footer>
-                        </blockquote>
+                        @include('partials.testimonial-card', ['testimonial' => $testimonial])
                     @endforeach
                 </div>
             </div>

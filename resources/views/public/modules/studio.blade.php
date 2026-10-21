@@ -55,10 +55,9 @@
         </section>
     @endif
 
-    @if($testimonials)
-        <section class="platform-dark platform-section service-testimonials" id="testimonials">
-            <div class="container"><div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $testimonials->payload['eyebrow'] ?? 'Client perspective' }}</p><h2>{{ $testimonials->heading }}</h2></div><div class="rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div>@if($featuredTestimonials->isNotEmpty())<div class="service-testimonial-grid">@foreach($featuredTestimonials->take(3) as $testimonial)<blockquote>“{{ $testimonial->testimonial }}”<footer><strong>{{ $testimonial->displayName() }}</strong>@if($testimonial->client_role){{ $testimonial->client_role }}@endif</footer></blockquote>@endforeach</div>@else
-@include('partials.service-testimonial-placeholder', ['serviceName' => 'Creative Studio', 'contactUrl' => route('creative-studio.book'), 'dark' => true])@endif<a class="text-link text-link-light" href="{{ route('creative-studio.testimonials') }}">Explore studio testimonials <span aria-hidden="true">↗</span></a></div>
+    @if($testimonials && $featuredTestimonials->isNotEmpty())
+        <section class="platform-dark platform-section testimonial-section testimonial-section-dark service-testimonials" id="testimonials" aria-labelledby="studio-testimonials-heading">
+            <div class="container"><div class="testimonial-section-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $testimonials->payload['eyebrow'] ?? 'Client perspective' }}</p><h2 id="studio-testimonials-heading">{{ $testimonials->heading }}</h2></div><div class="testimonial-section-description rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div><div class="testimonial-grid testimonial-grid-dark">@foreach($featuredTestimonials->take(3) as $testimonial)@include('partials.testimonial-card', ['testimonial' => $testimonial, 'dark' => true])@endforeach</div><a class="text-link text-link-light" href="{{ route('creative-studio.testimonials') }}">Explore studio testimonials <span aria-hidden="true">↗</span></a></div>
         </section>
     @endif
 

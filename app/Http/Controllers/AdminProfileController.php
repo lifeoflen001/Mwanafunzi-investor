@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\AdminAudit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -59,7 +60,9 @@ class AdminProfileController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $request->user()->forceFill(['password' => $data['password']])->save();
+        $request->user()->forceFill(['password' => $data['password'], 'remember_token' => null])->save();
+        Auth::logoutOtherDevices($data['password']);
+        $request->session()->regenerate();
         AdminAudit::record('profile.password_updated', 'Updated administrator password');
 
         return back()->with('success', 'Password updated securely.');

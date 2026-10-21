@@ -2,13 +2,13 @@
 @section('title', 'Business modules')
 @section('portal-heading', 'Business modules')
 @section('content')
-<x-admin.page-header eyebrow="Platform / Modules" title="Business modules" description="Manage the public module identity and availability. Public routes and application behavior remain controlled by code." />
+<x-admin.page-header eyebrow="Platform / Modules" title="Business modules" description="Manage the public module identity and availability. Use the linked page editor for Financial Academy, Digital Software and Creative Studio content." />
 
 <div class="admin-subresource-list admin-business-unit-list">
     @forelse($units as $unit)
         @php($page = $pages->get($unit->slug))
         <section class="admin-card admin-business-unit-card">
-            <div class="admin-subresource-header"><div><strong>{{ $unit->name }}</strong><small>{{ $unit->slug }} · {{ $unit->route_name ?: 'No public route' }}</small></div><div class="admin-actions">@if($unit->is_active)<em class="status-badge status-badge-success">Active</em>@else<em class="status-badge">Hidden</em>@endif @if($page)<a class="text-link" href="{{ route('admin.pages.edit', $page) }}">Edit page <span aria-hidden="true">↗</span></a>@endif</div></div>
+            <div class="admin-subresource-header"><div><strong>{{ $unit->name }}</strong><small>{{ $unit->slug }} · {{ $unit->route_name ?: 'No public route' }}</small></div><div class="admin-actions">@if($unit->is_active)<em class="status-badge status-badge-success">Active</em>@else<em class="status-badge">Hidden</em>@endif @if($page)<a class="text-link" href="{{ route('admin.pages.edit', $page) }}">Edit {{ $unit->slug === 'forex' ? 'Financial Academy page' : 'page' }} <span aria-hidden="true">↗</span></a>@endif</div></div>
             <form class="admin-form admin-inline-form" method="post" action="{{ route('admin.business-units.update', $unit) }}">
                 @csrf @method('put')
                 <div class="form-row"><label>Module name<input name="name" value="{{ old('name', $unit->name) }}" required></label><label>Slug <span>(code-controlled)</span><input value="{{ $unit->slug }}" readonly></label></div>

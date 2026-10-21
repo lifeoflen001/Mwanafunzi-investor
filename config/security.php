@@ -7,5 +7,6 @@ return [
     'admin_mfa_window' => 1,
     'outbound_connect_timeout' => (int) env('OUTBOUND_CONNECT_TIMEOUT', 10),
     'outbound_timeout' => (int) env('OUTBOUND_TIMEOUT', 20),
+    'studio_max_reference_bytes' => (int) env('STUDIO_MAX_REFERENCE_BYTES', 32 * 1024 * 1024),
     'force_hsts' => (bool) env('FORCE_HSTS', false),
 ];

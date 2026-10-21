@@ -11,6 +11,7 @@ use App\Models\StudioInquiry;
 use App\Services\CustomerDashboardService;
 use App\Services\DownloadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerAccountController extends Controller
@@ -113,7 +114,9 @@ class CustomerAccountController extends Controller
     {
         $currentPasswordRules = $request->user()->password === null ? ['nullable'] : ['required', 'current_password'];
         $data = $request->validate(['current_password' => $currentPasswordRules, 'password' => ['required', 'confirmed', 'min:10']]);
-        $request->user()->update(['password' => $data['password']]);
+        $request->user()->forceFill(['password' => $data['password'], 'remember_token' => null])->save();
+        Auth::logoutOtherDevices($data['password']);
+        $request->session()->regenerate();
 
         return back()->with('success', 'Password updated.');
     }

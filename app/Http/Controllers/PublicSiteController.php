@@ -32,8 +32,11 @@ class PublicSiteController extends Controller
         $page = $this->cmsPage($slug);
         $serviceScope = fn ($query) => $query->where('business_unit_id', $module->id);
         $featuredProjects = Project::published()->whereHas('services', $serviceScope)->with(['services', 'gallery'])->orderBy('display_order')->orderByDesc('project_date')->limit(6)->get();
-        $featuredTestimonials = Testimonial::published()->whereHas('project.services', $serviceScope)->with('project')->orderBy('sort_order')->limit(6)->get();
+        $featuredTestimonials = Testimonial::published()->where(function ($query) use ($module, $serviceScope) {
+            $query->where('business_unit_id', $module->id)->orWhereHas('project.services', $serviceScope);
+        })->with(['project', 'businessUnit'])->orderBy('sort_order')->limit(6)->get();
         PublicHero::preloadMedia($featuredProjects->pluck('featured_image'));
+        $this->preloadTestimonialMedia($featuredTestimonials);
 
         if ($module->route_name === 'home') {
             return to_route('home');
@@ -71,7 +74,10 @@ class PublicSiteController extends Controller
         }
 
         if ($collection === 'testimonials') {
-            $testimonials = Testimonial::published()->whereHas('project.services', fn ($query) => $query->where('business_unit_id', $module->id))->with('project')->orderBy('sort_order')->paginate(12);
+            $testimonials = Testimonial::published()->where(function ($query) use ($module) {
+                $query->where('business_unit_id', $module->id)->orWhereHas('project.services', fn ($projectQuery) => $projectQuery->where('business_unit_id', $module->id));
+            })->with(['project', 'businessUnit'])->orderBy('sort_order')->paginate(12);
+            $this->preloadTestimonialMedia($testimonials->getCollection());
         }
 
         return view('public.modules.collection', compact('module', 'page', 'collection', 'services', 'projects', 'testimonials'));
@@ -82,7 +88,9 @@ class PublicSiteController extends Controller
         $homePage = $this->cmsPage('home');
         $featuredProjects = Project::published()->where('is_featured', true)->with(['services', 'gallery'])->orderBy('display_order')->limit(4)->get();
         $featuredServices = Service::active()->where('is_featured', true)->orderBy('sort_order')->limit(4)->get();
+        $featuredTestimonials = Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(3)->get();
         PublicHero::preloadMedia($featuredProjects->pluck('featured_image')->merge($featuredServices->pluck('featured_image')));
+        $this->preloadTestimonialMedia($featuredTestimonials);
 
         return view('welcome', [
             'homePage' => $homePage,
@@ -90,7 +98,7 @@ class PublicSiteController extends Controller
             'featuredArticle' => Article::featured()->with('category')->first(),
             'featuredServices' => $featuredServices,
             'featuredProjects' => $featuredProjects,
-            'featuredTestimonials' => Testimonial::published()->where('is_featured', true)->with('project')->orderBy('sort_order')->limit(3)->get(),
+            'featuredTestimonials' => $featuredTestimonials,
         ]);
     }
 
@@ -141,6 +149,7 @@ class PublicSiteController extends Controller
     {
         abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
         $project->load(['services.businessUnit', 'gallery' => fn ($query) => $query->where('media.status', 'published'), 'testimonials' => fn ($query) => $query->published()->orderBy('sort_order')]);
+        $this->preloadTestimonialMedia($project->testimonials);
         $studioService = $project->services->first(fn ($service) => $service->businessUnit?->slug === 'studio');
         $isStudioProject = $studioService !== null;
         $relatedProjects = collect();
@@ -346,6 +355,11 @@ class PublicSiteController extends Controller
         $articles = Article::published()->with(['category', 'authorMember'])->latest('published_at')->limit(30)->get();
 
         return response()->view('public.feed', compact('articles'))->header('Content-Type', 'application/rss+xml; charset=UTF-8');
+    }
+
+    private function preloadTestimonialMedia(Collection $testimonials): void
+    {
+        PublicHero::preloadMedia($testimonials->flatMap(fn (Testimonial $testimonial) => [$testimonial->client_photo, $testimonial->company_logo]));
     }
 
     private function commentTree(Collection $commentsByParent, int $parentId = 0): Collection

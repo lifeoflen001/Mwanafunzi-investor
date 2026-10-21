@@ -58,6 +58,36 @@ class PortfolioTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('A supplied and approved perspective.');
     }
 
+    public function test_public_testimonial_sections_hide_empty_states_and_use_editorial_cards(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('testimonial-card', false)
+            ->assertDontSee('Client perspectives are being prepared.');
+
+        $this->get(route('creative-studio.testimonials'))
+            ->assertOk()
+            ->assertDontSee('service-testimonial-placeholder', false);
+
+        Testimonial::create([
+            'client_name' => 'Confirmed client',
+            'client_role' => 'Project lead',
+            'company' => 'Example organisation',
+            'testimonial' => 'A considered perspective from a completed project.',
+            'is_published' => true,
+            'is_featured' => true,
+            'consent_confirmed' => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('testimonial-card', false)
+            ->assertSee('testimonial-section-heading', false)
+            ->assertSee('A considered perspective from a completed project.')
+            ->assertSee('Confirmed client');
+    }
+
     public function test_creative_studio_project_uses_editorial_gallery_without_repeating_featured_image(): void
     {
         $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();

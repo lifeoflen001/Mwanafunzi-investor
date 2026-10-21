@@ -58,7 +58,12 @@ class MediaController extends Controller
         if ($request->filled('q')) $query->where(fn ($q) => $q->where('filename', 'like', '%'.$request->string('q').'%')->orWhere('title', 'like', '%'.$request->string('q').'%')->orWhere('caption', 'like', '%'.$request->string('q').'%'));
         if ($request->filled('type')) $query->where('mime_type', 'like', $request->string('type').'%');
         if ($request->filled('status') && in_array($request->string('status')->toString(), Media::STATUSES, true)) $query->where('status', $request->string('status'));
-        return view('admin.media.index', ['media' => $query->latest()->paginate(24)->withQueryString()]);
+        $media = $query->latest()->paginate(24)->withQueryString();
+
+        return view('admin.media.index', [
+            'media' => $media,
+            'usageCounts' => Media::usageCountsFor($media->getCollection()),
+        ]);
     }
 
     public function store(Request $request, MediaService $mediaService)

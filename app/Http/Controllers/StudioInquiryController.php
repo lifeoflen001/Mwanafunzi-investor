@@ -54,6 +54,13 @@ class StudioInquiryController extends Controller
             throw \Illuminate\Validation\ValidationException::withMessages(['project_id' => 'Please choose a published Creative Studio project.']);
         }
 
+        $referenceBytes = collect($request->file('reference_files', []))->sum(fn ($file) => (int) $file->getSize());
+        if ($referenceBytes > config('security.studio_max_reference_bytes')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'reference_files' => 'Please keep all reference files under 32 MB combined.',
+            ]);
+        }
+
         $reference = 'STU-'.now()->format('Ymd').'-'.strtoupper(Str::random(6));
         while (StudioInquiry::where('reference', $reference)->exists()) {
             $reference = 'STU-'.now()->format('Ymd').'-'.strtoupper(Str::random(6));

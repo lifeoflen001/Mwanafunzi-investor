@@ -73,6 +73,26 @@
         </section>
     @endif
 
+    @if($featuredTestimonials->isNotEmpty())
+        <section class="platform-section testimonial-section" id="testimonials" aria-labelledby="development-testimonials-heading">
+            <div class="container">
+                <div class="testimonial-section-heading">
+                    <div>
+                        <p class="eyebrow"><span class="eyebrow-line"></span> Client perspective</p>
+                        <h2 id="development-testimonials-heading">What the work felt like from the other side.</h2>
+                    </div>
+                    <p class="testimonial-section-description">Perspectives connected to Digital Software work.</p>
+                </div>
+                <div class="testimonial-grid testimonial-grid-collection">
+                    @foreach($featuredTestimonials->take(3) as $testimonial)
+                        @include('partials.testimonial-card', ['testimonial' => $testimonial])
+                    @endforeach
+                </div>
+                <a class="text-link" href="{{ route('digital-software.testimonials') }}">Explore software testimonials <span aria-hidden="true">↗</span></a>
+            </div>
+        </section>
+    @endif
+
     @if($process)
         <section class="platform-section dev-process">
             <div class="container">

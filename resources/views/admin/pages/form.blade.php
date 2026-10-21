@@ -1,10 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', $page->exists ? 'Edit '.$page->name : 'Add page')
+@php($adminPageName = $page->key === 'learn' ? 'Financial Academy' : $page->name)
+@section('title', $page->exists ? 'Edit '.$adminPageName : 'Add page')
 @section('portal-heading', $page->exists ? 'Edit page' : 'Add page')
 
 @section('content')
-    <x-admin.page-header eyebrow="Website / Pages" title="{{ $page->exists ? 'Edit '.$page->name : 'Add page' }}" description="Keep content editable while the frontend structure remains protected." />
+    <x-admin.page-header eyebrow="Website / Pages" title="{{ $page->exists ? 'Edit '.$adminPageName : 'Add page' }}" description="Keep content editable while the frontend structure remains protected." />
     @if($page->exists)<a class="admin-back-link" href="{{ URL::temporarySignedRoute('admin.preview', now()->addMinutes(30), ['type' => 'page', 'id' => $page->id]) }}" target="_blank" rel="noopener">Preview page ↗</a>@endif
 
     <div class="admin-form-card"><form class="admin-form admin-editor-form" method="post" action="{{ $action }}" data-unsaved-warning>

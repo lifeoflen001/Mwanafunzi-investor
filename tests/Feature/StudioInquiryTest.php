@@ -75,4 +75,22 @@ class StudioInquiryTest extends TestCase
 
         $this->assertDatabaseHas('studio_inquiries', ['project_id' => $project->id, 'service_id' => $service->id, 'email' => 'studio-context@example.test']);
     }
+
+    public function test_reference_files_have_a_combined_request_size_limit(): void
+    {
+        $this->from(route('creative-studio.book'))
+            ->post(route('creative-studio.book.store'), [
+                'name' => 'Upload test',
+                'email' => 'upload-limit@example.test',
+                'description' => 'A sufficiently detailed studio brief for testing the reference file size limit.',
+                'consent' => 1,
+                'reference_files' => [
+                    UploadedFile::fake()->create('one.pdf', 11264, 'application/pdf'),
+                    UploadedFile::fake()->create('two.pdf', 11264, 'application/pdf'),
+                    UploadedFile::fake()->create('three.pdf', 11264, 'application/pdf'),
+                ],
+            ])
+            ->assertRedirect(route('creative-studio.book'))
+            ->assertSessionHasErrors('reference_files');
+    }
 }

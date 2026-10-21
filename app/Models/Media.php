@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class Media extends Model
@@ -45,5 +46,74 @@ class Media extends Model
             + Tag::where('og_image', $this->path)->count()
             + SiteSetting::where('value', $this->path)->count()
         );
+    }
+
+    /**
+     * Count content references for a page of media in bulk.
+     *
+     * The media library renders usage counts for every card. Keeping the
+     * legacy per-record method available is useful for one-off checks, but
+     * list pages should use this method to avoid an N+1 query burst.
+     */
+    public static function usageCountsFor(Collection $media): array
+    {
+        $media = $media->filter(fn (self $item) => filled($item->path));
+        $paths = $media->pluck('path')->unique()->values();
+        $counts = $media->mapWithKeys(fn (self $item) => [$item->id => 0])->all();
+
+        if ($paths->isEmpty()) {
+            return $counts;
+        }
+
+        $addPathRows = function (string $model, array $columns) use ($paths, &$counts, $media): void {
+            $rows = $model::query()
+                ->where(function (Builder $query) use ($columns, $paths): void {
+                    foreach ($columns as $index => $column) {
+                        $method = $index === 0 ? 'whereIn' : 'orWhereIn';
+                        $query->{$method}($column, $paths->all());
+                    }
+                })
+                ->get($columns);
+
+            foreach ($rows as $row) {
+                foreach (array_unique(array_map(fn (string $column) => $row->{$column}, $columns)) as $path) {
+                    $media->filter(fn (self $item) => $item->path === $path)->each(function (self $item) use (&$counts): void {
+                        $counts[$item->id]++;
+                    });
+                }
+            }
+        };
+
+        $addPathRows(Course::class, ['featured_image', 'og_image']);
+        $addPathRows(Product::class, ['thumbnail', 'og_image']);
+        $addPathRows(Article::class, ['featured_image', 'og_image']);
+        $addPathRows(LearningTopic::class, ['image', 'hero_image', 'og_image']);
+        $addPathRows(Page::class, ['hero_image', 'og_image']);
+        $addPathRows(PageSection::class, ['image']);
+        $addPathRows(Project::class, ['featured_image', 'og_image']);
+        $addPathRows(Service::class, ['featured_image', 'og_image']);
+        $addPathRows(Testimonial::class, ['client_photo', 'company_logo']);
+        $addPathRows(TeamMember::class, ['portrait', 'og_image']);
+        $addPathRows(ArticleCategory::class, ['og_image']);
+        $addPathRows(Tag::class, ['og_image']);
+
+        $productImages = ProductImage::query()->whereIn('path', $paths->all())->get(['path']);
+        foreach ($productImages as $image) {
+            $media->filter(fn (self $item) => $item->path === $image->path)->each(fn (self $item) => $counts[$item->id]++);
+        }
+
+        $projectGallery = DB::table('project_media')->whereIn('media_id', $media->pluck('id')->all())->get(['media_id']);
+        foreach ($projectGallery as $galleryItem) {
+            if (array_key_exists($galleryItem->media_id, $counts)) {
+                $counts[$galleryItem->media_id]++;
+            }
+        }
+
+        $siteSettingReferences = SiteSetting::query()->whereIn('value', $paths->all())->get(['value']);
+        foreach ($siteSettingReferences as $setting) {
+            $media->filter(fn (self $item) => $item->path === $setting->value)->each(fn (self $item) => $counts[$item->id]++);
+        }
+
+        return $counts;
     }
 }

@@ -13,9 +13,12 @@ class AdminBusinessUnitController extends Controller
 {
     public function index()
     {
+        $units = BusinessUnit::orderBy('sort_order')->orderBy('name')->get();
+        $pageKeys = $units->mapWithKeys(fn (BusinessUnit $unit) => [$unit->slug => $unit->slug === 'forex' ? 'learn' : $unit->slug]);
+
         return view('admin.business-units.index', [
-            'units' => BusinessUnit::orderBy('sort_order')->orderBy('name')->get(),
-            'pages' => Page::whereIn('key', BusinessUnit::query()->pluck('slug'))->get()->keyBy('key'),
+            'units' => $units,
+            'pages' => Page::whereIn('key', $pageKeys->values())->get()->keyBy(fn (Page $page) => $pageKeys->search($page->key)),
         ]);
     }
 

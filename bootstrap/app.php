@@ -31,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $referer = (string) $request->headers->get('referer');
             $refererPath = $referer ? (string) parse_url($referer, PHP_URL_PATH) : '';
             $destination = $referer && $refererPath !== '/newsletter/subscribe'
-                ? $referer
+                ? \App\Support\SafeRedirect::normalize($refererPath, route('home'))
                 : route('home');
 
             return redirect()->to($destination)->with('newsletter_status', 'rate-limited');

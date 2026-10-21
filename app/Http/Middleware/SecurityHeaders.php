@@ -30,6 +30,11 @@ class SecurityHeaders
             "connect-src 'self' ws: wss: https://www.google.com/recaptcha/".$viteDevSources,
             "frame-src 'self' https://*.flutterwave.com",
         ]));
+        if ($request->user() && ($request->is('account') || $request->is('account/*') || $request->is('admin') || $request->is('admin/*') || $request->is('checkout/*') || $request->is('payments/*') || $request->is('downloads/*'))) {
+            $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
+        }
         if ($request->isSecure() || config('security.force_hsts', false)) $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
         return $response;

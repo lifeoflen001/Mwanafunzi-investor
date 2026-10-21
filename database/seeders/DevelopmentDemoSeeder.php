@@ -58,6 +58,7 @@ class DevelopmentDemoSeeder extends Seeder
         $now = now();
         $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
         $academy = BusinessUnit::where('slug', 'forex')->firstOrFail();
+        $development = BusinessUnit::where('slug', 'development')->firstOrFail();
         $demoClient = User::updateOrCreate(['email' => 'demo.client@mwanafunziinvestor.test'], [
             'name' => 'DEMO Client — Asha Example',
             'password' => 'DemoOnly!2026',
@@ -110,6 +111,36 @@ class DevelopmentDemoSeeder extends Seeder
                 'is_published' => false,
                 'sort_order' => 90 + $index,
             ]);
+        }
+
+        // Three clearly labelled local QA records per business module. These are
+        // deliberately published only in local/staging fixture environments so
+        // the public layout can be reviewed without presenting them as real
+        // client endorsements.
+        $moduleTestimonials = [
+            ['module' => 'Financial Academy', 'business_unit_id' => $academy->id, 'project_id' => null, 'role' => 'Fictional learner persona', 'company' => 'DEMO organisation'],
+            ['module' => 'Digital Software', 'business_unit_id' => $development->id, 'project_id' => null, 'role' => 'Fictional product persona', 'company' => 'DEMO organisation'],
+            ['module' => 'Creative Studio', 'business_unit_id' => $studio->id, 'project_id' => $demoProject->id, 'role' => 'Fictional studio persona', 'company' => 'DEMO organisation'],
+        ];
+
+        foreach ($moduleTestimonials as $moduleIndex => $moduleData) {
+            foreach (range(1, 3) as $position) {
+                $clientName = '[DEMO] '.$moduleData['module'].' perspective '.$position;
+
+                Testimonial::updateOrCreate(['client_name' => $clientName, 'business_unit_id' => $moduleData['business_unit_id']], [
+                    'client_role' => $moduleData['role'],
+                    'company' => $moduleData['company'],
+                    'testimonial' => 'DEMO DATA ONLY. Placeholder '.$position.' for '.$moduleData['module'].' testimonial workflow testing.',
+                    'project_id' => $moduleData['project_id'],
+                    'business_unit_id' => $moduleData['business_unit_id'],
+                    'rating' => null,
+                    'consent_confirmed' => false,
+                    'consent_notes' => 'Fictional local fixture; never publish as a real endorsement.',
+                    'is_featured' => true,
+                    'is_published' => true,
+                    'sort_order' => 100 + ($moduleIndex * 10) + $position,
+                ]);
+            }
         }
 
         $demoMedia = Media::updateOrCreate(['path' => 'images/brand/mwanafunzi-logo-light.webp'], [

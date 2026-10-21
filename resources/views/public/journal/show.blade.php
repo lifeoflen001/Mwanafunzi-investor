@@ -23,7 +23,7 @@
 @php($schemaContext = chr(64).'context')
 @php($articleSchema = [$schemaContext => 'https://schema.org', '@type' => 'BlogPosting', 'headline' => $article->title, 'description' => $article->publicExcerpt(), 'datePublished' => $article->published_at?->toIso8601String(), 'image' => $ogImage['url'] ?? null, 'author' => $article->authorMember ? ['@type' => 'Person', 'name' => $article->authorMember->name, 'url' => route('team.show', $article->authorMember)] : ['@type' => 'Organization', 'name' => 'Mwanafunzi Investor'], 'mainEntityOfPage' => $article->canonicalUrl(), 'publisher' => ['@type' => 'Organization', 'name' => 'Mwanafunzi Investor']])
 @if($article->hasMeaningfulUpdate()) @php($articleSchema['dateModified'] = $article->updated_at->toIso8601String()) @endif
-@section('structured_data')<script type="application/ld+json">{!! json_encode($articleSchema, JSON_UNESCAPED_SLASHES) !!}</script>@endsection
+@section('structured_data')<script type="application/ld+json">{!! json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>@endsection
 @section('content')
 <article class="editorial-article-detail">
     <x-public-hero class="detail-hero" compact :eyebrow="$article->displayCategory().' · '.($article->published_at?->format('M j, Y') ?: 'Unscheduled')" :title="$article->title" :summary="$article->publicExcerpt()" :image="$article->featured_image" :focal-point="$article->hero_focal_point" setting="hero_journal_image" :fallback-image="config('public.hero_defaults.journal')" :metadata="array_filter([$article->displayAuthor(), $article->readingTimeMinutes().' min read'])" :breadcrumbs="$heroBreadcrumbs">

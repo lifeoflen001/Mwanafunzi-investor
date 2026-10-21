@@ -893,7 +893,8 @@ class PlatformRoutesTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
 
-        $this->actingAs($admin)->get(route('admin.business-units'))->assertOk()->assertSee('Business modules')->assertSee('Creative Studio');
+        $this->actingAs($admin)->get(route('admin.business-units'))->assertOk()->assertSee('Business modules')->assertSee('Creative Studio')->assertSee('Edit Financial Academy page');
+        $this->actingAs($admin)->get(route('admin.pages'))->assertOk()->assertSee('Financial Academy');
         $this->actingAs($admin)->put(route('admin.business-units.update', $studio), [
             'name' => 'Mwanafunzi Studio',
             'tagline' => 'Stories with a point of view.',

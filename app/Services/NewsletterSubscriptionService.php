@@ -29,7 +29,7 @@ class NewsletterSubscriptionService
             if ($subscriber?->status === NewsletterSubscriber::ACTIVE) return $subscriber;
 
             $subscriber ??= new NewsletterSubscriber(['email' => $email]);
-            $subscriber->fill([
+            $subscriber->forceFill([
                 'user_id' => $subscriber->user_id ?: $userId,
                 'email' => $email,
                 'source' => $source,
