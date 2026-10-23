@@ -132,5 +132,6 @@
     <main id="main-content">@yield('content')</main>
     @include('partials.public-footer')
     @include('partials.cookie-consent')
+    @include('partials.tawk-widget')
 </body>
 </html>

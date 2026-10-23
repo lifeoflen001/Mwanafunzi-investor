@@ -173,6 +173,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     </main>
     @include('partials.public-footer')
     @include('partials.cookie-consent')
+    @include('partials.tawk-widget')
     <div class="toast" role="status" aria-live="polite" data-toast></div>
 </body>
 
