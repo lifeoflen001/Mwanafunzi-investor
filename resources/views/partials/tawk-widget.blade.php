@@ -1,5 +1,5 @@
 @if(config('tawk.enabled') && config('tawk.property_id') && config('tawk.widget_id'))
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
         (function () {
             var script = document.createElement('script');
