@@ -35,11 +35,13 @@
                     <a class="{{ request()->routeIs('account.downloads') ? 'is-active' : '' }}" href="{{ route('account.downloads') }}"><span class="portal-nav-icon" aria-hidden="true">↓</span><span>My tools</span></a>
                     <a class="{{ request()->routeIs('account.orders*') ? 'is-active' : '' }}" href="{{ route('account.orders') }}"><span class="portal-nav-icon" aria-hidden="true">▣</span><span>Orders &amp; receipts</span></a>
                     <a class="{{ request()->routeIs('account.studio.inquiries*') ? 'is-active' : '' }}" href="{{ route('account.studio.inquiries') }}"><span class="portal-nav-icon" aria-hidden="true">◫</span><span>Studio enquiries</span></a>
+                    <a class="{{ request()->routeIs('account.saved') ? 'is-active' : '' }}" href="{{ route('account.saved') }}"><span class="portal-nav-icon" aria-hidden="true">♡</span><span>Saved articles</span></a>
                 </nav>
                 <p class="portal-section-label">Account</p>
                 <nav class="portal-nav" aria-label="Account navigation">
                     <a class="{{ request()->routeIs('account.profile') ? 'is-active' : '' }}" href="{{ route('account.profile') }}"><span class="portal-nav-icon" aria-hidden="true">○</span><span>Profile</span></a>
                     <a class="{{ request()->routeIs('account.security') ? 'is-active' : '' }}" href="{{ route('account.security') }}"><span class="portal-nav-icon" aria-hidden="true">◇</span><span>Security</span></a>
+                    <a class="{{ request()->routeIs('account.notifications*') ? 'is-active' : '' }}" href="{{ route('account.notifications') }}"><span class="portal-nav-icon" aria-hidden="true">○</span><span>Notifications</span>@if($portalUser->unreadNotifications()->count() > 0)<b class="portal-nav-badge">{{ $portalUser->unreadNotifications()->count() }}</b>@endif</a>
                 </nav>
                 <p class="portal-section-label">Help</p>
                 <nav class="portal-nav" aria-label="Help navigation"><a href="{{ route('contact') }}"><span class="portal-nav-icon" aria-hidden="true">↗</span><span>Contact the desk</span></a></nav>
@@ -56,7 +58,7 @@
                         <button class="portal-profile-toggle" type="button" aria-expanded="false" aria-controls="account-profile-menu" data-admin-profile-toggle><x-portal-avatar :user="$portalUser" size="small" /><span class="portal-user-name">{{ $portalUser?->name }}</span><span class="portal-profile-caret" aria-hidden="true">⌄</span></button>
                         <div class="portal-profile-menu" id="account-profile-menu" hidden data-admin-profile-menu>
                             <div class="account-profile-menu-head"><x-portal-avatar :user="$portalUser" size="small" /><span><strong>{{ $portalUser?->name }}</strong><small>{{ $portalUser?->email }}</small></span></div>
-                            <div class="account-profile-menu-group"><a href="{{ route('account.profile') }}"><span aria-hidden="true">○</span>My profile</a><a href="{{ route('account.security') }}"><span aria-hidden="true">◇</span>Security</a><a href="{{ route('account.orders') }}"><span aria-hidden="true">▣</span>Orders &amp; receipts</a></div>
+                            <div class="account-profile-menu-group"><a href="{{ route('account.profile') }}"><span aria-hidden="true">○</span>My profile</a><a href="{{ route('account.security') }}"><span aria-hidden="true">◇</span>Security</a><a href="{{ route('account.notifications') }}"><span aria-hidden="true">○</span>Notifications</a><a href="{{ route('account.saved') }}"><span aria-hidden="true">♡</span>Saved articles</a><a href="{{ route('account.orders') }}"><span aria-hidden="true">▣</span>Orders &amp; receipts</a></div>
                             <div class="account-profile-menu-group"><a href="{{ route('contact') }}"><span aria-hidden="true">↗</span>Contact support</a><a href="{{ route('home') }}" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Visit public site</a></div>
                             <form class="account-profile-menu-group" method="post" action="{{ route('logout') }}">@csrf<button type="submit" class="account-profile-signout"><span aria-hidden="true">↪</span>Sign out</button></form>
                         </div>

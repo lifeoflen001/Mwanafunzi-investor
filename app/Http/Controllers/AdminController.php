@@ -98,12 +98,12 @@ class AdminController extends Controller
                 ['label' => 'Students', 'value' => $students, 'description' => 'Customer accounts', 'url' => route('admin.customers')],
                 ['label' => 'Orders', 'value' => $orders, 'description' => 'Commerce records', 'url' => route('admin.commerce.orders')],
                 ['label' => 'Confirmed revenue', 'value' => app(\App\Services\MoneyFormatter::class)->format($confirmedRevenue, config('commerce.currency')), 'description' => 'Paid and verified', 'url' => route('admin.commerce.orders')],
-                ['label' => 'Unread enquiries', 'value' => $unreadMessages, 'description' => 'Needs attention', 'url' => route('admin.messages', ['status' => 'new'])],
+                ['label' => 'Unread enquiries', 'value' => $unreadMessages, 'description' => 'Needs attention', 'url' => route('admin.messages', ['unread' => 1])],
                 ['label' => 'Published courses', 'value' => $publishedCourses, 'description' => 'Live learning', 'url' => route('admin.courses', ['status' => 'published'])],
                 ['label' => 'Products', 'value' => $products, 'description' => 'Tools and downloads', 'url' => route('admin.products')],
             ],
             'attentionItems' => collect([
-                ['label' => 'Unread enquiries', 'count' => $unreadMessages, 'action' => 'View inbox', 'url' => route('admin.messages', ['status' => 'new'])],
+                ['label' => 'Unread enquiries', 'count' => $unreadMessages, 'action' => 'View inbox', 'url' => route('admin.messages', ['unread' => 1])],
                 ['label' => 'Pending orders', 'count' => $metrics['pending_orders'], 'action' => 'View orders', 'url' => route('admin.commerce.orders')],
                 ['label' => 'Failed payments', 'count' => $metrics['failed_payments'], 'action' => 'View payments', 'url' => route('admin.commerce.payments', ['status' => 'failed'])],
                 ['label' => 'Draft pages', 'count' => $metrics['draft_pages'], 'action' => 'Review pages', 'url' => route('admin.pages')],
@@ -338,6 +338,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'q' => ['nullable', 'string', 'max:120'],
             'status' => ['nullable', 'in:new,in_progress,resolved,spam'],
+            'unread' => ['nullable', 'boolean'],
         ]);
         $term = trim((string) ($data['q'] ?? ''));
         $messages = ContactMessage::with('businessUnit')
@@ -347,6 +348,7 @@ class AdminController extends Controller
                 ->orWhere('phone', 'like', '%'.$term.'%')
                 ->orWhere('message', 'like', '%'.$term.'%')))
             ->when(! empty($data['status']), fn ($query) => $query->where('status', $data['status']))
+            ->when($request->boolean('unread'), fn ($query) => $query->whereNull('read_at'))
             ->latest()
             ->paginate(30)
             ->withQueryString();

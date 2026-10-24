@@ -44,6 +44,21 @@ class Comment extends Model
         return $this->hasMany(CommentReport::class);
     }
 
+    public function reactions()
+    {
+        return $this->hasMany(CommentReaction::class);
+    }
+
+    public function upReactions()
+    {
+        return $this->reactions()->where('type', 'up');
+    }
+
+    public function downReactions()
+    {
+        return $this->reactions()->where('type', 'down');
+    }
+
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', 'approved');

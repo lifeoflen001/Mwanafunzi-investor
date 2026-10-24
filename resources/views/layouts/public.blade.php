@@ -1,9 +1,7 @@
 @php
     $brandName = \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
-    $brandLogo = \App\Models\SiteSetting::getValue('logo');
-    $brandLogoData = $brandLogo ? \App\Support\PublicHero::candidate($brandLogo) : null;
-    $brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.webp');
-    $brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.webp');
+    $brandLogoDarkUrl = \App\Support\BrandAssets::logo('dark');
+    $brandLogoLightUrl = \App\Support\BrandAssets::logo('light');
     $email = \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
     $phone = \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
     $whatsapp = \App\Models\SiteSetting::getValue('contact_whatsapp');
@@ -13,9 +11,9 @@
     $footerBottomStatement = \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
     $disclaimer = \App\Models\SiteSetting::getValue('risk_disclaimer', 'Educational content only. This is not personalised financial advice. Trading involves risk.');
     $seoPageKey = match (request()->route()?->getName()) {
-        'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
+        'learn', 'courses', 'tools', 'journal', 'about', 'faqs', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
         'forex-academy' => 'learn',
-        'digital-software', 'digital-software.products', 'digital-software.projects', 'digital-software.testimonials', 'digital-systems' => 'development',
+        'digital-software', 'digital-software.products', 'digital-software.projects', 'digital-software.projects.show', 'digital-software.hospitality', 'digital-software.contact', 'digital-software.testimonials', 'digital-systems' => 'development',
         'creative-studio', 'creative-studio.services', 'creative-studio.projects', 'creative-studio.testimonials' => 'studio',
         'legal' => request()->route('page'),
         default => null,
@@ -126,10 +124,11 @@
                 @else
                     @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a><a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>
                 @endif
-                <a class="mobile-client-link" href="{{ auth()->check() && ! auth()->user()->is_admin ? route('account.dashboard') : route('login') }}">{{ auth()->check() && ! auth()->user()->is_admin ? 'My dashboard' : 'Client login' }}</a>
+                <a class="mobile-client-link" href="{{ auth()->check() && ! auth()->user()->is_admin ? route('account.dashboard') : route('login') }}">{{ auth()->check() && ! auth()->user()->is_admin ? 'My Dashboard' : 'Client login' }}</a>
             </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">Contact us <span aria-hidden="true">↗</span></a></div>
     </header>
     <main id="main-content">@yield('content')</main>
+    {{-- Every public module uses the same editable footer and legal/contact links. --}}
     @include('partials.public-footer')
     @include('partials.cookie-consent')
     @include('partials.tawk-widget')

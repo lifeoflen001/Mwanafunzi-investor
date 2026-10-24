@@ -22,6 +22,7 @@
         'tools' => 'tools',
         'journal' => 'journal',
         'about' => 'about',
+        'faqs' => 'faqs',
         'contact' => 'contact',
         'student-of-money' => 'student-of-money',
         'development', 'digital-systems' => 'development',

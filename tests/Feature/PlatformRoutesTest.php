@@ -72,7 +72,12 @@ class PlatformRoutesTest extends TestCase
     public function test_service_sites_keep_scoped_navigation_and_shared_footer(): void
     {
         foreach (['/digital-software', '/digital-software/products', '/digital-software/projects', '/digital-software/testimonials', '/creative-studio', '/creative-studio/services', '/creative-studio/projects', '/creative-studio/testimonials'] as $route) {
-            $this->get($route)->assertOk()->assertSee('site-footer', false);
+            $this->get($route)
+                ->assertOk()
+                ->assertSee('site-footer', false)
+                ->assertSee('footer-company', false)
+                ->assertSee('Cookie Preferences')
+                ->assertDontSee('digital-software-footer', false);
         }
 
         $this->get('/digital-software')
@@ -435,7 +440,7 @@ class PlatformRoutesTest extends TestCase
 
     public function test_authenticated_reactions_and_comments_are_moderated_and_safe(): void
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['is_admin' => false, 'avatar_path' => 'customer-avatars/comment-author.png']);
         $article = Article::create(['title' => 'A considered note', 'slug' => 'a-considered-note', 'content' => '<p>Read carefully.</p>', 'status' => 'published', 'published_at' => now()->subMinute()]);
 
         $this->actingAs($user)->post(route('journal.reaction', $article), ['type' => 'like'])->assertRedirect();
@@ -452,7 +457,7 @@ class PlatformRoutesTest extends TestCase
         $this->assertLessThan(strpos($commentPage->getContent(), 'comment-form-card'), strpos($commentPage->getContent(), 'A useful thought'));
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->patch(route('admin.comments.update', $comment), ['status' => 'approved'])->assertRedirect();
-        $this->get(route('journal.show', $article))->assertOk()->assertSee('&lt;script&gt;alert(1)&lt;/script&gt; A useful thought', false)->assertDontSee('<script>alert(1)</script>', false);
+        $this->get(route('journal.show', $article))->assertOk()->assertSee('&lt;script&gt;alert(1)&lt;/script&gt; A useful thought', false)->assertSee('src="/storage/customer-avatars/comment-author.png"', false)->assertDontSee('<script>alert(1)</script>', false);
 
         $otherUser = User::factory()->create(['is_admin' => false]);
         $this->actingAs($otherUser)->post(route('journal.comments.store', $article), ['parent_id' => $comment->id, 'body' => 'A reply from another reader'])->assertRedirect();
@@ -468,6 +473,34 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($otherUser)->get(route('journal.show', $article))
             ->assertSee('A reply from another reader')
             ->assertSee('Reply');
+    }
+
+    public function test_authenticated_comment_can_toggle_and_switch_thumb_reactions_and_admin_sees_counts(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $otherUser = User::factory()->create(['is_admin' => false]);
+        $article = Article::create(['title' => 'A note with reactions', 'slug' => 'a-note-with-reactions', 'content' => '<p>Read and respond.</p>', 'status' => 'published', 'published_at' => now()->subMinute()]);
+        $comment = Comment::create(['article_id' => $article->id, 'user_id' => $otherUser->id, 'body' => 'A useful reader perspective.', 'status' => 'approved', 'approved_at' => now()]);
+
+        $this->actingAs($user)->postJson(route('comments.reaction', $comment), ['type' => 'up'])
+            ->assertOk()->assertJsonPath('active', true)->assertJsonPath('user_type', 'up')->assertJsonPath('up_count', 1)->assertJsonPath('down_count', 0);
+        $this->assertDatabaseHas('comment_reactions', ['comment_id' => $comment->id, 'user_id' => $user->id, 'type' => 'up']);
+
+        $this->actingAs($user)->postJson(route('comments.reaction', $comment), ['type' => 'down'])
+            ->assertOk()->assertJsonPath('active', true)->assertJsonPath('user_type', 'down')->assertJsonPath('up_count', 0)->assertJsonPath('down_count', 1);
+        $this->assertDatabaseHas('comment_reactions', ['comment_id' => $comment->id, 'user_id' => $user->id, 'type' => 'down']);
+        $this->assertDatabaseMissing('comment_reactions', ['comment_id' => $comment->id, 'user_id' => $user->id, 'type' => 'up']);
+
+        $this->actingAs($user)->postJson(route('comments.reaction', $comment), ['type' => 'down'])
+            ->assertOk()->assertJsonPath('active', false)->assertJsonPath('user_type', null)->assertJsonPath('down_count', 0);
+
+        $this->actingAs($otherUser)->post(route('comments.reaction', $comment), ['type' => 'up'])->assertRedirect();
+        $page = $this->actingAs($user)->get(route('journal.show', $article));
+        $page->assertSee('comment-reaction-button')->assertSee('Thumbs up this comment')->assertSee('data-comment-reaction-count="up"', false);
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.comments'))->assertOk()->assertSee('Reactions')->assertSee('↑ 1', false);
+        $this->actingAs($admin)->get(route('admin.comments.show', $comment))->assertOk()->assertSee('↑ 1', false);
     }
 
     public function test_admin_managed_open_graph_media_reaches_detail_metadata(): void
@@ -726,8 +759,8 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)->get(route('admin.media.search', ['q' => 'editorial']))->assertOk()->assertJsonPath('0.label', 'editorial.jpg');
         $this->actingAs($admin)->get(route('admin.media', ['q' => 'editorial', 'type' => 'image']))->assertOk()->assertSee('Editorial desk');
 
-        $this->actingAs($admin)->put(route('admin.settings.update'), ['brand_name' => 'Mwanafunzi Test', 'contact_email' => 'desk@example.com', 'contact_phone' => '+255700000000', 'contact_whatsapp' => '+255711111111', 'contact_location' => 'Dar es Salaam', 'logo' => '', 'dark_logo' => '', 'light_logo' => '', 'icon_logo' => '', 'favicon' => '', 'apple_touch_icon' => '', 'default_social_image' => '', 'footer_copy' => 'Study. Test. Review.', 'footer_copyright' => 'Copyright managed from settings', 'footer_bottom_statement' => 'PROCESS OVER HYPE.', 'default_seo_title' => 'Test title', 'default_seo_description' => 'Test description', 'risk_disclaimer' => 'Test disclaimer.'])->assertRedirect();
-        $this->get('/')->assertOk()->assertSee('desk@example.com')->assertSee('WhatsApp +255711111111')->assertSee('Study. Test. Review.')->assertSee('Copyright managed from settings')->assertSee('PROCESS OVER HYPE.');
+        $this->actingAs($admin)->put(route('admin.settings.update'), ['brand_name' => 'Mwanafunzi Test', 'contact_email' => 'desk@example.com', 'contact_phone' => '+255700000000', 'contact_whatsapp' => '+255711111111', 'contact_location' => 'Dar es Salaam', 'logo' => '', 'dark_logo' => 'https://cdn.example.test/mwanafunzi-dark.svg', 'light_logo' => 'https://cdn.example.test/mwanafunzi-light.svg', 'icon_logo' => '', 'favicon' => '', 'apple_touch_icon' => '', 'default_social_image' => '', 'footer_copy' => 'Study. Test. Review.', 'footer_copyright' => 'Copyright managed from settings', 'footer_bottom_statement' => 'PROCESS OVER HYPE.', 'default_seo_title' => 'Test title', 'default_seo_description' => 'Test description', 'risk_disclaimer' => 'Test disclaimer.'])->assertRedirect();
+        $this->get('/')->assertOk()->assertSee('desk@example.com')->assertSee('WhatsApp +255711111111')->assertSee('Study. Test. Review.')->assertSee('Copyright managed from settings')->assertSee('PROCESS OVER HYPE.')->assertSee('https://cdn.example.test/mwanafunzi-light.svg')->assertSee('https://cdn.example.test/mwanafunzi-dark.svg');
 
         $this->post('/contact', ['name' => 'Operations', 'email' => 'ops@example.com', 'category' => 'support', 'message' => 'Please help with the platform.', 'consent' => '1'])->assertRedirect();
         $message = ContactMessage::where('email', 'ops@example.com')->firstOrFail();
@@ -1005,6 +1038,11 @@ class PlatformRoutesTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $admin->id, 'name' => 'Desk Lead', 'job_title' => 'Platform lead']);
         $this->actingAs($admin)->post(route('admin.profile.avatar.update'), ['avatar' => UploadedFile::fake()->image('avatar.png')])->assertRedirect();
         $this->assertNotNull($admin->fresh()->avatar_path);
+        $admin->update(['avatar_path' => 'admin-avatars/desk-lead.png']);
+        $this->actingAs($admin)->get(route('admin.profile'))
+            ->assertOk()
+            ->assertSee('src="/storage/admin-avatars/desk-lead.png"', false)
+            ->assertSee('admin-profile-avatar', false);
         $this->actingAs($admin)->delete(route('admin.profile.avatar.remove'))->assertRedirect();
         $this->assertNull($admin->fresh()->avatar_path);
         $this->actingAs($admin)->put(route('admin.profile.password'), ['current_password' => 'password', 'password' => 'new-password-123', 'password_confirmation' => 'new-password-123'])->assertRedirect();
@@ -1126,6 +1164,13 @@ class PlatformRoutesTest extends TestCase
             'location' => 'header', 'menu_group' => 'primary', 'label' => 'Our story', 'route_name' => 'about', 'url' => '', 'target' => '_self', 'cta_style' => 'link', 'sort_order' => $navigation->sort_order, 'is_visible' => 1,
         ])->assertRedirect();
         $this->get('/')->assertOk()->assertSee('Our story');
+
+        // Saving an existing navigation item without changing visibility must keep it public.
+        $this->actingAs($admin)->put(route('admin.navigation.update', $navigation), [
+            'location' => 'header', 'menu_group' => 'primary', 'label' => 'Our story updated', 'route_name' => 'about', 'url' => '', 'target' => '_self', 'cta_style' => 'link', 'sort_order' => $navigation->sort_order,
+        ])->assertRedirect();
+        $this->assertDatabaseHas('navigation_items', ['id' => $navigation->id, 'label' => 'Our story updated', 'is_visible' => 1]);
+        $this->get('/')->assertOk()->assertSee('Our story updated');
 
         $settings = ['brand_name' => 'Mwanafunzi Investor', 'contact_email' => 'desk@example.com', 'default_seo_title' => 'CMS title', 'default_seo_description' => 'CMS description', 'risk_disclaimer' => 'CMS disclaimer.', 'design_copper' => '#aa5533', 'design_container_max_width' => 1200];
         $this->actingAs($admin)->put(route('admin.settings.update'), $settings)->assertRedirect();

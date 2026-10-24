@@ -8,6 +8,8 @@ use App\Models\BusinessUnit;
 use App\Models\Comment;
 use App\Models\ContactMessage;
 use App\Models\Course;
+use App\Models\CourseFaq;
+use App\Models\Faq;
 use App\Models\LearningTopic;
 use App\Models\Page;
 use App\Models\Product;
@@ -32,6 +34,7 @@ class PublicSiteController extends Controller
         $page = $this->cmsPage($slug);
         $serviceScope = fn ($query) => $query->where('business_unit_id', $module->id);
         $featuredProjects = Project::published()->whereHas('services', $serviceScope)->with(['services', 'gallery'])->orderBy('display_order')->orderByDesc('project_date')->limit(6)->get();
+        $industries = Project::published()->whereHas('services', $serviceScope)->whereNotNull('industry')->where('industry', '<>', '')->distinct()->orderBy('industry')->pluck('industry');
         $featuredTestimonials = Testimonial::published()->where(function ($query) use ($module, $serviceScope) {
             $query->where('business_unit_id', $module->id)->orWhereHas('project.services', $serviceScope);
         })->with(['project', 'businessUnit'])->orderBy('sort_order')->limit(6)->get();
@@ -43,7 +46,7 @@ class PublicSiteController extends Controller
         }
 
         if ($module->slug === 'development') {
-            return view('public.modules.development', compact('module', 'page', 'featuredProjects', 'featuredTestimonials'));
+            return view('public.modules.development', compact('module', 'page', 'featuredProjects', 'featuredTestimonials', 'industries'));
         }
 
         if ($module->slug === 'studio') {
@@ -62,6 +65,13 @@ class PublicSiteController extends Controller
         $services = collect();
         $projects = collect();
         $testimonials = collect();
+        $projectFilters = [
+            'q' => trim((string) request('q')),
+            'industry' => trim((string) request('industry')),
+            'type' => trim((string) request('type')),
+        ];
+        $industries = collect();
+        $projectTypes = collect();
 
         if ($collection === 'services') {
             $services = Service::active()->where('business_unit_id', $module->id)->with('projects')->orderBy('sort_order')->orderBy('title')->get();
@@ -69,7 +79,26 @@ class PublicSiteController extends Controller
         }
 
         if ($collection === 'projects') {
-            $projects = Project::published()->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))->with('services')->orderBy('display_order')->orderByDesc('project_date')->paginate(12);
+            $projectQuery = Project::published()
+                ->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))
+                ->with(['services', 'gallery'])
+                ->when($projectFilters['q'], function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('title', 'like', '%'.$search.'%')
+                            ->orWhere('short_description', 'like', '%'.$search.'%')
+                            ->orWhere('industry', 'like', '%'.$search.'%')
+                            ->orWhere('project_type', 'like', '%'.$search.'%');
+                    });
+                })
+                ->when($projectFilters['industry'], fn ($query, string $industry) => $query->where('industry', $industry))
+                ->when($projectFilters['type'], fn ($query, string $type) => $query->where('project_type', $type))
+                ->orderBy('display_order')
+                ->orderByDesc('project_date');
+
+            $projects = $projectQuery->paginate(12)->withQueryString();
+            $catalogueQuery = Project::published()->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id));
+            $industries = (clone $catalogueQuery)->whereNotNull('industry')->where('industry', '<>', '')->distinct()->orderBy('industry')->pluck('industry');
+            $projectTypes = (clone $catalogueQuery)->whereNotNull('project_type')->where('project_type', '<>', '')->distinct()->orderBy('project_type')->pluck('project_type');
             PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
         }
 
@@ -80,7 +109,52 @@ class PublicSiteController extends Controller
             $this->preloadTestimonialMedia($testimonials->getCollection());
         }
 
-        return view('public.modules.collection', compact('module', 'page', 'collection', 'services', 'projects', 'testimonials'));
+        return view('public.modules.collection', compact('module', 'page', 'collection', 'services', 'projects', 'testimonials', 'projectFilters', 'industries', 'projectTypes'));
+    }
+
+    public function hospitality()
+    {
+        $module = BusinessUnit::query()->active()->where('slug', 'development')->firstOrFail();
+        $page = $this->cmsPage('development');
+        $terms = ['hospital', 'lodge', 'safari', 'tourism', 'tour operator', 'travel'];
+        $projects = Project::published()
+            ->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))
+            ->where(function ($query) use ($terms): void {
+                foreach ($terms as $term) {
+                    $query->orWhere('industry', 'like', '%'.$term.'%')->orWhere('project_type', 'like', '%'.$term.'%');
+                }
+            })
+            ->with(['services', 'gallery'])
+            ->orderBy('display_order')
+            ->orderByDesc('project_date')
+            ->paginate(9);
+        PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
+
+        return view('public.digital-software.hospitality', compact('module', 'page', 'projects'));
+    }
+
+    public function digitalProject(Project $project)
+    {
+        $module = BusinessUnit::query()->active()->where('slug', 'development')->firstOrFail();
+        abort_unless($project->services()->where('business_unit_id', $module->id)->exists(), 404);
+        abort_unless($project->status === 'published' && (! $project->published_at || $project->published_at->isPast()), 404);
+
+        $project->load([
+            'services.businessUnit',
+            'gallery' => fn ($query) => $query->where('media.status', 'published'),
+            'testimonials' => fn ($query) => $query->published()->orderBy('sort_order'),
+        ]);
+        $relatedProjects = Project::published()
+            ->whereKeyNot($project->id)
+            ->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))
+            ->with(['services', 'gallery'])
+            ->orderBy('display_order')
+            ->limit(3)
+            ->get();
+        $this->preloadTestimonialMedia($project->testimonials);
+        PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
+
+        return view('public.projects.digital-show', compact('project', 'relatedProjects', 'module'));
     }
 
     public function home()
@@ -316,7 +390,8 @@ class PublicSiteController extends Controller
                     $query->orWhere(fn ($pending) => $pending->where('status', 'pending')->where('user_id', auth()->id()));
                 }
             })
-            ->with('user')
+            ->with(['user.socialIdentities', 'reactions' => fn ($query) => auth()->check() ? $query->where('user_id', auth()->id()) : $query->whereKey(0)])
+            ->withCount(['upReactions', 'downReactions'])
             ->latest()
             ->get();
         $commentsByParent = $visibleComments->groupBy(fn (Comment $comment) => $comment->parent_id ?: 0);
@@ -377,6 +452,53 @@ class PublicSiteController extends Controller
         $selectedBusinessUnit = $businessUnits->firstWhere('slug', request('module'));
 
         return view('public.contact', ['businessUnits' => $businessUnits, 'selectedBusinessUnit' => $selectedBusinessUnit, 'page' => $this->cmsPage('contact')]);
+    }
+
+    public function faqs()
+    {
+        $items = collect();
+
+        CourseFaq::with('course')->orderBy('sort_order')->orderBy('id')->get()
+            ->filter(fn (CourseFaq $faq): bool => $faq->course && in_array($faq->course->status, ['published', 'open', 'coming_soon'], true))
+            ->each(fn (CourseFaq $faq) => $items->push([
+                'target' => $faq->course->title,
+                'type' => 'Course',
+                'question' => $faq->question,
+                'answer' => $faq->answer,
+                'sort_order' => $faq->sort_order,
+            ]));
+
+        Faq::with('faqable')->orderBy('sort_order')->orderBy('id')->get()
+            ->filter(function (Faq $faq): bool {
+                $target = $faq->faqable;
+
+                return match (true) {
+                    $target instanceof Product => in_array($target->availability, ['available', 'coming_soon', 'waitlist'], true),
+                    $target instanceof Page => $target->status === 'published'
+                        && $target->is_visible
+                        && (! $target->published_at || $target->published_at->isPast()),
+                    $target instanceof LearningTopic => $target->is_published && $target->status === 'published',
+                    default => false,
+                };
+            })
+            ->each(function (Faq $faq) use ($items): void {
+                $target = $faq->faqable;
+                $items->push([
+                    'target' => $target instanceof Product ? $target->name : ($target->title ?? $target->name),
+                    'type' => match (true) {
+                        $target instanceof Product => 'Digital tool',
+                        $target instanceof LearningTopic => 'Learning path',
+                        default => 'Platform',
+                    },
+                    'question' => $faq->question,
+                    'answer' => $faq->answer,
+                    'sort_order' => $faq->sort_order,
+                ]);
+            });
+
+        $groups = $items->sortBy([['target', 'asc'], ['sort_order', 'asc']])->groupBy('target');
+
+        return view('public.faqs.index', compact('groups'));
     }
 
     public function submitContact(Request $request)
@@ -447,7 +569,7 @@ class PublicSiteController extends Controller
             ['home', route('home')], ['learn', route('forex-academy')], ['development', route('digital-systems')],
             ['studio', route('creative-studio')], ['services', route('services')], ['projects', route('projects')],
             ['learn-index', route('learn')], ['courses', route('courses')], ['tools', route('tools')],
-            ['blog', route('blog')], ['site-map', route('site-map')], ['about', route('about')], ['contact', route('contact')],
+            ['blog', route('blog')], ['faqs', route('faqs')], ['site-map', route('site-map')], ['about', route('about')], ['contact', route('contact')],
             ['student-of-money', route('student-of-money')], ['privacy-policy', route('legal', 'privacy-policy')],
             ['terms', route('legal', 'terms')], ['risk-disclosure', route('legal', 'risk-disclosure')],
             ['refund-policy', route('legal', 'refund-policy')], ['disclaimer', route('legal', 'disclaimer')],
@@ -491,6 +613,7 @@ class PublicSiteController extends Controller
                 ['label' => 'Services', 'url' => route('services')],
                 ['label' => 'Projects', 'url' => route('projects')],
                 ['label' => 'Blog', 'url' => route('blog')],
+                ['label' => 'FAQs', 'url' => route('faqs')],
                 ['label' => 'About', 'url' => route('about')],
                 ['label' => 'Contact', 'url' => route('contact')],
             ],

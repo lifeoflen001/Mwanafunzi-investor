@@ -12,8 +12,8 @@ class AdminCommentController extends Controller
     public function index(Request $request)
     {
         $data = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', 'string', Rule::in([...Comment::STATUSES, 'reported'])]]);
-        $comments = Comment::with(['article', 'user', 'parent'])
-            ->withCount(['replies', 'reports'])
+        $comments = Comment::with(['article', 'user.socialIdentities', 'parent'])
+            ->withCount(['replies', 'reports', 'upReactions', 'downReactions'])
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where(fn ($search) => $search->where('body', 'like', '%'.$term.'%')->orWhere('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%')->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%'))->orWhereHas('article', fn ($article) => $article->where('title', 'like', '%'.$term.'%'))))
             ->when(($data['status'] ?? null) === 'reported', fn ($query) => $query->whereHas('reports', fn ($report) => $report->where('status', 'pending')))
             ->when(($data['status'] ?? null) && ($data['status'] ?? null) !== 'reported', fn ($query) => $query->where('status', $data['status']))
@@ -28,7 +28,7 @@ class AdminCommentController extends Controller
 
     public function show(Comment $comment)
     {
-        $comment->load(['article', 'user', 'parent', 'replies.user', 'reports.user']);
+        $comment->load(['article', 'user.socialIdentities', 'parent', 'replies.user.socialIdentities', 'reports.user.socialIdentities'])->loadCount(['upReactions', 'downReactions']);
         return view('admin.comments.show', compact('comment'));
     }
 

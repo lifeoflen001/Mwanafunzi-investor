@@ -1,9 +1,7 @@
 @php
 $brandName = \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
-$brandLogo = \App\Models\SiteSetting::getValue('logo');
-$brandLogoData = $brandLogo ? \App\Support\PublicHero::candidate($brandLogo) : null;
-$brandLogoLightUrl = asset('images/brand/mwanafunzi-logo-light.webp');
-$brandLogoDarkUrl = asset('images/brand/mwanafunzi-logo-dark.webp');
+$brandLogoLightUrl = \App\Support\BrandAssets::logo('light');
+$brandLogoDarkUrl = \App\Support\BrandAssets::logo('dark');
 $email = \App\Models\SiteSetting::getValue('contact_email', 'mwanafunziinvestor@outlook.com');
 $phone = \App\Models\SiteSetting::getValue('contact_phone', '+255 787 172 686');
 $whatsapp = \App\Models\SiteSetting::getValue('contact_whatsapp');

@@ -54,7 +54,11 @@ class AdminNavigationController extends Controller
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_visible' => ['nullable', 'boolean'],
         ]);
-        $data['is_visible'] = $request->boolean('is_visible');
+        // Inline edit forms may omit the checkbox when no visibility change was requested.
+        // Preserve the existing state instead of silently hiding a published link.
+        $data['is_visible'] = $request->has('is_visible')
+            ? $request->boolean('is_visible')
+            : ($current?->is_visible ?? false);
         if (! empty($data['route_name']) && ! Route::has($data['route_name'])) {
             throw ValidationException::withMessages(['route_name' => 'Choose a valid public route or leave this blank for an external URL.']);
         }

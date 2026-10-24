@@ -6,6 +6,8 @@ use App\Models\Article;
 use App\Models\ArticleReaction;
 use App\Models\Comment;
 use App\Models\CommentReport;
+use App\Models\CommentReaction;
+use App\Notifications\ClientActivityNotification;
 use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -59,8 +61,45 @@ class EditorialInteractionController extends Controller
             'body' => trim($data['body']),
             'status' => 'pending',
         ]);
+        $request->user()->notify(new ClientActivityNotification(
+            'Comment received',
+            'Your comment is awaiting moderation.',
+            route('blog.show', $article).'#comments',
+        ));
+        $request->session()->forget(\App\Services\AuthenticationRedirectService::COMMENT_DRAFT_KEY);
 
         return back()->with('success', 'Your comment is awaiting moderation.');
+    }
+
+    public function commentReaction(Request $request, Comment $comment)
+    {
+        $comment->loadMissing('article');
+        abort_unless($comment->status === 'approved' && $comment->article && $comment->article->status === 'published' && $comment->article->published_at?->isPast(), 404);
+
+        $data = $request->validate(['type' => ['required', Rule::in(['up', 'down'])]]);
+        $key = 'comment-reaction:'.$request->user()->id.':'.$comment->id;
+        abort_if(RateLimiter::tooManyAttempts($key, 30), 429, 'Too many reactions. Please try again shortly.');
+        RateLimiter::hit($key, 60);
+
+        $reaction = CommentReaction::where('comment_id', $comment->id)->where('user_id', $request->user()->id)->first();
+        $active = false;
+        if ($reaction?->type === $data['type']) {
+            $reaction->delete();
+        } elseif ($reaction) {
+            $reaction->update(['type' => $data['type']]);
+            $active = true;
+        } else {
+            CommentReaction::create(['comment_id' => $comment->id, 'user_id' => $request->user()->id, 'type' => $data['type']]);
+            $active = true;
+        }
+
+        $counts = CommentReaction::where('comment_id', $comment->id)->selectRaw("type, count(*) as aggregate")->groupBy('type')->pluck('aggregate', 'type');
+        $userType = CommentReaction::where('comment_id', $comment->id)->where('user_id', $request->user()->id)->value('type');
+        $payload = ['active' => $active, 'type' => $data['type'], 'user_type' => $userType, 'up_count' => (int) ($counts['up'] ?? 0), 'down_count' => (int) ($counts['down'] ?? 0)];
+
+        if ($request->expectsJson()) return response()->json($payload);
+
+        return back()->with('success', $active ? 'Your reaction was recorded.' : 'Your reaction was removed.');
     }
 
     public function report(Request $request, Comment $comment)

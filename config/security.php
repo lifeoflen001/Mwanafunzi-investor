@@ -5,6 +5,8 @@ return [
     'admin_mfa_issuer' => env('ADMIN_MFA_ISSUER', env('APP_NAME', 'Mwanafunzi Investor')),
     'admin_mfa_recovery_codes' => 8,
     'admin_mfa_window' => 1,
+    'client_mfa_recovery_codes' => 8,
+    'client_mfa_window' => 1,
     'outbound_connect_timeout' => (int) env('OUTBOUND_CONNECT_TIMEOUT', 10),
     'outbound_timeout' => (int) env('OUTBOUND_TIMEOUT', 20),
     'studio_max_reference_bytes' => (int) env('STUDIO_MAX_REFERENCE_BYTES', 32 * 1024 * 1024),

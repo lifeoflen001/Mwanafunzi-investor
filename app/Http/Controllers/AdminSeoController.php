@@ -31,6 +31,7 @@ class AdminSeoController extends Controller
             ['blog', 'Blog', route('blog'), 'Blog — Mwanafunzi Investor', 'Market education, trading reviews, platform updates and practical notes from Mwanafunzi Investor.', 'Blog'],
             ['about', 'About', route('about'), 'About — Mwanafunzi Investor', 'Learn about Mwanafunzi Investor, its approach to money, systems, software and creative work.', 'About'],
             ['contact', 'Contact', route('contact'), 'Contact — Mwanafunzi Investor', 'Contact the Mwanafunzi Investor desk for general questions, course enquiries, product support or partnerships.', 'Contact'],
+            ['faqs', 'FAQs', route('faqs'), 'Frequently asked questions — Mwanafunzi Investor', 'Find clear answers about Mwanafunzi Investor courses, learning paths, digital tools and platform services.', 'FAQ index'],
             ['development', 'Digital Software', route('digital-systems'), 'Digital Software — Mwanafunzi Investor', 'Websites, dashboards and operational software shaped around real business needs.', 'Service division'],
             ['studio', 'Creative Studio', route('creative-studio'), 'Creative Studio — Mwanafunzi Investor', 'Thoughtful visual identity, content and creative systems for brands with a point of view.', 'Service division'],
             ['services', 'Services', route('services'), 'Services — Mwanafunzi Investor', 'Digital software, websites and operational tools shaped around real business needs.', 'Services index'],

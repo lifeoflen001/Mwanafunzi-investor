@@ -231,7 +231,7 @@ class SecurityHardeningTest extends TestCase
             'email' => $customer->email,
             'password' => 'correct-password',
             'recaptcha_token' => 'valid-token',
-        ])->assertRedirect('/');
+        ])->assertRedirect(route('account.dashboard'));
 
         $this->assertAuthenticatedAs($customer);
     }
@@ -281,5 +281,18 @@ class SecurityHardeningTest extends TestCase
         $this->assertSame('encrypted', $setting->type);
         $this->assertNotSame('secret-key', $setting->value);
         $this->assertSame('secret-key', Crypt::decryptString($setting->value));
+    }
+
+    public function test_admin_security_panel_uses_compact_responsive_layout(): void
+    {
+        config()->set('security.admin_mfa_required', false);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.security'))
+            ->assertOk()
+            ->assertSee('admin-security-layout', false)
+            ->assertSee('admin-security-status-card', false)
+            ->assertSee('admin-security-config-card', false);
     }
 }

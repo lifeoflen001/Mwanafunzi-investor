@@ -62,6 +62,27 @@ class NewsletterCookieConsentTest extends TestCase
         Mail::assertQueued(\App\Mail\NewsletterConfirmedMail::class);
     }
 
+    public function test_legacy_pending_subscriber_can_render_confirmation_mail_with_a_backfilled_unsubscribe_token(): void
+    {
+        $subscriber = NewsletterSubscriber::create([
+            'email' => 'legacy-pending@example.test',
+            'status' => NewsletterSubscriber::PENDING,
+            'source' => 'footer',
+            'confirmation_token_hash' => hash('sha256', 'confirmation-token'),
+            'unsubscribe_token_hash' => hash('sha256', 'legacy-token'),
+            'unsubscribe_token' => null,
+        ]);
+
+        $html = (new NewsletterConfirmationMail($subscriber, 'confirmation-token'))->render();
+        $confirmedHtml = (new \App\Mail\NewsletterConfirmedMail($subscriber))->render();
+        $subscriber->refresh();
+
+        $this->assertNotEmpty($subscriber->unsubscribe_token);
+        $this->assertSame(hash('sha256', $subscriber->unsubscribe_token), $subscriber->unsubscribe_token_hash);
+        $this->assertStringContainsString('/newsletter/unsubscribe/', $html);
+        $this->assertStringContainsString('/newsletter/unsubscribe/', $confirmedHtml);
+    }
+
     public function test_admin_newsletter_and_privacy_surfaces_are_authorized_and_paginated(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

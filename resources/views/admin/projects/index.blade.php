@@ -3,6 +3,12 @@
 @section('portal-heading', 'Projects')
 @section('content')
 <x-admin.page-header eyebrow="Portfolio / Case studies" title="Projects" description="Curate selected work, structured case studies, media galleries, technologies and factual outcomes." action-url="{{ route('admin.projects.create') }}" action-label="Add project" />
+<form class="admin-filter-bar" method="get" action="{{ route('admin.projects') }}">
+    <label class="sr-only" for="project-search">Search projects</label><input id="project-search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search title or slug">
+    <label class="sr-only" for="project-status">Project status</label><select id="project-status" name="status"><option value="">All project statuses</option>@foreach($statuses as $status)<option value="{{ $status }}" @selected(($filters['status'] ?? '') === $status)>{{ str($status)->replace('_', ' ')->title() }}</option>@endforeach</select>
+    <label class="sr-only" for="project-industry">Industry</label><select id="project-industry" name="industry"><option value="">All industries</option>@foreach($industries as $industry)<option value="{{ $industry }}" @selected(($filters['industry'] ?? '') === $industry)>{{ $industry }}</option>@endforeach</select>
+    <button class="button button-secondary" type="submit">Filter</button>
+</form>
 <x-admin.card class="admin-table-card"><div class="admin-table"><div class="admin-table-head"><span>Project</span><span>Status</span><span>Services</span><span>Gallery</span><span>Updated</span><span></span></div>@forelse($projects as $project)<div class="admin-table-row"><span><strong>{{ $project->title }}</strong><small>{{ $project->slug }} @if($project->is_featured) · Featured @endif</small></span><span><x-admin.status-badge :status="$project->status" /></span><span>{{ $project->services_count }}</span><span>{{ $project->gallery_count }}</span><span>{{ $project->updated_at?->format('M j, Y') }}</span><x-admin.action-menu><a href="{{ route('admin.projects.edit', $project) }}">Edit case study</a><form method="post" action="{{ route('admin.projects.destroy', $project) }}" data-confirm="Remove this project?">@csrf @method('delete')<button type="submit">Remove</button></form></x-admin.action-menu></div>@empty<x-admin.empty-state title="No projects registered." description="Only add work that is real and ready to be documented." />@endforelse</div></x-admin.card>
 {{ $projects->links() }}
 @endsection

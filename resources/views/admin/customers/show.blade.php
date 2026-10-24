@@ -20,7 +20,7 @@
     </div>
 
     <section class="admin-card admin-subresource">
-        <header class="admin-card-header"><div><p class="admin-eyebrow">Profile</p><h2>Account details</h2></div></header>
+        <header class="admin-card-header"><div class="admin-person-heading">@if($customer->avatar_url)<x-portal-avatar :user="$customer" size="small" decorative />@else<span class="admin-person-avatar" aria-hidden="true">{{ $customer->initials() }}</span>@endif<div><p class="admin-eyebrow">Profile</p><h2>Account details</h2></div></div></header>
         <dl class="admin-definition-list">
             <div><dt>Email</dt><dd><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></dd></div>
             <div><dt>Phone</dt><dd>{{ $customer->phone ?: 'Not provided' }}</dd></div>

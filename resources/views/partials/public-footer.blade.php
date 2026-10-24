@@ -1,5 +1,6 @@
 @php
     $brandName = $brandName ?? \App\Models\SiteSetting::getValue('brand_name', 'Mwanafunzi Investor');
+    $brandLogoLightUrl = $brandLogoLightUrl ?? \App\Support\BrandAssets::logo('light');
     /* One editable footer contact defaults source. Admin-managed settings still override these values. */
     $footerContactDefaults = config('footer.contact');
     $email = $email ?? \App\Models\SiteSetting::getValue('contact_email', $footerContactDefaults['email']);
@@ -29,7 +30,7 @@
         <div class="footer-top">
             <div class="footer-brand">
                 <a class="brand" href="{{ route('home') }}" aria-label="{{ $brandName }} home">
-                    <img class="brand-image brand-logo-light" src="{{ asset('images/brand/mwanafunzi-logo-light.webp') }}" alt="{{ $brandName }}">
+                    <img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt="{{ $brandName }}">
                 </a>
                 <p class="footer-tagline">{{ $footerCopy }}</p>
                 <p class="footer-brand-context">Clear, practical lessons on markets, risk and probability.</p>

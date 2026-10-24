@@ -25,6 +25,7 @@
 @if($article->hasMeaningfulUpdate()) @php($articleSchema['dateModified'] = $article->updated_at->toIso8601String()) @endif
 @section('structured_data')<script type="application/ld+json">{!! json_encode($articleSchema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>@endsection
 @section('content')
+@php($commentDraft = app(\App\Services\AuthenticationRedirectService::class)->commentDraftFor(request(), $article->id))
 <article class="editorial-article-detail">
     <x-public-hero class="detail-hero" compact :eyebrow="$article->displayCategory().' · '.($article->published_at?->format('M j, Y') ?: 'Unscheduled')" :title="$article->title" :summary="$article->publicExcerpt()" :image="$article->featured_image" :focal-point="$article->hero_focal_point" setting="hero_journal_image" :fallback-image="config('public.hero_defaults.journal')" :metadata="array_filter([$article->displayAuthor(), $article->readingTimeMinutes().' min read'])" :breadcrumbs="$heroBreadcrumbs">
         @if($article->authorMember && $article->authorMember->portrait)
@@ -62,7 +63,7 @@
                     @auth
                         <form method="post" action="{{ route('blog.reaction', $article) }}" data-reaction-form>@csrf<input type="hidden" name="type" value="like"><button class="article-like-button {{ $userHasLiked ? 'is-active' : '' }}" type="submit" aria-label="{{ $userHasLiked ? 'Remove like' : 'Like this article' }}" aria-pressed="{{ $userHasLiked ? 'true' : 'false' }}"><span aria-hidden="true">{{ $userHasLiked ? '♥' : '♡' }}</span> <span data-reaction-count>{{ $article->likes_count }}</span> <span>Like</span></button></form>
                     @else
-                        <a class="article-like-button" href="{{ route('login') }}" aria-label="Sign in to like this article">♡ {{ $article->likes_count }} <span>Sign in to like</span></a>
+                        <a class="article-like-button" href="{{ route('login', ['redirect' => route('blog.show', $article)]) }}" aria-label="Sign in to like this article">♡ {{ $article->likes_count }} <span>Sign in to like</span></a>
                     @endauth
                     <div class="article-share" data-share-url="{{ $article->canonicalUrl() }}"><span class="eyebrow">Share</span><div class="article-share-links"><button type="button" data-copy-link aria-label="Copy article link">Copy link</button><a href="https://wa.me/?text={{ urlencode($article->title.' '.$article->canonicalUrl()) }}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp">WhatsApp</a><a href="https://www.linkedin.com/sharing/share-offsite/?url={{ urlencode($article->canonicalUrl()) }}" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn">LinkedIn</a><a href="https://twitter.com/intent/tweet?text={{ urlencode($article->title) }}&url={{ urlencode($article->canonicalUrl()) }}" target="_blank" rel="noopener noreferrer" aria-label="Share on X">X</a></div><span class="share-feedback" data-share-feedback role="status" aria-live="polite"></span></div>
                 </div>
@@ -82,7 +83,7 @@
 @if(!empty($preview))
     <div class="comment-signin"><p>Discussion is disabled in a private preview.</p></div>
 @elseif(auth()->check())
-    <div class="comment-form-card"><form method="post" action="{{ route('blog.comments.store', $article) }}">@csrf<label for="comment-body">Comment</label><textarea id="comment-body" name="body" rows="4" required maxlength="3000" placeholder="Share a considered response."></textarea><input class="comment-honeypot" type="text" name="website" tabindex="-1" autocomplete="off"><x-recaptcha action="comments" /><button class="button button-dark" type="submit">Post comment <span aria-hidden="true">↗</span></button></form></div>
+    <div class="comment-form-card">@if($commentDraft)<p class="comment-notice" role="status">Your comment draft was restored. Review it before posting.</p>@endif<form method="post" action="{{ route('blog.comments.store', $article) }}">@csrf<label for="comment-body">Comment</label><textarea id="comment-body" name="body" rows="4" required maxlength="3000" placeholder="Share a considered response.">{{ old('body', $commentDraft['body'] ?? '') }}</textarea><input class="comment-honeypot" type="text" name="website" tabindex="-1" autocomplete="off">@if(!empty($commentDraft['parent_id']))<input type="hidden" name="parent_id" value="{{ $commentDraft['parent_id'] }}">@endif<x-recaptcha action="comments" /><button class="button button-dark" type="submit">Post comment <span aria-hidden="true">↗</span></button></form></div>
 @else
     <div class="comment-signin"><p>Sign in to add a comment or reply.</p><a class="button button-dark" href="{{ route('login', ['redirect' => request()->getRequestUri().'#comments']) }}">Sign in to comment <span aria-hidden="true">↗</span></a><x-google-sign-in :redirect="request()->getRequestUri().'#comments'" /></div>
 @endif

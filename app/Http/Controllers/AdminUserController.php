@@ -16,6 +16,7 @@ class AdminUserController extends Controller
 
         $administrators = User::query()
             ->where('is_admin', true)
+            ->with('socialIdentities')
             ->when($term !== '', fn ($query) => $query->where(fn ($search) => $search->where('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%')))
             ->latest('updated_at')
             ->paginate(20)

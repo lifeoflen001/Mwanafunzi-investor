@@ -80,11 +80,18 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordC
     public function comments() { return $this->hasMany(Comment::class); }
     public function socialIdentities() { return $this->hasMany(SocialIdentity::class); }
     public function studioInquiries() { return $this->hasMany(StudioInquiry::class); }
+    public function clientTwoFactorAuthentication() { return $this->hasOne(ClientTwoFactorAuthentication::class); }
 
     public function getAvatarUrlAttribute(): ?string
     {
         if ($this->avatar_path) {
-            return asset('storage/'.$this->avatar_path);
+            // Keep local uploads relative to the current application base path.
+            // This works from localhost, a LAN address and an XAMPP subdirectory
+            // without trusting APP_URL to describe the browser's actual host.
+            $path = implode('/', array_map('rawurlencode', explode('/', ltrim($this->avatar_path, '/'))));
+            $basePath = app()->bound('request') ? trim(request()->getBaseUrl(), '/') : '';
+
+            return '/'.ltrim(($basePath ? $basePath.'/' : '').'storage/'.$path, '/');
         }
 
         $googleIdentity = $this->relationLoaded('socialIdentities')
@@ -101,5 +108,25 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPasswordC
             ->take(2)
             ->map(fn ($part) => strtoupper(substr($part, 0, 1)))
             ->implode('') ?: 'A';
+    }
+
+    public function firstName(): string
+    {
+        $parts = collect(preg_split('/\s+/', trim((string) $this->name)) ?: [])
+            ->filter()
+            ->values();
+
+        if ($parts->isEmpty()) {
+            return 'there';
+        }
+
+        $honorifics = ['mr', 'mrs', 'ms', 'miss', 'dr', 'prof'];
+        $first = strtolower(rtrim((string) $parts->first(), '.'));
+
+        if (in_array($first, $honorifics, true)) {
+            $parts = $parts->skip(1)->values();
+        }
+
+        return (string) ($parts->first() ?: 'there');
     }
 }

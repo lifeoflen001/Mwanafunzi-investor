@@ -4,8 +4,8 @@
 @section('content')
 <x-admin.page-header eyebrow="Admin desk / Security" title="Security status" description="Review production controls and configure bot protection without exposing secrets." />
 
-<div class="admin-dashboard-grid">
-    <section class="admin-form-card">
+<div class="admin-security-layout">
+    <section class="admin-form-card admin-security-status-card">
         <div class="admin-section-heading"><div><p class="eyebrow">Control status</p><h2>Application safeguards</h2></div></div>
         <div class="admin-status-list">
             @foreach($checks as $check)
@@ -15,7 +15,7 @@
         <p class="field-help">Dependency audits, HTTPS termination, database permissions, backup policy and web-server headers must still be verified in the deployment environment.</p>
     </section>
 
-    <section class="admin-form-card">
+    <section class="admin-form-card admin-security-config-card">
         <div class="admin-section-heading"><div><p class="eyebrow">Abuse prevention</p><h2>Google reCAPTCHA v3</h2></div><span class="status-badge {{ $recaptcha->isEnabled() ? 'status-published' : 'status-draft' }}">{{ $recaptcha->isEnabled() ? 'Enabled' : 'Disabled' }}</span></div>
         <p class="field-help">The site key is public by design. The secret is never rendered and is stored encrypted when managed here. Environment values remain the preferred production source.</p>
         <form class="admin-form" method="post" action="{{ route('admin.settings.security.update') }}" data-unsaved-warning>

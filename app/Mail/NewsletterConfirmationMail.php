@@ -27,9 +27,11 @@ class NewsletterConfirmationMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        $unsubscribeToken = $this->subscriber->ensureUnsubscribeToken();
+
         return new Content(view: 'emails.newsletter.confirmation', with: [
             'confirmUrl' => URL::temporarySignedRoute('newsletter.confirm', now()->addDays(7), ['token' => $this->token]),
-            'unsubscribeUrl' => URL::signedRoute('newsletter.unsubscribe', ['token' => $this->subscriber->unsubscribe_token]),
+            'unsubscribeUrl' => URL::signedRoute('newsletter.unsubscribe', ['token' => $unsubscribeToken]),
         ]);
     }
 }

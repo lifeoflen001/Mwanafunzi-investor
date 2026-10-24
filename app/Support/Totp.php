@@ -17,13 +17,13 @@ final class Totp
         return "otpauth://totp/{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
     }
 
-    public static function verify(string $secret, string $code, ?int $timestamp = null): bool
+    public static function verify(string $secret, string $code, ?int $timestamp = null, ?int $window = null): bool
     {
         $code = preg_replace('/\D+/', '', $code);
         if (strlen($code) !== 6) return false;
         $timestamp ??= time();
         $counter = intdiv($timestamp, 30);
-        $window = max(0, (int) config('security.admin_mfa_window', 1));
+        $window = max(0, (int) ($window ?? config('security.admin_mfa_window', 1)));
         for ($offset = -$window; $offset <= $window; $offset++) {
             if (hash_equals(self::code($secret, $counter + $offset), $code)) return true;
         }

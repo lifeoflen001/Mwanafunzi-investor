@@ -12,7 +12,7 @@ class AdminProfileController extends Controller
 {
     public function show(Request $request)
     {
-        return view('admin.profile.edit', ['user' => $request->user()]);
+        return view('admin.profile.edit', ['user' => $request->user()->load('socialIdentities')]);
     }
 
     public function update(Request $request)

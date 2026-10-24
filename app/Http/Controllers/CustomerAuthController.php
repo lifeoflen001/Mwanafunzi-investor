@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AuthenticationRedirectService;
 use App\Services\GoogleIdentityService;
-use App\Support\SafeRedirect;
 use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Password;
 
 class CustomerAuthController extends Controller
 {
-    public function login(Request $request) { $this->rememberRedirect($request); return view('auth.login'); }
-    public function register(Request $request) { $this->rememberRedirect($request); return view('auth.register'); }
-    public function verificationNotice() { return view('auth.verify'); }
+    public function login(Request $request, AuthenticationRedirectService $redirects) { $redirects->rememberFromRequest($request); return view('auth.login'); }
+    public function register(Request $request, AuthenticationRedirectService $redirects) { $redirects->rememberFromRequest($request); return view('auth.register'); }
+    public function verificationNotice(Request $request, AuthenticationRedirectService $redirects) { return view('auth.verify', ['continueUrl' => $redirects->current($request)]); }
     public function forgotPassword() { return view('auth.password-email'); }
     public function resetPassword(string $token) { return view('auth.password-reset', compact('token')); }
 
@@ -42,9 +42,10 @@ class CustomerAuthController extends Controller
         return to_route('login')->with('success', 'Your password has been reset. You can now sign in.');
     }
 
-    public function storeLogin(Request $request)
+    public function storeLogin(Request $request, AuthenticationRedirectService $redirects)
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string'], 'recaptcha_token' => Recaptcha::rules('login')]);
+        if ($request->filled('redirect')) $redirects->remember($request, $request->input('redirect'));
         unset($credentials['recaptcha_token']);
         if (! Auth::attempt([...$credentials, 'is_admin' => false, 'status' => 'active'], $request->boolean('remember'))) return back()->withErrors(['email' => 'The email or password is incorrect.'])->onlyInput('email');
         $request->session()->regenerate();
@@ -57,23 +58,24 @@ class CustomerAuthController extends Controller
             }
         }
 
-        return redirect()->to($this->pullRedirect($request));
+        return redirect()->to(app(AuthenticationRedirectService::class)->pull($request));
     }
 
-    public function storeRegister(Request $request)
+    public function storeRegister(Request $request, AuthenticationRedirectService $redirects)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'max:190', 'unique:users,email'], 'password' => ['required', 'confirmed', 'min:10'], 'phone' => ['nullable', 'string', 'max:40'], 'country' => ['nullable', 'string', 'size:2'], 'terms' => ['accepted'], 'recaptcha_token' => Recaptcha::rules('register')]);
+        if ($request->filled('redirect')) $redirects->remember($request, $request->input('redirect'));
         $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password'], 'phone' => $data['phone'] ?? null, 'country' => strtoupper($data['country'] ?? ''), 'status' => 'active', 'is_admin' => false]);
         Auth::login($user);
         $user->sendEmailVerificationNotification();
-        return to_route('verification.notice')->with('success', 'Your account was created. Check your email to verify it before checkout.');
+        return redirect()->to(app(AuthenticationRedirectService::class)->pull($request))->with('success', 'Your account was created. Check your email to verify it before checkout.');
     }
 
     public function verify(EmailVerificationRequest $request)
     {
-        if ($request->user()->hasVerifiedEmail()) return redirect()->to($this->pullRedirect($request));
+        if ($request->user()->hasVerifiedEmail()) return redirect()->to(app(AuthenticationRedirectService::class)->pull($request));
         if ($request->user()->markEmailAsVerified()) event(new Verified($request->user()));
-        return redirect()->to($this->pullRedirect($request))->with('success', 'Your email is verified.');
+        return redirect()->to(app(AuthenticationRedirectService::class)->pull($request))->with('success', 'Your email is verified.');
     }
 
     public function resendVerification(Request $request)
@@ -91,15 +93,4 @@ class CustomerAuthController extends Controller
         return to_route('login');
     }
 
-    private function rememberRedirect(Request $request): void
-    {
-        if ($request->filled('redirect')) {
-            $request->session()->put('auth.redirect', SafeRedirect::normalize($request->query('redirect')));
-        }
-    }
-
-    private function pullRedirect(Request $request): string
-    {
-        return SafeRedirect::normalize($request->session()->pull('auth.redirect'));
-    }
 }

@@ -12,6 +12,21 @@ use Illuminate\Support\Collection;
 
 class CustomerDashboardService
 {
+    /**
+     * These statuses still require client awareness or studio follow-up.
+     * Delivered, completed, declined and other terminal records remain in history.
+     */
+    private const OPEN_SERVICE_STATUSES = [
+        'new',
+        'reviewing',
+        'quoted',
+        'accepted',
+        'scheduled',
+        'in_production',
+        'editing',
+        'awaiting_approval',
+    ];
+
     public function __construct(private readonly MoneyFormatter $money)
     {
     }
@@ -45,6 +60,15 @@ class CustomerDashboardService
             ->latest()
             ->limit(5)
             ->get();
+        $ordersCount = $user->orders()->count();
+        $activeServices = $user->studioInquiries()
+            ->studio()
+            ->whereIn('status', self::OPEN_SERVICE_STATUSES)
+            ->with('service')
+            ->latest()
+            ->get();
+        $notifications = $user->notifications()->latest()->limit(5)->get();
+        $unreadNotifications = $user->unreadNotifications()->count();
 
         $catalogCourses = Course::published()
             ->select(['id', 'title', 'slug', 'featured_image', 'level', 'status', 'short_description', 'price', 'currency', 'sort_order'])
@@ -64,6 +88,7 @@ class CustomerDashboardService
         $hasAccountActivity = $enrollments->isNotEmpty()
             || $tools->isNotEmpty()
             || $orders->isNotEmpty()
+            || $activeServices->isNotEmpty()
             || $restrictedEntitlements->isNotEmpty();
         $profileComplete = filled($user->name) && filled($user->phone) && filled($user->country);
 
@@ -75,6 +100,9 @@ class CustomerDashboardService
             'featuredNextLesson' => $nextLesson,
             'tools' => $tools,
             'orders' => $orders,
+            'activeServices' => $activeServices,
+            'notifications' => $notifications,
+            'unreadNotifications' => $unreadNotifications,
             'catalogCourses' => $catalogCourses,
             'catalogTools' => $catalogTools,
             'alerts' => $this->alerts($user, $orders, $restrictedEntitlements),
@@ -83,6 +111,8 @@ class CustomerDashboardService
             'completedLessons' => $completedLessons,
             'stats' => [
                 'enrolled' => $enrollments->count(),
+                'orders' => $ordersCount,
+                'active_services' => $activeServices->count(),
                 'in_progress' => $enrollments->where('status', EnrollmentStatus::Active)->count(),
                 'completed' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
                 'lessons' => $completedLessons,

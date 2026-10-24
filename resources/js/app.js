@@ -43,10 +43,13 @@ document.addEventListener('click', (event) => {
 const publicAccount = document.querySelector('[data-public-account]');
 const publicAccountToggle = document.querySelector('[data-public-account-toggle]');
 const publicAccountPopover = document.querySelector('[data-public-account-popover]');
-const closePublicAccount = () => {
+let publicAccountReturnFocus = null;
+const closePublicAccount = (restoreFocus = false) => {
     if (!publicAccountPopover || !publicAccountToggle) return;
     publicAccountPopover.hidden = true;
     publicAccountToggle.setAttribute('aria-expanded', 'false');
+    if (restoreFocus && publicAccountReturnFocus?.focus) publicAccountReturnFocus.focus();
+    publicAccountReturnFocus = null;
 };
 publicAccountToggle?.addEventListener('click', (event) => {
     event.stopPropagation();
@@ -54,10 +57,28 @@ publicAccountToggle?.addEventListener('click', (event) => {
     const isOpen = !publicAccountPopover.hidden;
     publicAccountPopover.hidden = isOpen;
     publicAccountToggle.setAttribute('aria-expanded', String(!isOpen));
+    if (!isOpen) {
+        publicAccountReturnFocus = publicAccountToggle;
+        publicAccountPopover.querySelector('a, button')?.focus();
+    } else {
+        publicAccountReturnFocus = null;
+    }
 });
 publicAccount?.addEventListener('click', (event) => event.stopPropagation());
-document.addEventListener('click', closePublicAccount);
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePublicAccount(); });
+document.addEventListener('click', () => closePublicAccount());
+publicAccountToggle?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (publicAccountPopover?.hidden) publicAccountToggle.click();
+    }
+});
+publicAccountPopover?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closePublicAccount(true);
+    }
+});
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && publicAccountPopover && !publicAccountPopover.hidden) closePublicAccount(true); });
 
 const adminShell = document.querySelector('[data-admin-shell]');
 const adminSidebarToggle = document.querySelector('[data-admin-sidebar-toggle]');
@@ -775,6 +796,32 @@ document.querySelectorAll('[data-reaction-form]').forEach((form) => form.addEven
         if (count) count.textContent = payload.count;
         const icon = button.querySelector('[aria-hidden="true"]');
         if (icon) icon.textContent = payload.active ? '♥' : '♡';
+    } catch { form.submit(); }
+    finally { button.disabled = false; }
+}));
+
+document.querySelectorAll('[data-comment-reaction-form]').forEach((form) => form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = form.querySelector('button');
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+        const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!response.ok) throw new Error('Comment reaction failed');
+        const payload = await response.json();
+        const group = form.closest('[data-comment-reaction-group]');
+        group?.querySelectorAll('[data-comment-reaction-form]').forEach((reactionForm) => {
+            const type = reactionForm.querySelector('input[name="type"]')?.value;
+            const reactionButton = reactionForm.querySelector('button');
+            if (!reactionButton || !type) return;
+            const active = payload.user_type === type;
+            reactionButton.classList.toggle('is-active', active);
+            reactionButton.setAttribute('aria-pressed', String(active));
+            reactionButton.setAttribute('aria-label', active ? `Remove thumbs ${type}` : `Thumbs ${type} this comment`);
+            reactionButton.title = active ? `Remove thumbs ${type}` : `Thumbs ${type}`;
+            const count = reactionButton.querySelector(`[data-comment-reaction-count="${type}"]`);
+            if (count) count.textContent = payload[`${type}_count`];
+        });
     } catch { form.submit(); }
     finally { button.disabled = false; }
 }));

@@ -11,11 +11,14 @@ use App\Models\Course;
 use App\Models\CourseLessonCompletion;
 use App\Models\CourseLesson;
 use App\Models\CourseModule;
+use App\Models\BusinessUnit;
 use App\Models\Entitlement;
 use App\Models\Enrollment;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Service;
+use App\Models\StudioInquiry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -83,6 +86,26 @@ class StudentPortalTest extends TestCase
         $path = $customer->fresh()->avatar_path;
         $this->assertNotEmpty($path);
         Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_customer_avatar_is_rendered_in_the_portal_from_a_portable_url(): void
+    {
+        $customer = User::factory()->create([
+            'is_admin' => false,
+            'email_verified_at' => now(),
+            'avatar_path' => 'customer-avatars/profile-photo.png',
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('account.profile'))
+            ->assertOk()
+            ->assertSee('src="/storage/customer-avatars/profile-photo.png"', false)
+            ->assertSee('student-avatar-large', false);
+
+        $this->actingAs($customer)
+            ->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertSee('src="/storage/customer-avatars/profile-photo.png"', false);
     }
 
     public function test_customer_can_open_lessons_and_track_real_course_progress(): void
@@ -288,6 +311,63 @@ class StudentPortalTest extends TestCase
             ->assertOk()
             ->assertDontSee('ORD-RETURNING-001')
             ->assertDontSee('Access needs attention');
+    }
+
+    public function test_returning_dashboard_surfaces_owned_open_studio_work(): void
+    {
+        $customer = User::factory()->create(['is_admin' => false, 'email_verified_at' => now(), 'status' => 'active']);
+        $otherCustomer = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();
+        $development = BusinessUnit::where('slug', 'development')->firstOrFail();
+        $service = Service::create([
+            'business_unit_id' => $studio->id,
+            'title' => 'Portrait photography',
+            'slug' => 'dashboard-portrait-photography',
+            'short_description' => 'Portrait coverage.',
+            'pricing_type' => 'custom_quote',
+            'is_active' => true,
+        ]);
+
+        StudioInquiry::create([
+            'reference' => 'STU-DASH-001',
+            'user_id' => $customer->id,
+            'business_unit_id' => $studio->id,
+            'service_id' => $service->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'description' => 'A dashboard service enquiry with enough detail for review.',
+            'status' => 'reviewing',
+        ]);
+        StudioInquiry::create([
+            'reference' => 'STU-OTHER-001',
+            'user_id' => $otherCustomer->id,
+            'business_unit_id' => $studio->id,
+            'service_id' => $service->id,
+            'name' => $otherCustomer->name,
+            'email' => $otherCustomer->email,
+            'description' => 'This enquiry belongs to another client.',
+            'status' => 'accepted',
+        ]);
+        StudioInquiry::create([
+            'reference' => 'DEV-HIDDEN-001',
+            'user_id' => $customer->id,
+            'business_unit_id' => $development->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'description' => 'This non-studio enquiry must not appear in the studio workspace.',
+            'status' => 'accepted',
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('account.dashboard'))
+            ->assertOk()
+            ->assertSee('Keep your studio work moving.')
+            ->assertSee('STU-DASH-001')
+            ->assertSee('Portrait photography')
+            ->assertSee('Reviewing')
+            ->assertSee(route('account.studio.inquiries.show', ['inquiry' => StudioInquiry::where('reference', 'STU-DASH-001')->firstOrFail()]), false)
+            ->assertDontSee('STU-OTHER-001')
+            ->assertDontSee('DEV-HIDDEN-001');
     }
 
     public function test_pending_payment_is_returning_state_with_a_specific_actionable_alert(): void

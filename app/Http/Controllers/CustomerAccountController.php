@@ -12,6 +12,7 @@ use App\Services\CustomerDashboardService;
 use App\Services\DownloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerAccountController extends Controller
@@ -24,13 +25,24 @@ class CustomerAccountController extends Controller
     public function order(Order $order) { $this->owner($order); return view('account.order', compact('order')); }
     public function studioInquiries(Request $request)
     {
-        return view('account.studio-inquiries', ['inquiries' => $request->user()->studioInquiries()->with('service')->latest()->paginate(12)]);
+        return view('account.studio-inquiries', ['inquiries' => $request->user()->studioInquiries()->studio()->with('service')->latest()->paginate(12)]);
     }
     public function studioInquiry(Request $request, StudioInquiry $inquiry)
     {
         abort_unless($inquiry->user_id === $request->user()->id && $inquiry->businessUnit?->slug === 'studio', 404);
         $inquiry->load('service');
         return view('account.studio-inquiry', compact('inquiry'));
+    }
+    public function savedArticles(Request $request)
+    {
+        return view('account.saved-articles', [
+            'savedArticles' => $request->user()->articleReactions()
+                ->where('type', 'like')
+                ->whereHas('article', fn ($query) => $query->published())
+                ->with('article.category')
+                ->latest()
+                ->paginate(12),
+        ]);
     }
     public function downloads(Request $request) { return view('account.downloads', ['entitlements' => $request->user()->entitlements()->where('type', 'product')->where('status', 'active')->with(['product.assets', 'version'])->latest()->get(), 'downloads' => app(DownloadService::class)]); }
     public function courses(Request $request)
@@ -109,7 +121,40 @@ class CustomerAccountController extends Controller
         $user->update(['avatar_path' => null]);
         return back()->with('success', 'Profile photo removed.');
     }
-    public function security(Request $request) { return view('account.security', ['user' => $request->user()->load('socialIdentities')]); }
+    public function security(Request $request)
+    {
+        $table = config('session.table', 'sessions');
+        $sessions = DB::table($table)
+            ->where('user_id', $request->user()->id)
+            ->orderByDesc('last_activity')
+            ->get()
+            ->map(fn ($session) => (object) [
+                'id' => $session->id,
+                'ip_address' => $session->ip_address,
+                'user_agent' => $session->user_agent,
+                'last_activity' => \Illuminate\Support\Carbon::createFromTimestamp($session->last_activity),
+                'is_current' => hash_equals((string) $request->session()->getId(), (string) $session->id),
+            ]);
+
+        return view('account.security', [
+            'user' => $request->user()->load('socialIdentities', 'clientTwoFactorAuthentication'),
+            'sessions' => $sessions,
+        ]);
+    }
+    public function revokeSession(Request $request, string $session)
+    {
+        abort_if(hash_equals((string) $request->session()->getId(), $session), 422, 'The current session cannot be revoked here.');
+        DB::table(config('session.table', 'sessions'))->where('id', $session)->where('user_id', $request->user()->id)->delete();
+
+        return back()->with('success', 'The selected session was revoked.');
+    }
+    public function revokeOtherSessions(Request $request)
+    {
+        $request->validate(['current_password' => ['required', 'current_password']]);
+        DB::table(config('session.table', 'sessions'))->where('user_id', $request->user()->id)->where('id', '!=', $request->session()->getId())->delete();
+
+        return back()->with('success', 'All other sessions were revoked.');
+    }
     public function updatePassword(Request $request)
     {
         $currentPasswordRules = $request->user()->password === null ? ['nullable'] : ['required', 'current_password'];

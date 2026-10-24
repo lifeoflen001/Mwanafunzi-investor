@@ -133,7 +133,7 @@ class GoogleAuthenticationTest extends TestCase
             'auth.redirect' => 'https://evil.example/steal-session',
         ])->get(route('auth.google.callback'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('account.dashboard'));
     }
 
     public function test_google_only_clients_must_set_a_password_before_disconnect(): void

@@ -34,6 +34,9 @@ use App\Http\Controllers\AdminTeamMemberController;
 use App\Http\Controllers\AdminCommentController;
 use App\Http\Controllers\EditorialInteractionController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\CustomerNotificationController;
+use App\Http\Controllers\CustomerDataExportController;
+use App\Http\Controllers\CustomerTwoFactorController;
 use App\Http\Controllers\StudioInquiryController;
 use App\Http\Controllers\AdminNewsletterController;
 use App\Http\Controllers\AdminPrivacyController;
@@ -47,9 +50,12 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('/financial-academy', 'academy')->name('forex-academy');
     Route::get('/digital-software', 'module')->defaults('slug', 'development')->name('digital-systems');
+    Route::get('/digital-software/hospitality', 'hospitality')->name('digital-software.hospitality');
     Route::get('/digital-software/products', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'products')->name('digital-software.products');
     Route::get('/digital-software/projects', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'projects')->name('digital-software.projects');
+    Route::get('/digital-software/projects/{project:slug}', 'digitalProject')->name('digital-software.projects.show');
     Route::get('/digital-software/testimonials', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'testimonials')->name('digital-software.testimonials');
+    Route::get('/digital-software/contact', 'contact')->defaults('module', 'development')->name('digital-software.contact');
     Route::redirect('/digital-systems', '/digital-software', 301)->name('digital-systems.legacy');
     Route::get('/creative-studio', 'module')->defaults('slug', 'studio')->name('creative-studio');
     Route::get('/creative-studio/book', [StudioInquiryController::class, 'create'])->name('creative-studio.book');
@@ -87,6 +93,8 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/student-of-money', 'page')->defaults('page', 'student-of-money')->name('student-of-money');
     Route::get('/pages/{slug}', 'pageBySlug')->name('pages.show');
     Route::get('/contact', 'contact')->name('contact');
+    Route::get('/faqs', 'faqs')->name('faqs');
+    Route::redirect('/faq', '/faqs', 301)->name('faq.legacy');
     Route::post('/contact', 'submitContact')->middleware('throttle:10,1')->name('contact.submit');
     Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,10')->name('newsletter.subscribe');
     Route::get('/newsletter/confirm/{token}', [NewsletterController::class, 'confirm'])->middleware(['signed', 'throttle:10,10'])->name('newsletter.confirm');
@@ -96,6 +104,7 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::post('/journal/{article}/reaction', [EditorialInteractionController::class, 'react'])->middleware(['auth', 'throttle:30,1'])->name('journal.reaction');
     Route::post('/journal/{article}/comments', [EditorialInteractionController::class, 'comment'])->middleware(['auth', 'throttle:5,5'])->name('journal.comments.store');
     Route::post('/comments/{comment}/report', [EditorialInteractionController::class, 'report'])->middleware(['auth', 'throttle:10,10'])->name('comments.report');
+    Route::post('/comments/{comment}/reaction', [EditorialInteractionController::class, 'commentReaction'])->middleware(['auth', 'throttle:30,1'])->name('comments.reaction');
     Route::get('/sitemap.xml', 'sitemap')->name('sitemap');
     Route::get('/site-map', 'htmlSiteMap')->name('site-map');
     Route::get('/{page}', 'page')->whereIn('page', ['privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer'])->name('legal');
@@ -187,25 +196,40 @@ Route::post('/financial-academy/courses/{course:slug}/waitlist', [WaitlistContro
 Route::post('/courses/{course:slug}/waitlist', [WaitlistController::class, 'store'])->middleware('throttle:8,1')->name('courses.waitlist.legacy');
 
 Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->group(function () {
-    Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
-    Route::get('/orders', [CustomerAccountController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order}', [CustomerAccountController::class, 'order'])->name('orders.show');
-    Route::get('/orders/{order}/receipt', [CustomerAccountController::class, 'receipt'])->name('orders.receipt');
-    Route::get('/studio/inquiries', [CustomerAccountController::class, 'studioInquiries'])->name('studio.inquiries');
-    Route::get('/studio/inquiries/{inquiry}', [CustomerAccountController::class, 'studioInquiry'])->name('studio.inquiries.show');
-    Route::get('/downloads', [CustomerAccountController::class, 'downloads'])->name('downloads');
-    Route::get('/courses', [CustomerAccountController::class, 'courses'])->name('courses');
-    Route::get('/courses/{enrollment}', [CustomerAccountController::class, 'course'])->name('courses.show');
-    Route::get('/courses/{enrollment}/lessons/{lesson}', [CustomerAccountController::class, 'lesson'])->name('courses.lessons.show');
-    Route::post('/courses/{enrollment}/lessons/{lesson}/complete', [CustomerAccountController::class, 'completeLesson'])->name('courses.lessons.complete');
-    Route::get('/profile', [CustomerAccountController::class, 'profile'])->name('profile');
-    Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/profile/avatar', [CustomerAccountController::class, 'updateAvatar'])->name('profile.avatar.update');
-    Route::delete('/profile/avatar', [CustomerAccountController::class, 'removeAvatar'])->name('profile.avatar.remove');
-    Route::get('/security', [CustomerAccountController::class, 'security'])->name('security');
-    Route::put('/security/password', [CustomerAccountController::class, 'updatePassword'])->name('security.password');
-    Route::get('/security/google/redirect', [GoogleAuthController::class, 'linkRedirect'])->middleware('throttle:10,1')->name('security.google.redirect');
-    Route::post('/security/google/disconnect', [GoogleAuthController::class, 'disconnect'])->name('security.google.disconnect');
+    Route::get('/security/2fa/setup', [CustomerTwoFactorController::class, 'setup'])->name('security.2fa.setup');
+    Route::post('/security/2fa/setup', [CustomerTwoFactorController::class, 'storeSetup'])->middleware('throttle:5,1')->name('security.2fa.setup.store');
+    Route::get('/security/2fa/challenge', [CustomerTwoFactorController::class, 'challenge'])->name('security.challenge');
+    Route::post('/security/2fa/challenge', [CustomerTwoFactorController::class, 'verifyChallenge'])->middleware('throttle:5,1')->name('security.challenge.verify');
+    Route::delete('/security/2fa', [CustomerTwoFactorController::class, 'disable'])->name('security.2fa.disable');
+
+    Route::middleware('client.mfa')->group(function () {
+        Route::get('/', [CustomerAccountController::class, 'dashboard'])->name('dashboard');
+        Route::get('/orders', [CustomerAccountController::class, 'orders'])->name('orders');
+        Route::get('/orders/{order}', [CustomerAccountController::class, 'order'])->name('orders.show');
+        Route::get('/orders/{order}/receipt', [CustomerAccountController::class, 'receipt'])->name('orders.receipt');
+        Route::get('/studio/inquiries', [CustomerAccountController::class, 'studioInquiries'])->name('studio.inquiries');
+        Route::get('/studio/inquiries/{inquiry}', [CustomerAccountController::class, 'studioInquiry'])->name('studio.inquiries.show');
+        Route::get('/downloads', [CustomerAccountController::class, 'downloads'])->name('downloads');
+        Route::get('/courses', [CustomerAccountController::class, 'courses'])->name('courses');
+        Route::get('/courses/{enrollment}', [CustomerAccountController::class, 'course'])->name('courses.show');
+        Route::get('/courses/{enrollment}/lessons/{lesson}', [CustomerAccountController::class, 'lesson'])->name('courses.lessons.show');
+        Route::post('/courses/{enrollment}/lessons/{lesson}/complete', [CustomerAccountController::class, 'completeLesson'])->name('courses.lessons.complete');
+        Route::get('/profile', [CustomerAccountController::class, 'profile'])->name('profile');
+        Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/avatar', [CustomerAccountController::class, 'updateAvatar'])->name('profile.avatar.update');
+        Route::delete('/profile/avatar', [CustomerAccountController::class, 'removeAvatar'])->name('profile.avatar.remove');
+        Route::get('/security', [CustomerAccountController::class, 'security'])->name('security');
+        Route::put('/security/password', [CustomerAccountController::class, 'updatePassword'])->name('security.password');
+        Route::get('/security/google/redirect', [GoogleAuthController::class, 'linkRedirect'])->middleware('throttle:10,1')->name('security.google.redirect');
+        Route::post('/security/google/disconnect', [GoogleAuthController::class, 'disconnect'])->name('security.google.disconnect');
+        Route::get('/notifications', [CustomerNotificationController::class, 'index'])->name('notifications');
+        Route::post('/notifications/read-all', [CustomerNotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('/notifications/{notification}/read', [CustomerNotificationController::class, 'read'])->name('notifications.read');
+        Route::get('/saved-articles', [CustomerAccountController::class, 'savedArticles'])->name('saved');
+        Route::post('/security/sessions/revoke-others', [CustomerAccountController::class, 'revokeOtherSessions'])->name('security.sessions.revoke-others');
+        Route::delete('/security/sessions/{session}', [CustomerAccountController::class, 'revokeSession'])->name('security.sessions.revoke');
+        Route::get('/privacy/export', CustomerDataExportController::class)->name('privacy.export');
+    });
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {

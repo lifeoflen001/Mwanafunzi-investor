@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class NewsletterSubscriber extends Model
 {
@@ -26,6 +27,25 @@ class NewsletterSubscriber extends Model
     protected function casts(): array
     {
         return ['confirmed_at' => 'datetime', 'unsubscribed_at' => 'datetime', 'last_confirmation_sent_at' => 'datetime', 'unsubscribe_token' => 'encrypted'];
+    }
+
+    /**
+     * Backfill the encrypted token for legacy/imported rows before lifecycle
+     * mail renders an unsubscribe URL.
+     */
+    public function ensureUnsubscribeToken(): string
+    {
+        if (filled($this->unsubscribe_token) && filled($this->unsubscribe_token_hash)) {
+            return (string) $this->unsubscribe_token;
+        }
+
+        $token = Str::random(64);
+        $this->forceFill([
+            'unsubscribe_token_hash' => hash('sha256', $token),
+            'unsubscribe_token' => $token,
+        ])->save();
+
+        return $token;
     }
 
     public function user() { return $this->belongsTo(User::class); }

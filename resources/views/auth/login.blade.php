@@ -14,6 +14,7 @@
 
                 <form class="client-auth-form" method="post" action="{{ route('login.store') }}" data-auth-form>
                 @csrf
+                @if(request()->filled('redirect'))<input type="hidden" name="redirect" value="{{ request('redirect') }}">@endif
                 @include('partials.form-feedback')
                 @include('components.recaptcha', ['action' => 'login'])
 

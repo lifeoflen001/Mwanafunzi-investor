@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
+use App\Notifications\ClientActivityNotification;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -43,6 +44,11 @@ class PaymentService
                     $entitlement = $entitlements->grantForItem($item, $payment->order->user);
                     if ($entitlement?->course_id) app(EnrollmentService::class)->activateFromEntitlement($entitlement);
                 }
+                $payment->order->user?->notify(new ClientActivityNotification(
+                    'Payment confirmed',
+                    'Payment for order '.$payment->order->order_number.' has been verified and your access is ready.',
+                    route('account.orders.show', $payment->order),
+                ));
             }
             if ($eventKey) PaymentEvent::updateOrCreate(['event_key' => $eventKey], ['payment_id' => $payment->id, 'event_type' => 'payment_confirmed', 'provider' => $payment->provider, 'payload' => $providerData, 'status' => 'processed', 'processed_at' => now()]);
             DB::afterCommit(function () use ($payment) { Mail::to($payment->order->customer_email)->queue(new CommerceMail('Payment confirmed — '.$payment->order->order_number, 'Payment confirmed', 'Your payment has been verified and your Mwanafunzi Investor access is ready.', route('account.orders.show', $payment->order), 'View your order')); });

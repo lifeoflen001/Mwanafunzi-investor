@@ -20,10 +20,13 @@ class Testimonial extends Model
 
     public function scopePublished(Builder $query): Builder
     {
-        $query->where('is_published', true);
+        // Development fixtures are intentionally reusable for local QA, but must
+        // never appear as public social proof in any environment.
+        $query->where('is_published', true)
+            ->where('client_name', 'not like', '[DEMO]%');
 
         if (app()->environment('production')) {
-            $query->where('consent_confirmed', true)->where('client_name', 'not like', '[DEMO]%');
+            $query->where('consent_confirmed', true);
         }
 
         return $query;

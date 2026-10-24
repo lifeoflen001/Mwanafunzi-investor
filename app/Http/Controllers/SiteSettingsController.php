@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SiteSetting;
 use App\Models\Media;
 use App\Support\DesignTokens;
+use App\Support\ErrorPageContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use App\Support\AdminAudit;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class SiteSettingsController extends Controller
 {
-    public function edit() { return view('admin.settings.edit', ['settings' => SiteSetting::orderBy('key')->get()->keyBy('key'), 'media' => Media::latest()->limit(60)->get(), 'designTokenDefinitions' => DesignTokens::definitions(), 'designTokenValues' => DesignTokens::values()]); }
+    public function edit() { return view('admin.settings.edit', ['settings' => SiteSetting::orderBy('key')->get()->keyBy('key'), 'media' => Media::latest()->limit(60)->get(), 'designTokenDefinitions' => DesignTokens::definitions(), 'designTokenValues' => DesignTokens::values(), 'errorPages' => ErrorPageContent::all(), 'errorPageFields' => ErrorPageContent::fields()]); }
 
     public function security(RecaptchaService $recaptcha)
     {
@@ -59,8 +60,19 @@ class SiteSettingsController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->validate(array_merge(['brand_name' => ['required', 'string', 'max:190'], 'contact_email' => ['required', 'email'], 'contact_phone' => ['nullable', 'string', 'max:40'], 'contact_whatsapp' => ['nullable', 'string', 'max:40'], 'contact_location' => ['nullable', 'string', 'max:120'], 'business_legal_name' => ['nullable', 'string', 'max:190'], 'business_email' => ['nullable', 'email', 'max:190'], 'business_phone' => ['nullable', 'string', 'max:40'], 'business_address' => ['nullable', 'string', 'max:500'], 'business_country' => ['nullable', 'string', 'max:120'], 'business_jurisdiction' => ['nullable', 'string', 'max:190'], 'business_registration_number' => ['nullable', 'string', 'max:120'], 'business_tax_number' => ['nullable', 'string', 'max:120'], 'support_contact' => ['nullable', 'string', 'max:190'], 'google_site_verification' => ['nullable', 'string', 'max:255'], 'bing_site_verification' => ['nullable', 'string', 'max:255'], 'logo' => ['nullable', 'string', 'max:255'], 'dark_logo' => ['nullable', 'string', 'max:255'], 'light_logo' => ['nullable', 'string', 'max:255'], 'icon_logo' => ['nullable', 'string', 'max:255'], 'favicon' => ['nullable', 'string', 'max:255'], 'apple_touch_icon' => ['nullable', 'string', 'max:255'], 'default_social_image' => ['nullable', 'string', 'max:255'], 'default_public_hero' => ['nullable', 'string', 'max:255'], 'hero_home_image' => ['nullable', 'string', 'max:255'], 'hero_learn_image' => ['nullable', 'string', 'max:255'], 'hero_courses_image' => ['nullable', 'string', 'max:255'], 'hero_tools_image' => ['nullable', 'string', 'max:255'], 'hero_journal_image' => ['nullable', 'string', 'max:255'], 'hero_about_image' => ['nullable', 'string', 'max:255'], 'hero_contact_image' => ['nullable', 'string', 'max:255'], 'hero_student_image' => ['nullable', 'string', 'max:255'], 'hero_legal_image' => ['nullable', 'string', 'max:255'], 'footer_copy' => ['nullable', 'string', 'max:500'], 'footer_copyright' => ['nullable', 'string', 'max:190'], 'footer_bottom_statement' => ['nullable', 'string', 'max:190'], 'default_seo_title' => ['required', 'string', 'max:190'], 'default_seo_description' => ['required', 'string', 'max:300'], 'risk_disclaimer' => ['required', 'string', 'max:600']], DesignTokens::rules()));
-        foreach (Arr::except($data, array_keys(DesignTokens::rules())) as $key => $value) SiteSetting::updateOrCreate(['key' => $key], ['value' => $value, 'type' => 'text']);
+        $rules = array_merge(['brand_name' => ['required', 'string', 'max:190'], 'contact_email' => ['required', 'email'], 'contact_phone' => ['nullable', 'string', 'max:40'], 'contact_whatsapp' => ['nullable', 'string', 'max:40'], 'contact_location' => ['nullable', 'string', 'max:120'], 'business_legal_name' => ['nullable', 'string', 'max:190'], 'business_email' => ['nullable', 'email', 'max:190'], 'business_phone' => ['nullable', 'string', 'max:40'], 'business_address' => ['nullable', 'string', 'max:500'], 'business_country' => ['nullable', 'string', 'max:120'], 'business_jurisdiction' => ['nullable', 'string', 'max:190'], 'business_registration_number' => ['nullable', 'string', 'max:120'], 'business_tax_number' => ['nullable', 'string', 'max:120'], 'support_contact' => ['nullable', 'string', 'max:190'], 'google_site_verification' => ['nullable', 'string', 'max:255'], 'bing_site_verification' => ['nullable', 'string', 'max:255'], 'logo' => ['nullable', 'string', 'max:255'], 'dark_logo' => ['nullable', 'string', 'max:255'], 'light_logo' => ['nullable', 'string', 'max:255'], 'icon_logo' => ['nullable', 'string', 'max:255'], 'favicon' => ['nullable', 'string', 'max:255'], 'apple_touch_icon' => ['nullable', 'string', 'max:255'], 'default_social_image' => ['nullable', 'string', 'max:255'], 'default_public_hero' => ['nullable', 'string', 'max:255'], 'hero_home_image' => ['nullable', 'string', 'max:255'], 'hero_learn_image' => ['nullable', 'string', 'max:255'], 'hero_courses_image' => ['nullable', 'string', 'max:255'], 'hero_tools_image' => ['nullable', 'string', 'max:255'], 'hero_journal_image' => ['nullable', 'string', 'max:255'], 'hero_about_image' => ['nullable', 'string', 'max:255'], 'hero_contact_image' => ['nullable', 'string', 'max:255'], 'hero_student_image' => ['nullable', 'string', 'max:255'], 'hero_legal_image' => ['nullable', 'string', 'max:255'], 'footer_copy' => ['nullable', 'string', 'max:500'], 'footer_copyright' => ['nullable', 'string', 'max:190'], 'footer_bottom_statement' => ['nullable', 'string', 'max:190'], 'default_seo_title' => ['required', 'string', 'max:190'], 'default_seo_description' => ['required', 'string', 'max:300'], 'risk_disclaimer' => ['required', 'string', 'max:600'], 'error_pages' => ['sometimes', 'array']], DesignTokens::rules());
+        foreach (ErrorPageContent::codes() as $code) {
+            foreach (ErrorPageContent::fields() as $field => $definition) {
+                $rules["error_pages.{$code}.{$field}"] = ['sometimes', 'required', 'string', 'max:'.$definition['max']];
+            }
+        }
+
+        $data = $request->validate($rules);
+        $excludedKeys = array_merge(array_keys(DesignTokens::rules()), ['error_pages']);
+        foreach (Arr::except($data, $excludedKeys) as $key => $value) SiteSetting::updateOrCreate(['key' => $key], ['value' => $value, 'type' => 'text']);
+        if (array_key_exists('error_pages', $data)) {
+            SiteSetting::updateOrCreate(['key' => 'error_pages'], ['value' => json_encode(ErrorPageContent::filterInput($data['error_pages'])), 'type' => 'json']);
+        }
         DesignTokens::save($data);
         SiteSetting::forgetCache();
         AdminAudit::record('settings.updated', 'Updated site settings');

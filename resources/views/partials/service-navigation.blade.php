@@ -26,10 +26,12 @@
         ],
     ];
     $currentServiceNavigation = $serviceNavigation[$serviceContext] ?? null;
+    $hasDigitalTestimonials = $serviceContext !== 'development' || \App\Models\Testimonial::published()->where(function ($query) { $query->whereHas('businessUnit', fn ($unitQuery) => $unitQuery->where('slug', 'development'))->orWhereHas('project.services.businessUnit', fn ($unitQuery) => $unitQuery->where('slug', 'development')); })->exists();
 @endphp
 
 @if($currentServiceNavigation)
     @foreach($currentServiceNavigation['links'] as $link)
+        @continue($link['label'] === 'Testimonials' && ! $hasDigitalTestimonials)
         <a class="{{ request()->url() === $link['url'] ? 'active' : '' }}" href="{{ $link['url'] }}">{{ $link['label'] }}</a>
     @endforeach
 @endif

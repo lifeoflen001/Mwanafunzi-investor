@@ -58,6 +58,20 @@ class PortfolioTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('A supplied and approved perspective.');
     }
 
+    public function test_demo_testimonials_never_appear_on_public_pages(): void
+    {
+        Testimonial::create([
+            'client_name' => '[DEMO] Local QA perspective',
+            'testimonial' => 'DEMO DATA ONLY. This must remain private.',
+            'is_published' => true,
+            'is_featured' => true,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('DEMO DATA ONLY. This must remain private.');
+    }
+
     public function test_public_testimonial_sections_hide_empty_states_and_use_editorial_cards(): void
     {
         $this->get(route('home'))

@@ -5,8 +5,8 @@
 <section class="student-dashboard-hero">
     <div>
         <p class="student-eyebrow">Student portal / Overview</p>
-        <h1>{{ $isNewCustomer ? 'Welcome, '.$user->name.'.' : 'Welcome back, '.$user->name.'.' }}</h1>
-        <p>{{ $isNewCustomer ? 'Build your process with structured financial education and focused tools for deliberate practice.' : 'Pick up where you left off, review your access and keep the next useful action visible.' }}</p>
+        <h1>{{ $isNewCustomer ? 'Welcome, '.$user->firstName().'.' : 'Welcome back, '.$user->firstName().'.' }}</h1>
+        <p>Your learning and services workspace.</p>
     </div>
     <div class="student-dashboard-hero-actions">
         @if($featuredEnrollment && $featuredNextLesson)
@@ -27,6 +27,18 @@
         <a href="{{ $alert['href'] }}">{{ $alert['action'] }} <span aria-hidden="true">↗</span></a>
     </section>
 @endforeach
+
+@if($notifications->isNotEmpty())
+    <section class="student-dashboard-section student-dashboard-notifications">
+        <div class="student-dashboard-section-heading"><div><p class="student-eyebrow">Account updates</p><h2>{{ $unreadNotifications ? $unreadNotifications.' unread update'.($unreadNotifications === 1 ? '' : 's') : 'Recent account updates.' }}</h2></div><a class="student-text-link" href="{{ route('account.notifications') }}">View all <span aria-hidden="true">→</span></a></div>
+        <x-portal-card class="student-panel">
+            @foreach($notifications->take(3) as $notification)
+                @php($data = $notification->data)
+                <a class="student-list-row" href="{{ route('account.notifications') }}"><span class="student-list-icon student-list-icon-teal" aria-hidden="true">{{ $notification->read_at ? '○' : '●' }}</span><span><strong>{{ $data['title'] ?? 'Account update' }}</strong><small>{{ $data['body'] ?? '' }} · {{ $notification->created_at?->diffForHumans() }}</small></span><span class="student-list-trailing"><b aria-hidden="true">↗</b></span></a>
+            @endforeach
+        </x-portal-card>
+    </section>
+@endif
 
 @if($isNewCustomer)
     @php($completedChecklist = collect($checklist)->where('complete', true)->count())
@@ -81,10 +93,26 @@
 @else
     <div class="student-metric-grid student-dashboard-stats">
         <x-portal-metric label="Enrolled courses" :value="$stats['enrolled']" description="Your active learning access" tone="teal" icon="▤" />
-        <x-portal-metric label="In progress" :value="$stats['in_progress']" description="Courses still underway" tone="gold" icon="↗" />
-        <x-portal-metric label="Completed courses" :value="$stats['completed']" description="Finished learning paths" tone="blue" icon="✓" />
+        <x-portal-metric label="Orders" :value="$stats['orders']" description="Your order history" tone="gold" icon="▣" />
+        <x-portal-metric label="Active services" :value="$stats['active_services']" description="Open studio work" tone="blue" icon="◫" />
         <x-portal-metric label="Completed lessons" :value="$stats['lessons']" description="Recorded in your workspace" tone="copper" icon="○" />
     </div>
+    <p class="student-dashboard-status-note">In progress: {{ $stats['in_progress'] }} course{{ $stats['in_progress'] === 1 ? '' : 's' }} · Completed: {{ $stats['completed'] }} course{{ $stats['completed'] === 1 ? '' : 's' }}</p>
+
+    <section class="student-dashboard-section student-dashboard-services-section">
+        <div class="student-dashboard-section-heading"><div><p class="student-eyebrow">Creative Studio</p><h2>Keep your studio work moving.</h2></div><a class="student-text-link" href="{{ route('account.studio.inquiries') }}">View all enquiries <span aria-hidden="true">→</span></a></div>
+        @if($activeServices->isNotEmpty())
+            <div class="student-service-grid">
+                @foreach($activeServices->take(3) as $inquiry)
+                    <x-portal-dashboard-service :inquiry="$inquiry" />
+                @endforeach
+            </div>
+        @else
+            <x-portal-card class="student-panel student-panel-soft">
+                <x-portal-empty icon="◫" title="No open studio work." description="New Creative Studio enquiries and their status will appear here." :href="route('creative-studio.book')" action="Start an enquiry" />
+            </x-portal-card>
+        @endif
+    </section>
 
     <div class="student-dashboard-returning-grid">
         <x-portal-card class="student-panel student-dashboard-featured-panel">
@@ -102,6 +130,7 @@
                 @if($featuredEnrollment && $featuredNextLesson)<a href="{{ route('account.courses.lessons.show', [$featuredEnrollment, $featuredNextLesson]) }}"><span class="student-quick-icon">↗</span><span><strong>Resume learning</strong><small>{{ $featuredNextLesson->title }}</small></span><b aria-hidden="true">→</b></a>@endif
                 <a href="{{ route('account.profile') }}"><span class="student-quick-icon">○</span><span><strong>Profile details</strong><small>{{ $profileComplete ? 'Review your personal information' : 'Complete your account details' }}</small></span><b aria-hidden="true">→</b></a>
                 <a href="{{ route('account.security') }}"><span class="student-quick-icon">◇</span><span><strong>Security</strong><small>Protect your account access</small></span><b aria-hidden="true">→</b></a>
+                <a href="{{ route('account.saved') }}"><span class="student-quick-icon">♡</span><span><strong>Saved articles</strong><small>Return to your reading list</small></span><b aria-hidden="true">→</b></a>
             </div>
         </x-portal-card>
     </div>

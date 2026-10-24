@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SocialIdentity;
 use App\Models\User;
+use App\Services\AuthenticationRedirectService;
 use App\Services\GoogleIdentityService;
-use App\Support\SafeRedirect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -28,15 +28,15 @@ class GoogleAuthController extends Controller
         return $this->start($request, true);
     }
 
-    public function callback(Request $request, GoogleIdentityService $identities)
+    public function callback(Request $request, GoogleIdentityService $identities, AuthenticationRedirectService $redirects)
     {
         $intent = $request->session()->pull('google.auth.intent', 'login');
-        $defaultDestination = $intent === 'link' ? route('account.security') : '/';
-        $destination = SafeRedirect::normalize($request->session()->pull('auth.redirect'), $defaultDestination);
+        $defaultDestination = $intent === 'link' ? route('account.security') : $redirects->defaultDestination();
+        $destination = $redirects->pull($request, $defaultDestination);
         $failureRoute = $intent === 'link' ? 'account.security' : 'login';
 
         if ($request->filled('error')) {
-            return to_route($failureRoute)->withErrors(['google' => 'Google sign-in was cancelled. You can continue with email and password.']);
+            return $this->googleFailure($request, $redirects, $failureRoute, $destination, 'Google sign-in was cancelled. You can continue with email and password.');
         }
 
         try {
@@ -45,11 +45,11 @@ class GoogleAuthController extends Controller
                 ->enablePKCE()
                 ->user();
         } catch (InvalidStateException) {
-            return to_route($failureRoute)->withErrors(['google' => 'That Google sign-in session expired. Please try again.']);
+            return $this->googleFailure($request, $redirects, $failureRoute, $destination, 'That Google sign-in session expired. Please try again.');
         } catch (Throwable $exception) {
             Log::warning('Google sign-in failed.', ['exception' => $exception::class]);
 
-            return to_route($failureRoute)->withErrors(['google' => 'Google sign-in could not be completed. Please try again or use email and password.']);
+            return $this->googleFailure($request, $redirects, $failureRoute, $destination, 'Google sign-in could not be completed. Please try again or use email and password.');
         }
 
         $claims = $identities->claims(
@@ -61,7 +61,7 @@ class GoogleAuthController extends Controller
         );
 
         if ($claims['provider_user_id'] === '' || ! filter_var($claims['provider_email'], FILTER_VALIDATE_EMAIL) || ! $claims['email_verified']) {
-            return to_route($failureRoute)->withErrors(['google' => 'Google did not provide a verified email identity, so no account was changed.']);
+            return $this->googleFailure($request, $redirects, $failureRoute, $destination, 'Google did not provide a verified email identity, so no account was changed.');
         }
 
         if ($intent === 'link') {
@@ -84,7 +84,7 @@ class GoogleAuthController extends Controller
             }
 
             $request->session()->put('google.pending_identity', $claims);
-            $request->session()->put('auth.redirect', $destination);
+            $redirects->remember($request, $destination);
 
             return to_route('login')->with('success', 'This email already has a client account. Sign in with your password to connect Google securely.');
         }
@@ -125,7 +125,8 @@ class GoogleAuthController extends Controller
         }
 
         $request->session()->put('google.auth.intent', $link ? 'link' : 'login');
-        $request->session()->put('auth.redirect', SafeRedirect::normalize($request->query('redirect'), $link ? route('account.security') : '/'));
+        $redirects = app(AuthenticationRedirectService::class);
+        $redirects->remember($request, $request->query('redirect') ?: ($link ? route('account.security') : $redirects->defaultDestination()));
 
         if (! $link) {
             $request->session()->forget('google.pending_identity');
@@ -164,5 +165,12 @@ class GoogleAuthController extends Controller
         $user->forceFill(['last_login_at' => now()])->saveQuietly();
 
         return redirect()->to($destination);
+    }
+
+    private function googleFailure(Request $request, AuthenticationRedirectService $redirects, string $route, string $destination, string $message)
+    {
+        $redirects->remember($request, $destination);
+
+        return to_route($route)->withErrors(['google' => $message]);
     }
 }

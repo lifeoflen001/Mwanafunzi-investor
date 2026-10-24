@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([__DIR__.'/../app/Console/Commands'])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\RequestContext::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
@@ -18,8 +19,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'admin.mfa' => \App\Http\Middleware\EnsureAdminMfa::class,
             'customer' => \App\Http\Middleware\EnsureCustomer::class,
+            'client.mfa' => \App\Http\Middleware\EnsureClientMfa::class,
         ]);
-        $middleware->redirectGuestsTo(fn ($request) => $request->routeIs('admin.*') ? \route('admin.login') : \route('login'));
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->routeIs('admin.*')) {
+                return \route('admin.login');
+            }
+
+            $redirects = app(\App\Services\AuthenticationRedirectService::class);
+            $destination = $redirects->captureGuestRequest($request);
+
+            return \route('login', ['redirect' => $destination]);
+        });
         $middleware->validateCsrfTokens(except: ['payments/flutterwave/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

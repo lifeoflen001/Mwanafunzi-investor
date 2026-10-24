@@ -6,6 +6,7 @@ use App\Models\BusinessUnit;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\StudioInquiry;
+use App\Notifications\ClientActivityNotification;
 use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -78,7 +79,7 @@ class StudioInquiryController extends Controller
             ];
         })->values()->all();
 
-        StudioInquiry::create([
+        $inquiry = StudioInquiry::create([
             ...$data,
             'reference' => $reference,
             'user_id' => $request->user()?->id,
@@ -87,6 +88,13 @@ class StudioInquiryController extends Controller
             'reference_files' => $files,
             'status' => 'new',
         ]);
+        if ($request->user()) {
+            $request->user()->notify(new ClientActivityNotification(
+                'Studio enquiry received',
+                'Your enquiry '.$reference.' has been received and is ready for review.',
+                route('account.studio.inquiries.show', $inquiry),
+            ));
+        }
 
         return to_route('creative-studio.book')->with('success', 'Your studio enquiry has been received. Keep your reference '.$reference.' for follow-up.');
     }

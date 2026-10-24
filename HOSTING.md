@@ -105,6 +105,62 @@ If cPanel allows the domain or subdomain document root to point directly to the 
 
 This is the preferred configuration. It preserves the repository's normal Laravel paths and requires no manual `public/index.php` path edits.
 
+### Mwanafunzi Investor domain and subdomain setup
+
+The intended cPanel deployment uses one Laravel application with these three hostnames:
+
+| Hostname | Purpose | Current route entry points |
+| --- | --- | --- |
+| `https://mwanafunziinvestor.com` | Public website, academy, studio, journal, commerce and authentication | `/` and the public named routes |
+| `https://admin.mwanafunziinvestor.com` | Administrative panel | `/admin/login` and `/admin/...` |
+| `https://client.mwanafunziinvestor.com` | Customer portal | `/login`, then `/account/...` |
+
+The current application uses path-based Laravel route groups. The admin and client subdomains are therefore aliases for the same application, not separate Laravel installations: for example, the administrative sign-in is currently `https://admin.mwanafunziinvestor.com/admin/login` and the portal is currently `https://client.mwanafunziinvestor.com/account/`. Do not remove those prefixes in cPanel or duplicate the project source. Clean host-root routing such as `https://admin.mwanafunziinvestor.com/` would require a separate, reviewed host-routing change in the application.
+
+#### DNS and cPanel domains
+
+1. In the DNS provider, point the apex record for `mwanafunziinvestor.com` and the `admin` and `client` subdomains to the hosting account using the provider's assigned A/AAAA records or CNAME targets. Use the real values supplied by the host; do not copy example IP addresses from this guide.
+2. In cPanel, create the primary domain and both subdomains. Set the document root for all three to the same Laravel public directory, preferably:
+
+   ```text
+   /home/USERNAME/mwanafunzi/public
+   ```
+
+3. If the cPanel interface refuses a shared document root, keep one application directory and configure each domain's document root to the same copied `public/` contents. Never copy `.env`, `vendor/`, `app/`, `config/`, `database/`, `resources/` or `routes/` into a browsable public directory.
+4. Issue SSL certificates with AutoSSL or the host's equivalent for `mwanafunziinvestor.com`, `www.mwanafunziinvestor.com`, `admin.mwanafunziinvestor.com` and `client.mwanafunziinvestor.com`. Confirm HTTPS works on every hostname before enabling secure cookies.
+5. Keep application authorization in Laravel. The admin host still requires the `auth`, `admin` and configured MFA middleware; the client host still requires customer authentication, verification and any configured client MFA. A cPanel directory restriction can be added as defence in depth, but must not replace application authorization.
+
+#### Environment values for the shared application
+
+Use the public site as the canonical application URL unless the deployment has an explicitly reviewed multi-host URL strategy:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://mwanafunziinvestor.com
+ASSET_URL=
+CDN_URL=
+SESSION_SECURE_COOKIE=true
+SESSION_DOMAIN=
+```
+
+Leave `SESSION_DOMAIN` empty unless there is a documented requirement to share a login session between the public, admin and client hosts. Sharing a cookie across all subdomains increases the trust boundary; host-local sessions are the safer default. If shared sessions are required, use `.mwanafunziinvestor.com`, verify the security implications, and test logout and session invalidation on all three hosts.
+
+Do not set `APP_URL` to `localhost`, an internal LAN address, a cPanel preview URL or one of the subdomains. The application uses named routes and the canonical public host for portable links and SEO. Configure external callback URLs with the exact host that owns each flow, using real credentials and provider values only. For example, a Google OAuth callback must match the host used by the login button and the callback configured in Google Cloud; do not register a guessed callback URL.
+
+#### Three-host verification checklist
+
+After deployment, verify each item over HTTPS:
+
+- `https://mwanafunziinvestor.com/` loads public pages, built assets, images and the shared footer.
+- `https://admin.mwanafunziinvestor.com/admin/login` loads the admin sign-in and rejects unauthenticated access to `/admin`.
+- `https://client.mwanafunziinvestor.com/login` loads customer authentication and `/account` rejects unauthenticated access.
+- Login, logout, password reset, email verification, CSRF protection and configured MFA use the intended host and do not redirect to localhost or the LAN address.
+- Admin CRUD operations cannot be reached by a customer account, and customer records cannot be accessed by another customer.
+- Uploaded avatars/media resolve through `/storage/...` on all hosts and private downloads remain signed/authorized.
+- Canonical links, redirects, form actions, email links, OAuth callbacks, payment callbacks and webhook URLs use the configured production host rather than a development URL.
+- Cookie consent, newsletter confirmation, contact/enquiry forms and the Tawk widget (if enabled) work on the public host without leaking admin or client session data.
+
 ### Separate `public_html` configuration
 
 If the host requires `public_html`:
