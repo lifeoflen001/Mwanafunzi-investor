@@ -5,19 +5,25 @@
     $contactLocation = \App\Models\SiteSetting::getValue('contact_location', 'Tanzania');
     $intro = $page?->section('intro');
     $contactTopics = $intro?->payload['list'] ?? [];
+    $contactHeading = \App\Support\CmsContent::value($intro, 'contact_heading', 'Let’s talk.');
+    $contactBody = \App\Support\CmsContent::value($intro, 'contact_body', 'Tell us what you are learning, building or creating. The Mwanafunzi desk is here for thoughtful questions, project enquiries and useful next steps.');
+    $contactFormIntro = \App\Support\CmsContent::value($intro, 'contact_form_intro', 'A few details help us send your enquiry to the right part of the platform.');
+    $contactResponseNote = \App\Support\CmsContent::value($intro, 'contact_response_note', 'We usually reply with the next useful step, not a sales script.');
+    $contactTopicsLabel = \App\Support\CmsContent::value($intro, 'contact_topics_label', 'You can contact us about');
 @endphp
 @extends('layouts.public')
 @section('title', $page?->seo_title ?: 'Contact — Mwanafunzi Investor')
 @section('description', $page?->seo_description ?: ($intro?->body ?: 'Contact the Mwanafunzi Investor desk for general questions, course enquiries, product support or partnerships.'))
 @section('content')
 <x-public-hero class="public-page-hero" :eyebrow="$intro?->payload['eyebrow'] ?? 'The desk'" :title="($intro?->heading ?: 'Markets will always be uncertain. Your process does not have to be.')" :summary="($intro?->body ?: 'For general questions, course enquiries, product support or partnership ideas, send a note and we will respond as soon as we can.')" setting="hero_contact_image" :fallback-image="config('public.hero_defaults.contact')" />
+@if($intro?->is_enabled)
 <section class="platform-section contact-section">
     <div class="container">
         <div class="contact-intro">
             <x-section-label label="Contact us" />
             <div>
-                <h2>Let’s talk.</h2>
-                <p>Tell us what you are learning, building or creating. The Mwanafunzi desk is here for thoughtful questions, project enquiries and useful next steps.</p>
+                <h2>{{ $contactHeading }}</h2>
+                <p>{{ $contactBody }}</p>
             </div>
         </div>
 
@@ -40,7 +46,7 @@
                 </dl>
                 @if($contactTopics)
                     <div class="contact-note">
-                        <x-section-label label="You can contact us about" />
+                        <x-section-label :label="$contactTopicsLabel" />
                         <ul class="contact-topic-list">@foreach($contactTopics as $topic)<li>{{ $topic }}</li>@endforeach</ul>
                     </div>
                 @endif
@@ -50,7 +56,7 @@
                 @csrf
                 @include('partials.form-feedback')
                 @include('components.recaptcha', ['action' => 'contact'])
-                <p class="contact-form-intro">A few details help us send your enquiry to the right part of the platform.</p>
+                <p class="contact-form-intro">{{ $contactFormIntro }}</p>
                 <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" name="website"></label>
                 <div class="form-row">
                     <label for="name">Name<input id="name" name="name" value="{{ old('name') }}" required autocomplete="name">@error('name')<small>{{ $message }}</small>@enderror</label>
@@ -64,9 +70,10 @@
                 <label for="message">Message<textarea id="message" name="message" rows="5" required>{{ old('message') }}</textarea>@error('message')<small>{{ $message }}</small>@enderror</label>
                 <label class="consent"><input type="checkbox" name="consent" value="1" required> <span>I agree that Mwanafunzi Investor may use the information in this form to respond to my enquiry. This is an educational platform, not personalised financial advice. <a href="{{ route('legal', 'privacy-policy') }}">Read the Privacy Policy</a> and <a href="{{ route('legal', 'risk-disclosure') }}">Risk Disclosure</a>.</span></label>
                 <button class="button button-dark contact-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
-                <p class="contact-response-note">We usually reply with the next useful step, not a sales script.</p>
+                <p class="contact-response-note">{{ $contactResponseNote }}</p>
             </form>
         </div>
     </div>
 </section>
+@endif
 @endsection

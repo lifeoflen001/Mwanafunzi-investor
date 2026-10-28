@@ -9,6 +9,7 @@
     $footerCopy = \App\Models\SiteSetting::getValue('footer_copy', 'Student of Money. Probability. Systems. Discipline.');
     $footerCopyright = \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
     $footerBottomStatement = \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
+    $headerContactLabel = \App\Models\SiteSetting::getValue('header_contact_label', 'Contact us');
     $disclaimer = \App\Models\SiteSetting::getValue('risk_disclaimer', 'Educational content only. This is not personalised financial advice. Trading involves risk.');
     $seoPageKey = match (request()->route()?->getName()) {
         'learn', 'courses', 'tools', 'journal', 'about', 'faqs', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
@@ -110,7 +111,7 @@
                     @foreach($businessUnits as $businessUnit)<a class="{{ request()->routeIs($businessUnit->route_name, $serviceRoutes[$businessUnit->slug] ?? null) ? 'active' : '' }}" href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }}</a>@endforeach<a href="{{ route('about') }}">About</a><a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog</a>
                 @endif
             </nav>
-            <div class="header-actions">@if(auth()->check() && ! auth()->user()->is_admin)<x-public-account-menu :user="auth()->user()" />@else<a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">Client login</a>@endif<a class="button button-small button-light" href="{{ $serviceContactUrl }}">Contact us <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
+            <div class="header-actions">@if(auth()->check() && ! auth()->user()->is_admin)<x-public-account-menu :user="auth()->user()" />@else<a class="header-contact header-client-link {{ request()->routeIs('login') ? 'active' : '' }}" href="{{ route('login') }}">Client login</a>@endif<a class="button button-small button-light" href="{{ $serviceContactUrl }}">{{ $headerContactLabel }} <span aria-hidden="true">↗</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle><span class="sr-only">Open menu</span><span></span><span></span></button></div>
         </div>
         <div class="mobile-menu" id="mobile-menu" data-mobile-menu><nav aria-label="{{ $serviceContext ? 'Service navigation' : 'Mobile navigation' }}">
                 @if($serviceContext)
@@ -125,7 +126,7 @@
                     @foreach($businessUnits as $businessUnit)<a href="{{ $serviceRoutes[$businessUnit->slug] ?? route($businessUnit->route_name) }}">{{ $businessUnit->name }} <span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span></a>@endforeach<a href="{{ route('about') }}">About <span>{{ str_pad($businessUnits->count() + 1, 2, '0', STR_PAD_LEFT) }}</span></a><a class="{{ request()->routeIs('blog*') ? 'active' : '' }}" href="{{ route('blog') }}">Blog <span aria-hidden="true">↗</span></a>
                 @endif
                 <a class="mobile-client-link" href="{{ auth()->check() && ! auth()->user()->is_admin ? route('account.dashboard') : route('login') }}">{{ auth()->check() && ! auth()->user()->is_admin ? 'My Dashboard' : 'Client login' }}</a>
-            </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">Contact us <span aria-hidden="true">↗</span></a></div>
+            </nav><a class="button button-dark" href="{{ $serviceContactUrl }}">{{ $headerContactLabel }} <span aria-hidden="true">↗</span></a></div>
     </header>
     <main id="main-content">@yield('content')</main>
     {{-- Every public module uses the same editable footer and legal/contact links. --}}

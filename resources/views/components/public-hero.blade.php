@@ -71,8 +71,8 @@
         @if($metadata)<div class="public-hero-metadata">@foreach((array) $metadata as $item)<span>{{ $item }}</span>@endforeach</div>@endif
         @if($slot->isEmpty() && $cmsPage?->hero_primary_label && $cmsPage?->hero_primary_url)
             <div class="hero-buttons">
-                <a class="button button-accent" href="{{ $cmsPage->hero_primary_url }}">{{ $cmsPage->hero_primary_label }} <span aria-hidden="true">↗</span></a>
-                @if($cmsPage->hero_secondary_label && $cmsPage->hero_secondary_url)<a class="text-link text-link-light" href="{{ $cmsPage->hero_secondary_url }}">{{ $cmsPage->hero_secondary_label }} <span aria-hidden="true">→</span></a>@endif
+                <a class="button button-accent" href="{{ \App\Support\Seo::resolve($cmsPage->hero_primary_url, '#') }}" target="{{ $cmsPage->hero_primary_target ?: '_self' }}" @if(($cmsPage->hero_primary_target ?: '_self') === '_blank') rel="noopener" @endif>{{ $cmsPage->hero_primary_label }} <span aria-hidden="true">↗</span></a>
+                @if($cmsPage->hero_secondary_label && $cmsPage->hero_secondary_url)<a class="text-link text-link-light" href="{{ \App\Support\Seo::resolve($cmsPage->hero_secondary_url, '#') }}" target="{{ $cmsPage->hero_secondary_target ?: '_self' }}" @if(($cmsPage->hero_secondary_target ?: '_self') === '_blank') rel="noopener" @endif>{{ $cmsPage->hero_secondary_label }} <span aria-hidden="true">→</span></a>@endif
             </div>
         @endif
         {{ $slot }}

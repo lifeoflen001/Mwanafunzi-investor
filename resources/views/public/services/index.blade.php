@@ -1,6 +1,10 @@
 @extends('layouts.public')
 
 @php($pageSections = $page?->sections?->where('is_enabled', true)->keyBy('key') ?? collect())
+@php($divisionsSection = $pageSections->get('divisions'))
+@php($offerSection = $pageSections->get('offer'))
+@php($projectsSection = $pageSections->get('projects'))
+@php($finalCtaSection = $pageSections->get('final-cta'))
 @section('title', $page?->seo_title ?: 'Services — Mwanafunzi Investor')
 @section('description', $page?->seo_description ?: 'Digital software, websites and operational tools shaped around real business needs.')
 @section('canonical', $page?->canonical_url ?: route('services'))
@@ -10,15 +14,15 @@
     <a class="button button-accent" href="{{ \App\Support\Seo::resolve($page?->hero_primary_url, route('contact', ['module' => 'development'])) }}">{{ $page?->hero_primary_label ?: 'Start a project' }} <span aria-hidden="true">↗</span></a>
 </x-public-hero>
 
-@if($businessUnits->isNotEmpty())
+@if($divisionsSection && $businessUnits->isNotEmpty())
 <section class="platform-section portfolio-divisions-section" id="divisions">
     <div class="container">
         <div class="split-heading">
             <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> The Mwanafunzi ecosystem</p>
-                <h2>Choose the part of the work you need.</h2>
+                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($divisionsSection, 'eyebrow', 'The Mwanafunzi ecosystem') }}</p>
+                <h2>{{ $divisionsSection->heading }}</h2>
             </div>
-            <p class="body-copy">Three connected divisions, each with its own route into the work.</p>
+            @if($divisionsSection->body)<p class="body-copy">{{ $divisionsSection->body }}</p>@endif
         </div>
         <div class="portfolio-division-grid">@foreach($businessUnits as $businessUnit)<a class="portfolio-division-card" href="{{ $serviceRoutes[$businessUnit->slug] ?? ($businessUnit->route_name ? route($businessUnit->route_name) : route('contact')) }}"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                 <h3>{{ $businessUnit->name }}</h3>
@@ -28,15 +32,15 @@
 </section>
 @endif
 
-@if($services->isNotEmpty())
+@if($offerSection && $services->isNotEmpty())
 <section class="platform-section portfolio-services-section" id="services">
     <div class="container">
         <div class="split-heading">
             <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> What I offer</p>
-                <h2>Practical systems, carefully built.</h2>
+                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($offerSection, 'eyebrow', 'What I offer') }}</p>
+                <h2>{{ $offerSection->heading }}</h2>
             </div>
-            <p class="body-copy">Choose the kind of support that matches the problem in front of you. Pricing and delivery guidance is shown only when it has been configured.</p>
+            @if($offerSection->body)<p class="body-copy">{{ $offerSection->body }}</p>@endif
         </div>
         <div class="portfolio-service-grid">@foreach($services as $service)<article class="portfolio-service-card">
                 <div class="portfolio-service-card-head"><span class="portfolio-service-icon">{{ $service->icon ?: str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span>{{ $service->pricingText() }}</span></div>
@@ -65,14 +69,14 @@
 </section>
 @endif
 
-@if($featuredProjects->isNotEmpty())
+@if($projectsSection && $featuredProjects->isNotEmpty())
 <section class="platform-section portfolio-projects-tease">
     <div class="container">
         <div class="split-heading">
             <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p>
-                <h2>Systems built for the work behind the work.</h2>
-            </div><a class="text-link" href="{{ route('projects') }}">View all projects <span aria-hidden="true">→</span></a>
+                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($projectsSection, 'eyebrow', 'Selected work') }}</p>
+                <h2>{{ $projectsSection->heading }}</h2>
+            </div>@if($projectsSection->cta_label && $projectsSection->cta_url)<a class="text-link" href="{{ \App\Support\Seo::resolve($projectsSection->cta_url, route('projects')) }}">{{ $projectsSection->cta_label }} <span aria-hidden="true">→</span></a>@endif
         </div>
         <div class="portfolio-project-grid">@foreach($featuredProjects as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="portfolio-project-card" href="{{ route('projects.show', $project) }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" @if($projectImage['srcset']) srcset="{{ $projectImage['srcset'] }}" sizes="(max-width: 760px) 100vw, 50vw" @endif alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Case study' }}</span>
                     <h3>{{ $project->title }}</h3>
@@ -82,15 +86,18 @@
 </section>
 @endif
 
+@if($finalCtaSection)
 <section class="platform-section portfolio-cta">
     <div class="container two-column">
         <div>
-            <p class="eyebrow"><span class="eyebrow-line"></span> Have something specific in mind?</p>
-            <h2>Tell me what you are trying to build.</h2>
+            <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($finalCtaSection, 'eyebrow', 'Have something specific in mind?') }}</p>
+            <h2>{{ $finalCtaSection->heading }}</h2>
         </div>
         <div>
-            <p class="body-copy">A short conversation is the best place to understand the problem, the people involved and what a useful outcome looks like.</p><a class="button button-dark" href="{{ route('contact', ['module' => 'development']) }}">Discuss your project <span aria-hidden="true">↗</span></a>
+            @if($finalCtaSection->body)<p class="body-copy">{{ $finalCtaSection->body }}</p>@endif
+            @if($finalCtaSection->cta_label && $finalCtaSection->cta_url)<a class="button button-dark" href="{{ \App\Support\Seo::resolve($finalCtaSection->cta_url, route('contact', ['module' => 'development'])) }}">{{ $finalCtaSection->cta_label }} <span aria-hidden="true">↗</span></a>@endif
         </div>
     </div>
 </section>
+@endif
 @endsection

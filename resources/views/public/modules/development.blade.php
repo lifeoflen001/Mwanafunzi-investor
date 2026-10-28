@@ -5,9 +5,13 @@
 @php
     $sections = $page->sections->where('is_enabled', true)->keyBy('key');
     $capabilities = $sections->get('capabilities');
+    $products = $sections->get('products');
     $languages = $sections->get('languages');
     $process = $sections->get('process');
     $finalCta = $sections->get('final_cta');
+    $selectedWork = $sections->get('selected-work');
+    $hospitality = $sections->get('hospitality');
+    $industriesSection = $sections->get('industries');
     $capabilityCards = collect($capabilities?->payload['cards'] ?? [])->values();
     $heroTitle = $page->hero_title ?: 'Websites and software built around real business operations.';
     $heroSummary = $page->hero_summary ?: 'Professional websites, custom business systems, portals, dashboards and integrations for hospitality, tourism, education and growing organisations.';
@@ -20,17 +24,17 @@
 @section('content')
     <x-public-hero class="development-hero" :eyebrow="$page->hero_eyebrow ?: 'Mwanafunzi Investor | Digital Software'" :title="$heroTitle" :summary="$heroSummary" :image="$page->hero_image" :focal-point="$page->hero_focal_point" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" setting="hero_tools_image" :fallback-image="config('public.hero_defaults.modules')">
         <div class="detail-actions">
-            <a class="button button-dark" href="#selected-work">View completed projects <span aria-hidden="true">↓</span></a>
+            @if($selectedWork && $featuredProjects->isNotEmpty())<a class="button button-dark" href="#{{ \App\Support\CmsContent::value($selectedWork, 'anchor_id', 'selected-work') }}">View completed projects <span aria-hidden="true">↓</span></a>@endif
             <a class="text-link text-link-light" href="{{ route('digital-software.contact') }}">Discuss a project <span aria-hidden="true">↗</span></a>
         </div>
         <div class="digital-credibility-row" aria-label="Digital Software capabilities"><span>Tanzania</span><span>Available remotely</span><span>Laravel</span><span>PHP</span><span>Business systems</span></div>
     </x-public-hero>
 
-    @if($featuredProjects->isNotEmpty())
+    @if($selectedWork && $featuredProjects->isNotEmpty())
         <section class="platform-section digital-featured-projects" id="selected-work" aria-labelledby="digital-featured-heading">
             <div class="container">
-                <div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p><h2 id="digital-featured-heading">Projects built for real work.</h2></div><a class="text-link" href="{{ route('digital-software.projects') }}">View all projects <span aria-hidden="true">↗</span></a></div>
-                <p class="body-copy digital-section-intro">Systems and digital products designed around real workflows, operational needs and business problems.</p>
+                <div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($selectedWork, 'eyebrow', 'Selected work') }}</p><h2 id="digital-featured-heading">{{ $selectedWork->heading }}</h2></div>@if($selectedWork->cta_label && $selectedWork->cta_url)<a class="text-link" href="{{ \App\Support\Seo::resolve($selectedWork->cta_url, '#') }}" target="{{ \App\Support\CmsContent::value($selectedWork, 'cta_target', '_self') }}" @if(\App\Support\CmsContent::value($selectedWork, 'cta_target', '_self') === '_blank') rel="noopener" @endif>{{ $selectedWork->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div>
+                @if($selectedWork->body)<p class="body-copy digital-section-intro">{{ $selectedWork->body }}</p>@endif
                 <div class="digital-project-grid">
                     @foreach($featuredProjects->take(4) as $project)
                         @php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)
@@ -44,12 +48,14 @@
         </section>
     @endif
 
-    <section class="platform-dark digital-hospitality-section" aria-labelledby="digital-hospitality-heading">
+    @if($hospitality)
+    <section class="platform-dark digital-hospitality-section" id="{{ \App\Support\CmsContent::value($hospitality, 'anchor_id', 'hospitality') }}" aria-labelledby="digital-hospitality-heading">
         <div class="container">
-            <div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> Hospitality &amp; Tourism</p><h2 id="digital-hospitality-heading">Websites and operational systems for hospitality businesses.</h2></div><div class="body-copy rich-copy"><p>Professional guest-facing websites and maintainable systems for hotels, lodges, safari camps and tour operators.</p><a class="text-link text-link-light" href="{{ route('digital-software.hospitality') }}">Explore hospitality work <span aria-hidden="true">↗</span></a></div></div>
-            <div class="digital-capability-grid digital-capability-grid-dark"><article><span>01</span><h3>Guest-facing websites</h3><p>Accommodation, gallery, enquiry and contact journeys that remain clear on mobile.</p></article><article><span>02</span><h3>Booking and enquiry UX</h3><p>Useful paths for availability questions, direct enquiries and WhatsApp conversations.</p></article><article><span>03</span><h3>Hotel operations</h3><p>Reservations, room planning, POS, finance, inventory and reporting where the data exists.</p></article><article><span>04</span><h3>Tour operations</h3><p>Inquiries, quotations, itineraries, bookings, suppliers and operational handoffs.</p></article></div>
+            <div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($hospitality, 'eyebrow', 'Hospitality & Tourism') }}</p><h2 id="digital-hospitality-heading">{{ $hospitality->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($hospitality->body) !!}@if($hospitality->cta_label && $hospitality->cta_url)<a class="text-link text-link-light" href="{{ \App\Support\Seo::resolve($hospitality->cta_url, route('digital-software.hospitality')) }}" target="{{ \App\Support\CmsContent::value($hospitality, 'cta_target', '_self') }}" @if(\App\Support\CmsContent::value($hospitality, 'cta_target', '_self') === '_blank') rel="noopener" @endif>{{ $hospitality->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></div>
+            <div class="digital-capability-grid digital-capability-grid-dark">@foreach($hospitality->payload['cards'] ?? [] as $card)<article><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div>
         </div>
     </section>
+    @endif
 
     @if($capabilityCards->isNotEmpty())
         <section class="platform-section platform-muted" id="capabilities" aria-labelledby="digital-capabilities-heading">
@@ -57,8 +63,12 @@
         </section>
     @endif
 
-    @if($industries->isNotEmpty())
-        <section class="platform-section digital-industries" aria-labelledby="digital-industries-heading"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Areas of work</p><h2 id="digital-industries-heading">Selected industries.</h2></div><p class="body-copy">The catalogue reflects the industries represented by published project records.</p></div><div class="digital-industry-list">@foreach($industries as $industry)<span>{{ $industry }}</span>@endforeach</div></div></section>
+    @if($products)
+        <section class="platform-section platform-muted digital-products-section" id="{{ \App\Support\CmsContent::value($products, 'anchor_id', 'products') }}"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($products, 'eyebrow', 'What we deliver') }}</p><h2>{{ $products->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($products->body) !!}</div></div><div class="digital-capability-grid">@foreach($products->payload['cards'] ?? [] as $card)<article><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div></div></section>
+    @endif
+
+    @if($industriesSection && $industries->isNotEmpty())
+        <section class="platform-section digital-industries" id="{{ \App\Support\CmsContent::value($industriesSection, 'anchor_id', 'industries') }}" aria-labelledby="digital-industries-heading"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($industriesSection, 'eyebrow', 'Areas of work') }}</p><h2 id="digital-industries-heading">{{ $industriesSection->heading }}</h2></div>@if($industriesSection->body)<p class="body-copy">{{ $industriesSection->body }}</p>@endif</div><div class="digital-industry-list">@foreach($industries as $industry)<span>{{ $industry }}</span>@endforeach</div></div></section>
     @endif
 
     @if($process)
@@ -73,5 +83,5 @@
         <section class="platform-section testimonial-section" id="testimonials" aria-labelledby="development-testimonials-heading"><div class="container"><div class="testimonial-section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Client perspective</p><h2 id="development-testimonials-heading">Approved perspectives connected to the work.</h2></div><p class="testimonial-section-description">Published only when the relevant permission and review state are recorded.</p></div>@include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'development-testimonials'])</div></section>
     @endif
 
-    <section class="platform-dark digital-final-cta" aria-labelledby="digital-final-cta-heading"><div class="container"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $finalCta?->payload['eyebrow'] ?? 'Have a project in mind?' }}</p><h2 id="digital-final-cta-heading">{{ $finalCta?->heading ?? 'Bring the problem. We will shape the system.' }}</h2><p>{{ $finalCta?->body ?? 'Tell us what needs to work better and we will start with the workflow behind the brief.' }}</p><a class="button button-accent" href="{{ route('digital-software.contact') }}">Discuss a project <span aria-hidden="true">↗</span></a></div></section>
+    @if($finalCta)<section class="platform-dark digital-final-cta" aria-labelledby="digital-final-cta-heading"><div class="container"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($finalCta, 'eyebrow', 'Have a project in mind?') }}</p><h2 id="digital-final-cta-heading">{{ $finalCta->heading }}</h2><p>{{ $finalCta->body }}</p>@if($finalCta->cta_label && $finalCta->cta_url)<a class="button button-accent" href="{{ \App\Support\Seo::resolve($finalCta->cta_url, '#') }}" target="{{ \App\Support\CmsContent::value($finalCta, 'cta_target', '_self') }}" @if(\App\Support\CmsContent::value($finalCta, 'cta_target', '_self') === '_blank') rel="noopener" @endif>{{ $finalCta->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></section>@endif
 @endsection

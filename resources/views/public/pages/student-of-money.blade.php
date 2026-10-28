@@ -13,7 +13,7 @@
 @section('content')
     <x-public-hero class="manifesto-hero" :eyebrow="$page?->hero_eyebrow ?: ($intro?->payload['eyebrow'] ?? 'The signature philosophy')" :title="$page?->hero_title ?: 'Student of Money'" :title-html="$heroTitleHtml" :summary="$page?->hero_summary" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'medium'" :alignment="$page?->hero_alignment ?: 'left'" setting="hero_student_image" :fallback-image="config('public.hero_defaults.student-of-money')" />
 
-    @if($intro)
+    @if($intro && $intro->is_enabled)
         <section class="platform-section">
             <div class="container editorial-copy">
                 <p class="eyebrow">{{ $intro->payload['eyebrow'] ?? 'The Student of Money' }}</p>
@@ -23,7 +23,7 @@
         </section>
     @endif
 
-    @if($framework)
+    @if($framework && $framework->is_enabled)
         <section class="platform-dark framework-platform">
             <div class="container">
                 <p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $framework->payload['eyebrow'] ?? 'A process you can come back to' }}</p>

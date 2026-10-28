@@ -5,7 +5,6 @@
     <div class="admin-auth-title"><h2>Choose a new password.</h2><p>Use at least ten characters and do not reuse a password from another service.</p></div>
     <form class="admin-form admin-auth-form" method="post" action="{{ route('admin.password.update') }}">
         @csrf
-        @include('partials.form-feedback')
         @include('components.recaptcha', ['action' => 'password_reset'])
         <input type="hidden" name="token" value="{{ $token }}">
         <label for="admin-reset-email">Email address<input id="admin-reset-email" type="email" name="email" required autofocus value="{{ old('email', request('email')) }}" autocomplete="username"></label>

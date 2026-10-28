@@ -85,6 +85,12 @@
                     <input name="hero_primary_url" value="{{ old('hero_primary_url', $page->hero_primary_url) }}">
                 </label>
             </div>
+            <label>Primary CTA opens
+                <select name="hero_primary_target">
+                    <option value="_self" @selected(old('hero_primary_target', $page->hero_primary_target ?: '_self') === '_self')>Same window</option>
+                    <option value="_blank" @selected(old('hero_primary_target', $page->hero_primary_target ?: '_self') === '_blank')>New tab</option>
+                </select>
+            </label>
             <div class="form-row">
                 <label>Secondary CTA label
                     <input name="hero_secondary_label" value="{{ old('hero_secondary_label', $page->hero_secondary_label) }}">
@@ -93,6 +99,12 @@
                     <input name="hero_secondary_url" value="{{ old('hero_secondary_url', $page->hero_secondary_url) }}">
                 </label>
             </div>
+            <label>Secondary CTA opens
+                <select name="hero_secondary_target">
+                    <option value="_self" @selected(old('hero_secondary_target', $page->hero_secondary_target ?: '_self') === '_self')>Same window</option>
+                    <option value="_blank" @selected(old('hero_secondary_target', $page->hero_secondary_target ?: '_self') === '_blank')>New tab</option>
+                </select>
+            </label>
             <div class="form-row">
                 <label>Hero aside
                     <textarea name="hero_aside" rows="2" placeholder="Use a new line for the second line">{{ old('hero_aside', $page->hero_aside) }}</textarea>
@@ -173,6 +185,18 @@
                             </label>
                         </div>
 
+                        <div class="form-row">
+                            <label>Section anchor <span>(optional)</span>
+                                <input name="sections[{{ $section->id }}][anchor_id]" value="{{ old('sections.'.$section->id.'.anchor_id', $sectionPayload['anchor_id'] ?? '') }}" placeholder="e.g. selected-work">
+                            </label>
+                            <label>Image alt text <span>(optional)</span>
+                                <input name="sections[{{ $section->id }}][image_alt]" value="{{ old('sections.'.$section->id.'.image_alt', $sectionPayload['image_alt'] ?? '') }}" placeholder="Describe the image">
+                            </label>
+                        </div>
+                        <label>Image caption <span>(optional)</span>
+                            <input name="sections[{{ $section->id }}][image_caption]" value="{{ old('sections.'.$section->id.'.image_caption', $sectionPayload['image_caption'] ?? '') }}">
+                        </label>
+
                         @if(!($page->key === 'about' && $section->key === 'philosophy') && $section->key !== 'mission-vision')
                             @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][body]', 'label' => 'Body', 'value' => old('sections.'.$section->id.'.body', $section->body), 'help' => 'Use headings, emphasis, lists, links and quotes. Unsafe HTML is sanitized before display.'])
                         @endif
@@ -190,9 +214,6 @@
                         @if($page->key === 'about' && $section->key === 'philosophy')
                             <fieldset class="form-section cms-about-story-fields">
                                 <legend>Who we are / Our story</legend>
-                                <label>Image alt text
-                                    <input name="sections[{{ $section->id }}][image_alt]" value="{{ old('sections.'.$section->id.'.image_alt', $sectionPayload['image_alt'] ?? '') }}" placeholder="Describe the meaningful image">
-                                </label>
                                 <label>Image focal point <span>(optional)</span>
                                     <input name="sections[{{ $section->id }}][image_focal_point]" value="{{ old('sections.'.$section->id.'.image_focal_point', $sectionPayload['image_focal_point'] ?? 'center center') }}" placeholder="e.g. center 40%">
                                 </label>
@@ -212,6 +233,16 @@
                                 <div class="form-row"><label>Vision label<input name="sections[{{ $section->id }}][vision_label]" value="{{ old('sections.'.$section->id.'.vision_label', $sectionPayload['vision_label'] ?? '') }}"></label><label>Vision heading<input name="sections[{{ $section->id }}][vision_heading]" value="{{ old('sections.'.$section->id.'.vision_heading', $sectionPayload['vision_heading'] ?? '') }}"></label></div>
                                 @include('admin.components.rich-text-field', ['name' => 'sections['.$section->id.'][vision_body]', 'label' => 'Vision body', 'value' => old('sections.'.$section->id.'.vision_body', $sectionPayload['vision_body'] ?? '')])
                                 <label class="checkbox-field"><input type="hidden" name="sections[{{ $section->id }}][vision_enabled]" value="0"><input type="checkbox" name="sections[{{ $section->id }}][vision_enabled]" value="1" @checked(old('sections.'.$section->id.'.vision_enabled', $sectionPayload['vision_enabled'] ?? true))> Vision visible</label>
+                            </fieldset>
+                        @endif
+
+                        @if($page->key === 'contact' && $section->key === 'intro')
+                            <fieldset class="form-section cms-contact-copy-fields">
+                                <legend>Contact page copy</legend>
+                                <div class="form-row"><label>Contact section heading<input name="sections[{{ $section->id }}][contact_heading]" value="{{ old('sections.'.$section->id.'.contact_heading', $sectionPayload['contact_heading'] ?? '') }}"></label><label>Topics label<input name="sections[{{ $section->id }}][contact_topics_label]" value="{{ old('sections.'.$section->id.'.contact_topics_label', $sectionPayload['contact_topics_label'] ?? '') }}"></label></div>
+                                <label>Contact section copy<textarea name="sections[{{ $section->id }}][contact_body]" rows="3">{{ old('sections.'.$section->id.'.contact_body', $sectionPayload['contact_body'] ?? '') }}</textarea></label>
+                                <label>Form introduction<textarea name="sections[{{ $section->id }}][contact_form_intro]" rows="2">{{ old('sections.'.$section->id.'.contact_form_intro', $sectionPayload['contact_form_intro'] ?? '') }}</textarea></label>
+                                <label>Form response note<textarea name="sections[{{ $section->id }}][contact_response_note]" rows="2">{{ old('sections.'.$section->id.'.contact_response_note', $sectionPayload['contact_response_note'] ?? '') }}</textarea></label>
                             </fieldset>
                         @endif
 
@@ -251,16 +282,22 @@
                             </label>
                         @endif
 
-                        @if(array_key_exists('secondary_cta_label', $sectionPayload) || array_key_exists('secondary_cta_url', $sectionPayload))
-                            <div class="form-row">
-                                <label>Secondary CTA label
-                                    <input name="sections[{{ $section->id }}][secondary_cta_label]" value="{{ old('sections.'.$section->id.'.secondary_cta_label', $sectionPayload['secondary_cta_label'] ?? '') }}">
-                                </label>
-                                <label>Secondary CTA URL
-                                    <input name="sections[{{ $section->id }}][secondary_cta_url]" value="{{ old('sections.'.$section->id.'.secondary_cta_url', $sectionPayload['secondary_cta_url'] ?? '') }}">
-                                </label>
-                            </div>
-                        @endif
+                        <div class="form-row">
+                            <label>Primary CTA opens
+                                <select name="sections[{{ $section->id }}][cta_target]"><option value="_self" @selected(old('sections.'.$section->id.'.cta_target', $sectionPayload['cta_target'] ?? '_self') === '_self')>Same window</option><option value="_blank" @selected(old('sections.'.$section->id.'.cta_target', $sectionPayload['cta_target'] ?? '_self') === '_blank')>New tab</option></select>
+                            </label>
+                            <label>Secondary CTA label <span>(optional)</span>
+                                <input name="sections[{{ $section->id }}][secondary_cta_label]" value="{{ old('sections.'.$section->id.'.secondary_cta_label', $sectionPayload['secondary_cta_label'] ?? '') }}">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>Secondary CTA URL <span>(optional)</span>
+                                <input name="sections[{{ $section->id }}][secondary_cta_url]" value="{{ old('sections.'.$section->id.'.secondary_cta_url', $sectionPayload['secondary_cta_url'] ?? '') }}">
+                            </label>
+                            <label>Secondary CTA opens
+                                <select name="sections[{{ $section->id }}][secondary_cta_target]"><option value="_self" @selected(old('sections.'.$section->id.'.secondary_cta_target', $sectionPayload['secondary_cta_target'] ?? '_self') === '_self')>Same window</option><option value="_blank" @selected(old('sections.'.$section->id.'.secondary_cta_target', $sectionPayload['secondary_cta_target'] ?? '_self') === '_blank')>New tab</option></select>
+                            </label>
+                        </div>
 
                         @if(array_key_exists('visual_caption', $sectionPayload) || array_key_exists('visual_index', $sectionPayload) || array_key_exists('visual_note', $sectionPayload) || array_key_exists('visual_note_emphasis', $sectionPayload))
                             <div class="form-row">
@@ -370,7 +407,11 @@
                         <input name="new_section_cta_url" value="{{ old('new_section_cta_url') }}">
                     </label>
                 </div>
+                <label>CTA opens
+                    <select name="new_section_cta_target"><option value="_self">Same window</option><option value="_blank">New tab</option></select>
+                </label>
                 <label class="checkbox-field">
+                    <input type="hidden" name="new_section_enabled" value="0">
                     <input type="checkbox" name="new_section_enabled" value="1" checked>
                     Section enabled
                 </label>

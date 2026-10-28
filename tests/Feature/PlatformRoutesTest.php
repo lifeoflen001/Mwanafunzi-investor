@@ -101,35 +101,37 @@ class PlatformRoutesTest extends TestCase
         $login = $this->get(route('login'))
             ->assertOk()
             ->assertSee('Client portal')
-            ->assertSee('Primary navigation')
-            ->assertSee('Contact us')
             ->assertSee('client-password', false)
             ->assertSee('data-password-toggle', false)
+            ->assertSee('auth-shell', false)
             ->assertSee('client-auth-layout', false)
             ->assertSee('client-auth-panel', false)
             ->assertSee('client-auth-showcase', false)
-            ->assertSee('data-auth-slide', false)
             ->assertSee('Create an account')
-            ->assertSee('site-footer', false)
+            ->assertSee('Back to website')
+            ->assertDontSee('site-header', false)
+            ->assertDontSee('site-footer', false)
+            ->assertDontSee('data-auth-slide', false)
             ->assertSee('Forgot password')
-            ->assertSeeInOrder(['id="client-email"', 'id="client-password"', 'data-auth-submit', 'or continue with', 'Continue with Google'], false);
+            ->assertSeeInOrder(['id="client-email"', 'id="client-password"', 'data-auth-submit', '<span>or</span>', 'Continue with Google'], false);
 
         $this->get(route('register'))
             ->assertOk()
-            ->assertSee('Create your free account.')
+            ->assertSee('Create your account.')
             ->assertSee('client-password-confirmation', false)
             ->assertSee('data-password-toggle', false)
+            ->assertSee('auth-shell', false)
             ->assertSee('client-auth-layout', false)
             ->assertSee('client-auth-panel', false)
             ->assertSee('client-auth-showcase', false)
-            ->assertSee('data-auth-slide', false)
             ->assertSee('I accept the')
-            ->assertSee('Primary navigation')
-            ->assertSee('Contact us')
-            ->assertSee('site-footer', false)
+            ->assertSee('Back to website')
+            ->assertDontSee('site-header', false)
+            ->assertDontSee('site-footer', false)
+            ->assertDontSee('data-auth-slide', false)
             ->assertDontSee('client-phone', false)
             ->assertDontSee('client-country', false)
-            ->assertSeeInOrder(['id="client-name"', 'id="client-email"', 'id="client-password"', 'data-auth-submit', 'or continue with', 'Continue with Google'], false);
+            ->assertSeeInOrder(['id="client-name"', 'id="client-email"', 'id="client-password"', 'data-auth-submit', '<span>or</span>', 'Continue with Google'], false);
 
         $this->post(route('login.store'), ['email' => 'not-an-email', 'password' => ''])
             ->assertSessionHasErrors(['email', 'password']);
@@ -236,6 +238,55 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('A CMS-managed service card.');
         $this->assertStringContainsString('no-cache', (string) $digitalResponse->headers->get('Cache-Control'));
         $this->assertStringContainsString('must-revalidate', (string) $digitalResponse->headers->get('Cache-Control'));
+    }
+
+    public function test_cms_section_visibility_and_explicit_empty_values_persist_publicly(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $page = Page::where('key', 'development')->firstOrFail();
+        $hospitality = $page->sections()->where('key', 'hospitality')->firstOrFail();
+        $selectedWork = $page->sections()->where('key', 'selected-work')->firstOrFail();
+
+        $base = [
+            'name' => $page->name,
+            'key' => $page->key,
+            'slug' => $page->slug,
+            'page_type' => $page->page_type,
+            'status' => 'published',
+            'is_visible' => 1,
+            'hero_focal_point' => $page->hero_focal_point,
+            'hero_overlay' => $page->hero_overlay,
+            'hero_alignment' => $page->hero_alignment,
+        ];
+
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), $base + [
+            'sections' => [
+                $hospitality->id => ['sort_order' => $hospitality->sort_order, 'is_enabled' => 0],
+                $selectedWork->id => ['sort_order' => $selectedWork->sort_order, 'is_enabled' => 1, 'body' => ''],
+            ],
+        ])->assertRedirect();
+
+        $hidden = $this->get(route('digital-systems'))->assertOk();
+        $hidden->assertDontSee('digital-hospitality-section', false)
+            ->assertDontSee('Websites and operational systems for hospitality businesses.')
+            ->assertDontSee('Systems and digital products designed around real workflows, operational needs and business problems.');
+
+        $this->actingAs($admin)->put(route('admin.pages.update', $page), $base + [
+            'sections' => [
+                $hospitality->id => [
+                    'sort_order' => $hospitality->sort_order,
+                    'is_enabled' => 1,
+                    'heading' => 'Verified hospitality systems',
+                    'body' => 'CMS restored content.',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $visible = $this->get(route('digital-systems'))->assertOk();
+        $visible->assertSee('digital-hospitality-section', false)
+            ->assertSee('Verified hospitality systems')
+            ->assertSee('CMS restored content.');
+        $this->assertSame('', (string) $selectedWork->fresh()->body);
     }
 
     public function test_about_story_and_mission_vision_are_editable_from_page_cms(): void

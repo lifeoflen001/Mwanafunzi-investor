@@ -11,6 +11,13 @@
     $footerCopy = trim(preg_replace('/\s+/', ' ', str_replace('\\n', ' ', (string) ($footerCopy ?? 'Student of Money. Probability. Systems. Discipline.'))));
     $footerCopyright = $footerCopyright ?? \App\Models\SiteSetting::getValue('footer_copyright', '© '.date('Y').' '.$brandName);
     $footerBottomStatement = $footerBottomStatement ?? \App\Models\SiteSetting::getValue('footer_bottom_statement', 'ALWAYS A MWANAFUNZI.');
+    $footerBrandContext = \App\Models\SiteSetting::getValue('footer_brand_context', 'Clear, practical lessons on markets, risk and probability.');
+    $footerCompanyLabel = \App\Models\SiteSetting::getValue('footer_company_label', 'Company');
+    $footerExploreLabel = \App\Models\SiteSetting::getValue('footer_explore_label', 'Explore');
+    $footerLegalLabel = \App\Models\SiteSetting::getValue('footer_legal_label', 'Legal');
+    $footerContactLabel = \App\Models\SiteSetting::getValue('footer_contact_label', 'Contact');
+    $footerSocialLabel = \App\Models\SiteSetting::getValue('footer_social_label', 'Follow');
+    $footerNewsletterEyebrow = \App\Models\SiteSetting::getValue('footer_newsletter_eyebrow', 'Stay connected');
     $footerNavigation = $footerNavigation ?? \App\Support\PublicSiteData::footerNavigation();
     $socialLinks = $socialLinks ?? \App\Support\PublicSiteData::socialLinks();
     $resolvePublicUrl = static fn (string $path): string => \App\Support\Seo::resolve($path, '#') ?: '#';
@@ -33,12 +40,12 @@
                     <img class="brand-image brand-logo-light" src="{{ $brandLogoLightUrl }}" alt="{{ $brandName }}">
                 </a>
                 <p class="footer-tagline">{{ $footerCopy }}</p>
-                <p class="footer-brand-context">Clear, practical lessons on markets, risk and probability.</p>
+                <p class="footer-brand-context">{{ $footerBrandContext }}</p>
             </div>
 
             <div class="footer-links">
                 <nav class="footer-group footer-company" aria-label="Company links">
-                    <span>Company</span>
+                    <span>{{ $footerCompanyLabel }}</span>
                     @forelse($companyLinks as $item)
                         <a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->publicLabel() }}</a>
                     @empty
@@ -47,7 +54,7 @@
                 </nav>
 
                 <nav class="footer-group footer-explore" aria-label="Explore links">
-                    <span>Explore</span>
+                    <span>{{ $footerExploreLabel }}</span>
                     @forelse($exploreLinks as $item)
                         <a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->publicLabel() }}</a>
                     @empty
@@ -56,7 +63,7 @@
                 </nav>
 
                 <nav class="footer-group footer-legal" aria-label="Legal links">
-                    <span>Legal</span>
+                    <span>{{ $footerLegalLabel }}</span>
                     @foreach($legalLinks as $item)
                         <a href="{{ $item->href() }}" target="{{ $item->target }}">{{ $item->publicLabel() }}</a>
                     @endforeach
@@ -67,7 +74,7 @@
                     @endforeach
                 </nav>
                 <nav class="footer-group footer-contact" aria-label="Contact details">
-                    <span>Contact</span>
+                    <span>{{ $footerContactLabel }}</span>
                     <a class="footer-contact-link" href="mailto:{{ $email }}" aria-label="Email {{ $email }}">{{ $email }}</a>
                     <a href="tel:{{ $phoneHref }}">{{ $phone }}</a>
                     @if($whatsapp)
@@ -82,7 +89,7 @@
         @if($newsletterSettings['enabled'] && $newsletterSettings['footer_visible'])
             <section class="footer-newsletter-row footer-contact-newsletter" aria-labelledby="footer-newsletter-heading">
                 <div class="footer-newsletter-copy">
-                    <p class="eyebrow">Stay connected</p>
+                    <p class="eyebrow">{{ $footerNewsletterEyebrow }}</p>
                     <h2 id="footer-newsletter-heading">{{ $newsletterSettings['heading'] }}</h2>
                     <p class="footer-newsletter-description">{{ $newsletterSettings['description'] }}</p>
                 </div>
@@ -104,7 +111,7 @@
 
         @if($socialLinks->isNotEmpty())
             <nav class="footer-social footer-social-bottom" aria-label="Social links">
-                <span>Follow</span>
+                <span>{{ $footerSocialLabel }}</span>
                 <div class="footer-social-links">
                     @foreach($socialLinks as $social)
                         @php($socialLabel = strtolower($social->label))

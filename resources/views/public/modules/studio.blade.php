@@ -8,6 +8,8 @@
     $formats = $sections->get('formats');
     $testimonials = $sections->get('testimonials');
     $approach = $sections->get('approach');
+    $process = $sections->get('process');
+    $selectedWork = $sections->get('selected-work');
     $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br> <em>'.e($page->hero_highlight).'</em>' : null;
     $cards = $services?->payload['cards'] ?? [];
 @endphp
@@ -20,7 +22,7 @@
     <x-public-hero class="studio-hero" :eyebrow="$page->hero_eyebrow ?: 'Mwanafunzi Investor / Creative Studio'" :title="$page->hero_title ?: $module->name" :title-html="$heroTitleHtml" :summary="$page->hero_summary ?: $module->description" :image="$page->hero_image" :focal-point="$page->hero_focal_point" :overlay="$page->hero_overlay" :alignment="$page->hero_alignment" setting="hero_about_image" :fallback-image="config('public.hero_defaults.about')">
         <div class="detail-actions">
             <a class="button button-accent" href="{{ \App\Support\Seo::resolve($page->hero_primary_url, route('creative-studio.book')) }}">{{ $page->hero_primary_label ?: 'Book a shoot' }} <span aria-hidden="true">↗</span></a>
-            <a class="text-link text-link-light" href="{{ \App\Support\Seo::resolve($page->hero_secondary_url, '#services') }}">{{ $page->hero_secondary_label ?: 'Explore the studio' }} <span aria-hidden="true">↓</span></a>
+            @if($services)<a class="text-link text-link-light" href="#{{ \App\Support\CmsContent::value($services, 'anchor_id', 'services') }}">{{ $page->hero_secondary_label ?: 'Explore the studio' }} <span aria-hidden="true">↓</span></a>@endif
         </div>
     </x-public-hero>
 
@@ -50,9 +52,11 @@
     @endif
 
     @if($featuredProjects->isNotEmpty())
-        <section class="platform-section studio-projects" id="projects">
-            <div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Selected work</p><h2>Stories worth keeping.</h2></div><a class="text-link" href="{{ route('creative-studio.projects') }}">View studio projects <span aria-hidden="true">↗</span></a></div><div class="service-project-grid">@foreach($featuredProjects->take(3) as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="service-project-card" href="{{ route('projects.show', $project) }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Creative project' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div>
+        @if($selectedWork && $featuredProjects->isNotEmpty())
+        <section class="platform-section studio-projects" id="{{ \App\Support\CmsContent::value($selectedWork, 'anchor_id', 'projects') }}">
+            <div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($selectedWork, 'eyebrow', 'Selected work') }}</p><h2>{{ $selectedWork->heading }}</h2></div>@if($selectedWork->cta_label && $selectedWork->cta_url)<a class="text-link" href="{{ \App\Support\Seo::resolve($selectedWork->cta_url, '#') }}">{{ $selectedWork->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div>@if($selectedWork->body)<p class="body-copy">{{ $selectedWork->body }}</p>@endif<div class="service-project-grid">@foreach($featuredProjects->take(3) as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="service-project-card" href="{{ route('projects.show', $project) }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Creative project' }}</span><h3>{{ $project->title }}</h3><p>{{ $project->short_description }}</p></div></a>@endforeach</div></div>
         </section>
+        @endif
     @endif
 
     @if($testimonials && $featuredTestimonials->isNotEmpty())
@@ -74,6 +78,10 @@
                 </div>
             </div>
         </section>
+    @endif
+
+    @if($process)
+        <section class="platform-dark platform-section studio-process"><div class="container"><div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($process, 'eyebrow', 'From brief to delivery') }}</p><h2>{{ $process->heading }}</h2></div><div class="rich-copy">{!! \App\Support\RichText::render($process->body) !!}</div></div><div class="dev-process-grid">@foreach($process->payload['steps'] ?? [] as $step)<div class="dev-process-step"><span>{{ $step['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $step['title'] ?? '' }}</h3><p>{{ $step['body'] ?? '' }}</p></div>@endforeach</div></div></section>
     @endif
 
 @endsection

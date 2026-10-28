@@ -51,6 +51,8 @@ class AdminPageController extends Controller
         $data['key'] = Str::slug($data['key'], '-');
         $data['slug'] = $data['slug'] ? Str::slug($data['slug']) : null;
         $data['is_visible'] = $request->boolean('is_visible');
+        $data['hero_primary_target'] = $data['hero_primary_target'] ?? '_self';
+        $data['hero_secondary_target'] = $data['hero_secondary_target'] ?? '_self';
         $page = Page::create($data);
         if ($page->page_type === 'policy') $this->recordPolicyRevision($page, $request);
         // Keep the public CMS context in sync when a page is created as well
@@ -71,6 +73,8 @@ class AdminPageController extends Controller
         $data['key'] = Str::slug($data['key'], '-');
         $data['slug'] = $data['slug'] ? Str::slug($data['slug']) : null;
         $data['is_visible'] = $request->boolean('is_visible');
+        $data['hero_primary_target'] = $data['hero_primary_target'] ?? '_self';
+        $data['hero_secondary_target'] = $data['hero_secondary_target'] ?? '_self';
         $oldPublicPath = $page->slug ? '/pages/'.$page->slug : null;
         $wasPublished = $page->status === 'published' && $page->is_visible;
         $page->update($data);
@@ -109,8 +113,10 @@ class AdminPageController extends Controller
             'hero_focal_point' => ['required', Rule::in(HeroFocalPoint::options())],
             'hero_primary_label' => ['nullable', 'string', 'max:120'],
             'hero_primary_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'hero_primary_target' => ['nullable', Rule::in(['_self', '_blank'])],
             'hero_secondary_label' => ['nullable', 'string', 'max:120'],
             'hero_secondary_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'hero_secondary_target' => ['nullable', Rule::in(['_self', '_blank'])],
             'hero_note' => ['nullable', 'string', 'max:500'],
             'hero_aside' => ['nullable', 'string', 'max:500'],
             'hero_aside_index' => ['nullable', 'string', 'max:50'],
@@ -137,6 +143,7 @@ class AdminPageController extends Controller
             'sections.*.image' => ['nullable', 'string', 'max:255'],
             'sections.*.cta_label' => ['nullable', 'string', 'max:120'],
             'sections.*.cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'sections.*.cta_target' => ['nullable', Rule::in(['_self', '_blank'])],
             'sections.*.sort_order' => ['nullable', 'integer', 'min:0'],
             'sections.*.is_enabled' => ['nullable', 'boolean'],
             'sections.*.list' => ['nullable', 'string', 'max:10000'],
@@ -145,6 +152,15 @@ class AdminPageController extends Controller
             'sections.*.cards' => ['nullable', 'string', 'max:20000'],
             'sections.*.secondary_cta_label' => ['nullable', 'string', 'max:120'],
             'sections.*.secondary_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'sections.*.secondary_cta_target' => ['nullable', Rule::in(['_self', '_blank'])],
+            'sections.*.anchor_id' => ['nullable', 'string', 'max:80', 'alpha_dash'],
+            'sections.*.image_alt' => ['nullable', 'string', 'max:190'],
+            'sections.*.image_caption' => ['nullable', 'string', 'max:500'],
+            'sections.*.contact_heading' => ['nullable', 'string', 'max:190'],
+            'sections.*.contact_body' => ['nullable', 'string', 'max:5000'],
+            'sections.*.contact_form_intro' => ['nullable', 'string', 'max:500'],
+            'sections.*.contact_response_note' => ['nullable', 'string', 'max:500'],
+            'sections.*.contact_topics_label' => ['nullable', 'string', 'max:190'],
             'sections.*.visual_caption' => ['nullable', 'string', 'max:190'],
             'sections.*.visual_index' => ['nullable', 'string', 'max:30'],
             'sections.*.dashboard_title' => ['nullable', 'string', 'max:120'],
@@ -158,7 +174,6 @@ class AdminPageController extends Controller
             'sections.*.empty_body' => ['nullable', 'string', 'max:1000'],
             'sections.*.empty_cta_label' => ['nullable', 'string', 'max:120'],
             'sections.*.empty_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
-            'sections.*.image_alt' => ['nullable', 'string', 'max:190'],
             'sections.*.image_focal_point' => ['nullable', 'string', 'max:80'],
             'sections.*.who_heading' => ['nullable', 'string', 'max:190'],
             'sections.*.who_body' => ['nullable', 'string', 'max:10000'],
@@ -181,6 +196,7 @@ class AdminPageController extends Controller
             'new_section_image' => ['nullable', 'string', 'max:255'],
             'new_section_cta_label' => ['nullable', 'string', 'max:120'],
             'new_section_cta_url' => ['nullable', 'string', 'max:500', 'regex:/^(https?:\/\/|mailto:|\/|#)/i'],
+            'new_section_cta_target' => ['nullable', Rule::in(['_self', '_blank'])],
             'new_section_sort_order' => ['nullable', 'integer', 'min:0'],
             'new_section_enabled' => ['nullable', 'boolean'],
         ]);
@@ -222,7 +238,7 @@ class AdminPageController extends Controller
                     ->values()
                     ->all();
             }
-            foreach (['eyebrow', 'secondary_cta_label', 'secondary_cta_url', 'visual_caption', 'visual_index', 'visual_note', 'visual_note_emphasis', 'dashboard_title', 'dashboard_status', 'card_cta_label', 'empty_index', 'empty_heading', 'empty_body', 'empty_cta_label', 'empty_cta_url'] as $payloadKey) {
+            foreach (['eyebrow', 'secondary_cta_label', 'secondary_cta_url', 'secondary_cta_target', 'cta_target', 'anchor_id', 'visual_caption', 'visual_index', 'visual_note', 'visual_note_emphasis', 'dashboard_title', 'dashboard_status', 'card_cta_label', 'empty_index', 'empty_heading', 'empty_body', 'empty_cta_label', 'empty_cta_url', 'image_alt', 'image_caption', 'contact_heading', 'contact_body', 'contact_form_intro', 'contact_response_note', 'contact_topics_label'] as $payloadKey) {
                 if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = trim((string) $input[$payloadKey]) ?: null;
             }
             if (array_key_exists('metrics', $input)) {
@@ -235,7 +251,7 @@ class AdminPageController extends Controller
                     ->values()
                     ->all();
             }
-            foreach (['image_alt', 'image_focal_point', 'who_heading', 'story_heading', 'quote_label', 'quote', 'mission_label', 'mission_heading', 'mission_body', 'vision_label', 'vision_heading', 'vision_body'] as $payloadKey) {
+            foreach (['image_focal_point', 'who_heading', 'story_heading', 'quote_label', 'quote', 'mission_label', 'mission_heading', 'mission_body', 'vision_label', 'vision_heading', 'vision_body'] as $payloadKey) {
                 if (array_key_exists($payloadKey, $input)) $payload[$payloadKey] = trim((string) $input[$payloadKey]) ?: null;
             }
             foreach (['who_body', 'story_body', 'mission_body', 'vision_body'] as $payloadKey) {
@@ -271,6 +287,7 @@ class AdminPageController extends Controller
             'image' => $request->input('new_section_image'),
             'cta_label' => $request->input('new_section_cta_label'),
             'cta_url' => $request->input('new_section_cta_url'),
+            'payload' => ['cta_target' => $request->input('new_section_cta_target', '_self')],
             'sort_order' => max(0, (int) $request->input('new_section_sort_order', 0)),
             'is_enabled' => $request->boolean('new_section_enabled', true),
         ]);

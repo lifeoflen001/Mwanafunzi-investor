@@ -1,6 +1,7 @@
 @extends('layouts.public')
-@section('title', 'Frequently asked questions — Mwanafunzi Investor')
-@section('description', 'Find clear answers about Mwanafunzi Investor courses, learning paths, digital tools and platform services.')
+@php($intro = $page?->section('intro'))
+@section('title', $page?->seo_title ?: 'Frequently asked questions — Mwanafunzi Investor')
+@section('description', $page?->seo_description ?: 'Find clear answers about Mwanafunzi Investor courses, learning paths, digital tools and platform services.')
 @section('structured_data')
     @if($groups->isNotEmpty())
         @php($faqItems = $groups->flatten(1)->map(fn ($faq) => ['@type' => 'Question', 'name' => $faq['question'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => strip_tags($faq['answer'])]])->values()->all())
@@ -8,15 +9,16 @@
     @endif
 @endsection
 @section('content')
-<x-public-hero class="public-page-hero" eyebrow="Questions, made clear" title="Frequently asked questions." summary="A practical place to find answers about learning, tools and the work we do." :breadcrumbs="[['label' => 'Home', 'url' => route('home')]]" />
+<x-public-hero class="public-page-hero" :eyebrow="$page?->hero_eyebrow ?: 'Questions, made clear'" :title="$page?->hero_title ?: 'Frequently asked questions.'" :summary="$page?->hero_summary ?: 'A practical place to find answers about learning, tools and the work we do.'" :image="$page?->hero_image" :overlay="$page?->hero_overlay ?: 'strong'" :breadcrumbs="[['label' => 'Home', 'url' => route('home')]]" />
+@if($intro && $intro->is_enabled)
 <section class="platform-section faq-directory" aria-labelledby="faq-directory-heading">
     <div class="container">
         <div class="split-heading">
             <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> Answers</p>
-                <h2 id="faq-directory-heading">Start with the question you have.</h2>
+                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($intro, 'eyebrow', 'Answers') }}</p>
+                <h2 id="faq-directory-heading">{{ $intro->heading }}</h2>
             </div>
-            <p class="body-copy">These answers are connected to currently published platform content and are kept deliberately direct.</p>
+            @if($intro->body)<p class="body-copy">{{ $intro->body }}</p>@endif
         </div>
 
         @forelse($groups as $target => $faqs)
@@ -44,4 +46,5 @@
         @endforelse
     </div>
 </section>
+@endif
 @endsection

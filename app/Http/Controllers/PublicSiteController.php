@@ -169,6 +169,8 @@ class PublicSiteController extends Controller
         return view('welcome', [
             'homePage' => $homePage,
             'products' => Product::available()->orderBy('sort_order')->limit(3)->get(),
+            'learningTopics' => LearningTopic::query()->where('is_published', true)->orderBy('sort_order')->limit(8)->get(),
+            'courses' => Course::published()->orderBy('sort_order')->limit(4)->get(),
             'featuredArticle' => Article::featured()->with('category')->first(),
             'featuredServices' => $featuredServices,
             'featuredProjects' => $featuredProjects,
@@ -498,7 +500,7 @@ class PublicSiteController extends Controller
 
         $groups = $items->sortBy([['target', 'asc'], ['sort_order', 'asc']])->groupBy('target');
 
-        return view('public.faqs.index', compact('groups'));
+        return view('public.faqs.index', ['groups' => $groups, 'page' => $this->cmsPage('faqs')]);
     }
 
     public function submitContact(Request $request)

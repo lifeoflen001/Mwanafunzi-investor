@@ -5,6 +5,7 @@
     $cmsPhilosophy = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'philosophy');
     $cmsMissionVision = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'mission-vision');
     $cmsApproach = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'approach');
+    $cmsTeam = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'team');
     $storyPayload = $cmsPhilosophy?->payload ?: [];
     $storyImage = $cmsPhilosophy?->image ? \App\Support\PublicHero::candidate($cmsPhilosophy->image) : null;
     $storyImagePosition = \App\Support\HeroFocalPoint::normalise($storyPayload['image_focal_point'] ?? 'center center');
@@ -46,15 +47,15 @@
 @if($cmsApproach)
 <section class="platform-dark"><div class="container two-column"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $cmsApproach->payload['eyebrow'] ?? '' }}</p><h2>{{ $cmsApproach->heading }}</h2></div><div><div class="rich-copy">{!! \App\Support\RichText::render($cmsApproach->body) !!}</div>@if($cmsApproach->cta_label && $cmsApproach->cta_url)<a class="button button-accent" href="{{ $cmsApproach->cta_url }}">{{ $cmsApproach->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></div></section>
 @endif
-@if(!empty($teamMembers))
+@if($cmsTeam && !empty($teamMembers))
 <section class="team-section">
     <div class="container">
         <div class="team-section-heading">
             <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> The people behind the work</p>
-                <h2>A small team with a serious point of view.</h2>
+                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($cmsTeam, 'eyebrow', 'The people behind the work') }}</p>
+                <h2>{{ $cmsTeam->heading }}</h2>
             </div>
-            <p>Good work is built by people who care about the details, stay curious and keep the process honest.</p>
+            @if($cmsTeam->body)<p>{{ $cmsTeam->body }}</p>@endif
         </div>
         <div class="team-grid">
             @foreach($teamMembers as $member)
