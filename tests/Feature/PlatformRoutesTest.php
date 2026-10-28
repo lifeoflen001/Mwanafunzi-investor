@@ -230,6 +230,12 @@ class PlatformRoutesTest extends TestCase
         ])->assertRedirect();
 
         $this->get('/development')->assertOk()->assertSee('Systems managed from the desk.')->assertSee('A CMS-managed service card.');
+        $digitalResponse = $this->get(route('digital-systems'));
+        $digitalResponse->assertOk()
+            ->assertSee('Systems managed from the desk.')
+            ->assertSee('A CMS-managed service card.');
+        $this->assertStringContainsString('no-cache', (string) $digitalResponse->headers->get('Cache-Control'));
+        $this->assertStringContainsString('must-revalidate', (string) $digitalResponse->headers->get('Cache-Control'));
     }
 
     public function test_about_story_and_mission_vision_are_editable_from_page_cms(): void

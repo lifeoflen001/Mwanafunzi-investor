@@ -8,6 +8,7 @@ use App\Models\PolicyRevision;
 use App\Models\Redirect;
 use App\Support\AdminAudit;
 use App\Support\HeroFocalPoint;
+use App\Support\PublicSiteData;
 use App\Support\RichText;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -52,6 +53,9 @@ class AdminPageController extends Controller
         $data['is_visible'] = $request->boolean('is_visible');
         $page = Page::create($data);
         if ($page->page_type === 'policy') $this->recordPolicyRevision($page, $request);
+        // Keep the public CMS context in sync when a page is created as well
+        // as when an existing page is edited.
+        PublicSiteData::forgetCache();
         AdminAudit::record('page.created', 'Created page '.$page->name, $page);
         return to_route('admin.pages.edit', $page)->with('success', 'Page created. Add sections when the page content is ready.');
     }
@@ -80,6 +84,10 @@ class AdminPageController extends Controller
         $this->createSection($request, $page);
         $page->refresh()->load('sections');
         if ($page->page_type === 'policy') $this->recordPolicyRevision($page, $request);
+        // Page content is rendered alongside the cached public chrome. Clear that
+        // cache after the complete page update so the next public request reads
+        // the saved navigation/module context as well as the fresh page rows.
+        PublicSiteData::forgetCache();
         AdminAudit::record('page.updated', 'Updated page '.$page->name, $page, ['sections' => $page->sections()->count()]);
         return back()->with('success', 'Page and sections updated.');
     }

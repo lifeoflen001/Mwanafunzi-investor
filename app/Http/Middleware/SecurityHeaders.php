@@ -37,6 +37,31 @@ class SecurityHeaders
             $response->headers->set('Pragma', 'no-cache');
             $response->headers->set('Expires', '0');
         }
+        if ($request->routeIs([
+            'home',
+            'digital-systems',
+            'digital-software.*',
+            'development',
+            'studio',
+            'creative-studio*',
+            'forex-academy',
+            'learn*',
+            'courses*',
+            'tools*',
+            'journal*',
+            'blog*',
+            'about',
+            'contact',
+            'student-of-money',
+            'legal',
+            'cookie-policy',
+            'faqs',
+            'pages.show',
+        ])) {
+            // CMS pages must revalidate after an administrator publishes an edit.
+            // Hashed assets remain cacheable; only dynamic HTML is revalidated.
+            $response->headers->set('Cache-Control', 'no-cache, must-revalidate');
+        }
         if ($request->isSecure() || config('security.force_hsts', false)) $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
         return $response;
