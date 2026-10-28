@@ -751,6 +751,22 @@ document.querySelectorAll('[data-feedback]').forEach((feedback) => {
     if (!feedback.classList.contains('feedback-error')) window.setTimeout(() => feedback.remove(), 6500);
 });
 
+// Mark only the controls that failed validation. The message stays in the
+// existing inline error or summary; fields receive a red border without a fill.
+document.querySelectorAll('[data-validation-summary]').forEach((summary) => {
+    let fields = [];
+    try { fields = JSON.parse(summary.dataset.validationFields || '[]'); } catch { fields = []; }
+    if (!fields.length) return;
+    const scope = summary.closest('form, .auth-panel, .portal-content, main') || document;
+    const normalise = (name) => name.replace(/\[([^\]]+)\]/g, '.$1');
+    const invalid = new Set(fields.map((field) => normalise(String(field))));
+    scope.querySelectorAll('input[name], select[name], textarea[name]').forEach((control) => {
+        if (control.type === 'hidden' || !invalid.has(normalise(control.name))) return;
+        control.classList.add('has-validation-error');
+        control.setAttribute('aria-invalid', 'true');
+    });
+});
+
 document.querySelectorAll('.admin-portal form.admin-form, .admin-portal form.admin-filter-toolbar, .admin-portal form.admin-inline-form').forEach((form) => form.addEventListener('submit', (event) => {
     if (event.defaultPrevented || form.getAttribute('aria-busy') === 'true') return;
     form.setAttribute('aria-busy', 'true');

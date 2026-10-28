@@ -137,6 +137,29 @@ class PlatformRoutesTest extends TestCase
             ->assertSessionHasErrors(['email', 'password']);
     }
 
+    public function test_inline_form_errors_are_not_repeated_in_the_summary(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'form-errors@example.test',
+            'password' => Hash::make('correct-password'),
+            'is_admin' => false,
+        ]);
+
+        $this->from(route('login'))
+            ->post(route('login.store'), ['email' => $user->email, 'password' => 'wrong-password'])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['email']);
+
+        $page = $this->get(route('login'));
+
+        $page->assertOk()
+            ->assertDontSee('Review the form errors below.')
+            ->assertDontSee('Please correct the highlighted field.')
+            ->assertSee('The email or password is incorrect.');
+
+        $this->assertSame(1, substr_count($page->getContent(), 'The email or password is incorrect.'));
+    }
+
     public function test_admin_login_exposes_a_separate_admin_password_reset_flow(): void
     {
         Notification::fake();

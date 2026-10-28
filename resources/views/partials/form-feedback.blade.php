@@ -6,6 +6,10 @@
         ['key' => 'error', 'title' => 'Unable to complete that request', 'message' => session('error'), 'role' => 'alert'],
     ])->filter(fn ($item) => filled($item['message']))->values();
     $validationErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();
+    $showValidationDetails = $show_validation_details ?? true;
+    $validationFieldKeys = $validationErrors->any()
+        ? $validationErrors->getBag('default')->keys()
+        : [];
 @endphp
 
 @if($feedback->isNotEmpty())
@@ -21,12 +25,14 @@
 @endif
 
 @if($validationErrors->any())
-    <div class="feedback feedback-error feedback-validation-summary" id="form-first-error" role="alert" aria-live="assertive">
-        <span class="feedback-icon" aria-hidden="true">!</span>
-        <span class="feedback-copy">
-            <strong>Please correct {{ $validationErrors->count() === 1 ? 'the highlighted field' : $validationErrors->count().' highlighted fields' }}.</strong>
-            <span><a href="#form-first-error">Review the form errors below.</a></span>
-            <ul>@foreach($validationErrors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
-        </span>
-    </div>
+    @if($showValidationDetails)
+        <div class="feedback feedback-error feedback-validation-summary" id="form-first-error" role="alert" aria-live="assertive" data-validation-summary data-validation-fields="{{ e(json_encode($validationFieldKeys)) }}">
+            <span class="feedback-icon" aria-hidden="true">!</span>
+            <span class="feedback-copy">
+                <ul>@foreach($validationErrors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
+            </span>
+        </div>
+    @else
+        <span hidden data-validation-summary data-validation-fields="{{ e(json_encode($validationFieldKeys)) }}"></span>
+    @endif
 @endif

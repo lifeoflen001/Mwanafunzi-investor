@@ -5,6 +5,7 @@
 @section('auth_brand_foot', 'Student of Money. Probability. Systems. Discipline.')
 @section('auth_back_url', route('home'))
 @section('auth_back_label', 'Back to website')
+@section('auth_validation_details', 'false')
 @section('title', 'Create a client account')
 @section('content')
 <div class="auth-form-wrap">

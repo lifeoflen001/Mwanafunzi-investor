@@ -121,6 +121,9 @@
 .auth-page .client-auth-form input { min-height:46px; padding:0 13px; border:1px solid rgba(18,28,36,.2); border-radius:7px; background:rgba(255,255,255,.4); color:var(--ink); font:16px var(--sans); }
 .auth-page .client-auth-form input:focus { border-color:var(--copper); box-shadow:0 0 0 3px rgba(255,106,0,.14); }
 .auth-page .client-auth-showcase { display:flex; flex-direction:column; justify-content:space-between; }
+.auth-page .auth-options input[type="checkbox"],
+.auth-page .auth-consent input[type="checkbox"],
+.auth-page .admin-auth-form .admin-check input[type="checkbox"] { width:16px; height:16px; min-width:16px; min-height:16px; margin:1px 0 0; padding:0; accent-color:var(--copper); }
 
 @media (max-width:1100px) {
     .auth-page .auth-shell { grid-template-columns:minmax(0,1.25fr) minmax(360px,1fr); }
@@ -4305,6 +4308,13 @@ body input:focus-visible, body select:focus-visible, body textarea:focus-visible
 .field-error,
 .client-field-error {
     color:#943d33 !important;
+}
+.has-validation-error,
+.has-validation-error:focus {
+    border-color:#bd5a4b !important;
+    box-shadow:none !important;
+    outline:none !important;
+    background:inherit !important;
 }
 .form-success a,
 .feedback-success a,

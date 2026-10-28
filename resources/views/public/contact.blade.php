@@ -54,7 +54,7 @@
 
             <form class="contact-form" method="post" action="{{ route('contact.submit') }}">
                 @csrf
-                @include('partials.form-feedback')
+                @include('partials.form-feedback', ['show_validation_details' => false])
                 @include('components.recaptcha', ['action' => 'contact'])
                 <p class="contact-form-intro">{{ $contactFormIntro }}</p>
                 <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" name="website"></label>
@@ -69,6 +69,7 @@
                 <label for="category">What can we help with?<select id="category" name="category" required><option value="">Select a reason</option><option value="general">General question</option><option value="course">Course question</option><option value="product">Digital product support</option><option value="partnership">Partnership</option><option value="support">Technical support</option><option value="other">Other</option></select></label>
                 <label for="message">Message<textarea id="message" name="message" rows="5" required>{{ old('message') }}</textarea>@error('message')<small>{{ $message }}</small>@enderror</label>
                 <label class="consent"><input type="checkbox" name="consent" value="1" required> <span>I agree that Mwanafunzi Investor may use the information in this form to respond to my enquiry. This is an educational platform, not personalised financial advice. <a href="{{ route('legal', 'privacy-policy') }}">Read the Privacy Policy</a> and <a href="{{ route('legal', 'risk-disclosure') }}">Risk Disclosure</a>.</span></label>
+                @error('consent')<small>{{ $message }}</small>@enderror
                 <button class="button button-dark contact-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
                 <p class="contact-response-note">{{ $contactResponseNote }}</p>
             </form>
