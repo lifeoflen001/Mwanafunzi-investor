@@ -56,7 +56,6 @@ document.querySelectorAll('form[method="post"]').forEach((form) => {
             delete form.dataset.recaptchaBypass;
             return;
         }
-        if (token.value) return;
         event.preventDefault();
         const status = form.querySelector('[data-recaptcha-status]');
         const submit = event.submitter || form.querySelector('button[type="submit"]');
