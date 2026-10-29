@@ -45,6 +45,40 @@ class PortalSubdomainTest extends TestCase
         $this->assertSame(204, $response->getStatusCode());
     }
 
+    public function test_client_root_is_a_portal_entry_point_not_a_public_homepage(): void
+    {
+        $response = $this->throughMiddleware('https://client.mwanafunziinvestor.com/');
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('https://client.mwanafunziinvestor.com/login', $response->headers->get('Location'));
+    }
+
+    public function test_client_public_pages_return_to_the_public_host(): void
+    {
+        $response = $this->throughMiddleware('https://client.mwanafunziinvestor.com/about?source=portal');
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('https://mwanafunziinvestor.com/about?source=portal', $response->headers->get('Location'));
+    }
+
+    public function test_admin_root_is_a_portal_entry_point_and_public_paths_leave_admin_host(): void
+    {
+        $root = $this->throughMiddleware('https://admin.mwanafunziinvestor.com/');
+        $public = $this->throughMiddleware('https://admin.mwanafunziinvestor.com/about');
+
+        $this->assertSame('https://admin.mwanafunziinvestor.com/login', $root->headers->get('Location'));
+        $this->assertSame('https://mwanafunziinvestor.com/about', $public->headers->get('Location'));
+    }
+
+    public function test_disallowed_portal_posts_are_rejected_without_forwarding_the_body(): void
+    {
+        $client = $this->throughMiddleware('https://client.mwanafunziinvestor.com/contact', 'POST');
+        $admin = $this->throughMiddleware('https://admin.mwanafunziinvestor.com/contact', 'POST');
+
+        $this->assertSame(404, $client->getStatusCode());
+        $this->assertSame(404, $admin->getStatusCode());
+    }
+
     public function test_correct_subdomain_login_uses_correct_controller(): void
     {
         $router = app('router');
@@ -53,6 +87,7 @@ class PortalSubdomainTest extends TestCase
         $this->assertSame(AdminAuthController::class.'@create', $admin->getActionName());
         $this->assertSame(CustomerAuthController::class.'@login', $client->getActionName());
         $this->assertSame(204, $this->throughMiddleware('https://client.mwanafunziinvestor.com/login')->getStatusCode());
+        $this->assertSame(204, $this->throughMiddleware('https://client.mwanafunziinvestor.com/auth/google/callback')->getStatusCode());
     }
 
     public function test_local_and_staging_hosts_and_post_bodies_are_not_redirected(): void

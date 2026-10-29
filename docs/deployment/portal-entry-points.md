@@ -2,9 +2,9 @@
 
 Public login links open the client or administrator login in a new tab using `target="_blank" rel="noopener"`. HTTP redirects cannot force a new tab when an address is typed or opened externally.
 
-In production, GET/HEAD `/login`, `/register` and `/forgot-password` on the main or www host redirect to the client subdomain. `/admin/login` redirects to the admin subdomain's `/login`; other `/admin/...` links retain their path on the admin host. The admin host has explicit GET/POST `/login` routes registered before the generic client login. Existing `/admin/login` POST routes continue to handle the administrator form on that host.
+In production, GET/HEAD `/login`, `/register` and `/forgot-password` on the main or www host redirect to the client subdomain. The client root redirects to its `/login`; public content requested on the client host returns to the main host. Client authentication, OAuth, account, checkout, payment and download paths remain on the client host. `/admin/login` redirects to the admin subdomain's `/login`; other `/admin/...` links retain their path on the admin host. The admin root redirects to `/login`, and public content requested on the admin host returns to the main host. The admin host has explicit GET/POST `/login` routes registered before the generic client login. Existing `/admin/login` POST routes continue to handle the administrator form on that host.
 
-Redirects use configured hosts, preserve the query string, leave local/staging hosts alone and never forward POST bodies. Existing portal authentication and authorization checks remain in place. This change routes entry points; it does not isolate every public content route by host or migrate signed URLs.
+Redirects use configured hosts, preserve the query string, leave local/staging hosts alone and never forward POST bodies. Disallowed non-GET/HEAD requests on portal hosts return 404 rather than forwarding submitted data to another host. Existing portal authentication and authorization checks remain in place. Signed download URLs must be generated on the client host when they are consumed there.
 
 ## Release checks
 
