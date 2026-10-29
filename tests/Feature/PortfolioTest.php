@@ -21,6 +21,7 @@ class PortfolioTest extends TestCase
     {
         $this->get(route('services'))->assertOk()->assertSee(route('forex-academy'))->assertSee(route('digital-systems'))->assertSee(route('creative-studio'))->assertDontSee('Practical systems, carefully built.')->assertDontSee('Selected work');
         $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.projects.create'))->assertOk()->assertSee('Project categories')->assertSee('Featured image or header')->assertSee('Upload a photo or video');
 
         $this->actingAs($admin)->post(route('admin.services.store'), [
             'title' => 'Custom Systems', 'slug' => 'custom-systems', 'short_description' => 'Systems shaped around the real workflow.',
@@ -35,15 +36,25 @@ class PortfolioTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.projects.store'), [
             'title' => 'Operations Platform', 'slug' => 'operations-platform', 'project_type' => 'Operational system', 'industry' => 'Operations',
-            'short_description' => 'A structured system for a real workflow.', 'status' => 'published', 'display_order' => 1, 'is_featured' => 1,
+            'short_description' => 'A structured system for a real workflow.', 'status' => 'published', 'display_order' => 1, 'is_featured' => 1, 'featured_image' => 'images/hero-home.webp',
             'service_ids' => [$service->id], 'technologies' => "Laravel\nMySQL", 'features' => 'Workflow visibility | One place for the operating record.',
             'results' => 'Operations visibility | Centralized | Fragmented information brought into one workspace.',
         ])->assertRedirect();
 
         $project = Project::where('slug', 'operations-platform')->firstOrFail();
         $this->assertDatabaseHas('project_service', ['project_id' => $project->id, 'service_id' => $service->id]);
-        $this->get(route('projects'))->assertOk()->assertSee('Operations Platform');
+        $this->assertSame('images/hero-home.webp', $project->featured_image);
+        $this->get(route('admin.projects'))->assertOk()->assertSee('Operations Platform')->assertSee('Custom Systems');
+        $this->get(route('admin.projects', ['service_id' => $service->id]))->assertOk()->assertSee('Operations Platform')->assertSee('Custom Systems');
+        $this->get(route('projects'))->assertOk()->assertSee('Operations Platform')->assertSee('Custom Systems')->assertSee('hero-home.webp');
         $this->get(route('projects.show', $project))->assertOk()->assertSee('Centralized')->assertSee('Laravel')->assertSee('Workflow visibility');
+
+        $this->actingAs($admin)->put(route('admin.projects.update', $project), [
+            'title' => 'Operations Platform Updated', 'slug' => 'operations-platform-updated', 'short_description' => 'An updated structured system for a real workflow.',
+            'status' => 'published', 'display_order' => 2, 'service_ids' => [$service->id], 'featured_image' => 'images/hero-about.webp',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('projects', ['id' => $project->id, 'title' => 'Operations Platform Updated', 'featured_image' => 'images/hero-about.webp']);
+        $this->get(route('projects.show', $project->fresh()))->assertOk()->assertSee('Operations Platform Updated')->assertSee('hero-about.webp');
     }
 
     public function test_unpublished_projects_and_unapproved_testimonials_stay_private(): void

@@ -19,12 +19,15 @@ class AdminProjectController extends Controller
             'q' => trim((string) $request->input('q')),
             'status' => trim((string) $request->input('status')),
             'industry' => trim((string) $request->input('industry')),
+            'service_id' => trim((string) $request->input('service_id')),
         ];
         $query = Project::query()
+            ->with(['services.businessUnit'])
             ->withCount(['services', 'gallery', 'testimonials'])
             ->when($filters['q'], fn ($query, string $search) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('slug', 'like', '%'.$search.'%')))
             ->when($filters['status'], fn ($query, string $status) => $query->where('project_status', $status))
             ->when($filters['industry'], fn ($query, string $industry) => $query->where('industry', $industry))
+            ->when($filters['service_id'], fn ($query, string $serviceId) => $query->whereHas('services', fn ($services) => $services->whereKey($serviceId)))
             ->orderBy('display_order')
             ->orderBy('title');
 
@@ -33,10 +36,19 @@ class AdminProjectController extends Controller
             'filters' => $filters,
             'statuses' => Project::STATUSES,
             'industries' => Project::whereNotNull('industry')->where('industry', '<>', '')->distinct()->orderBy('industry')->pluck('industry'),
+            'services' => Service::active()->with('businessUnit')->orderBy('sort_order')->orderBy('title')->get(),
         ]);
     }
 
-    public function create() { return view('admin.projects.form', ['project' => new Project(['status' => 'draft']), 'services' => Service::active()->orderBy('sort_order')->orderBy('title')->get(), 'media' => Media::latest()->limit(100)->get(), 'action' => route('admin.projects.store')]); }
+    public function create()
+    {
+        return view('admin.projects.form', [
+            'project' => new Project(['status' => 'draft']),
+            'serviceGroups' => $this->serviceGroups(),
+            'media' => Media::latest()->limit(100)->get(),
+            'action' => route('admin.projects.store'),
+        ]);
+    }
 
     public function store(Request $request)
     {
@@ -46,7 +58,15 @@ class AdminProjectController extends Controller
         return to_route('admin.projects.edit', $project)->with('success', 'Project created.');
     }
 
-    public function edit(Project $project) { return view('admin.projects.form', ['project' => $project->load(['services', 'gallery']), 'services' => Service::active()->orderBy('sort_order')->orderBy('title')->get(), 'media' => Media::latest()->limit(100)->get(), 'action' => route('admin.projects.update', $project)]); }
+    public function edit(Project $project)
+    {
+        return view('admin.projects.form', [
+            'project' => $project->load(['services', 'gallery']),
+            'serviceGroups' => $this->serviceGroups($project),
+            'media' => Media::latest()->limit(100)->get(),
+            'action' => route('admin.projects.update', $project),
+        ]);
+    }
 
     public function update(Request $request, Project $project)
     {
@@ -88,6 +108,19 @@ class AdminProjectController extends Controller
             $gallery[(int) $item['media_id']] = ['alt_text' => trim((string) ($item['alt_text'] ?? '')), 'caption' => trim((string) ($item['caption'] ?? '')), 'sort_order' => (int) ($item['sort_order'] ?? $index)];
         }
         $project->gallery()->sync($gallery);
+    }
+
+    private function serviceGroups(?Project $project = null)
+    {
+        $selectedServiceIds = $project?->exists ? $project->services()->pluck('services.id') : collect();
+
+        return Service::active()
+            ->with('businessUnit')
+            ->when($selectedServiceIds->isNotEmpty(), fn ($query) => $query->orWhereIn('id', $selectedServiceIds->all()))
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get()
+            ->groupBy(fn (Service $service) => $service->businessUnit?->name ?: 'Other services');
     }
 
     private function lines(?string $value): array { return collect(preg_split('/\r\n|\r|\n/', (string) $value))->map(fn ($item) => trim($item))->filter()->values()->all(); }
