@@ -80,10 +80,12 @@
     @if($bingVerification)<meta name="msvalidate.01" content="{{ $bingVerification }}">@endif
     @include('partials.brand-schema', ['includeWebsiteSchema' => request()->routeIs('home')])
     @yield('structured_data')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php($recaptcha = app(\App\Services\RecaptchaService::class))
     @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
         <script>window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
+    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
         <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode($recaptcha->siteKey()) }}" async defer></script>
     @endif
     @include('components.design-tokens')

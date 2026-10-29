@@ -1,6 +1,6 @@
 // The provider script and this integration are loaded only when reCAPTCHA is
 // enabled. The server-side rule remains authoritative for every form.
-const recaptchaConfig = window.mwanafunziRecaptcha;
+const recaptchaConfig = () => window.mwanafunziRecaptcha;
 
 // The Google script is loaded asynchronously in the shared layouts. Keep the
 // form handler independent from that load order so a quick submit cannot
@@ -39,10 +39,7 @@ const recaptchaActionForForm = (form) => {
     return null;
 };
 
-document.querySelectorAll('form[method="post"]').forEach((form) => {
-    const action = recaptchaActionForForm(form);
-    if (!action || !recaptchaConfig?.siteKey || form.dataset.recaptchaBound === 'true') return;
-    form.dataset.recaptchaBound = 'true';
+const ensureTokenField = (form) => {
     let token = form.querySelector('[data-recaptcha-token]');
     if (!token) {
         token = document.createElement('input');
@@ -51,29 +48,43 @@ document.querySelectorAll('form[method="post"]').forEach((form) => {
         token.dataset.recaptchaToken = 'true';
         form.append(token);
     }
-    form.addEventListener('submit', async (event) => {
-        if (form.dataset.recaptchaBypass === 'true') {
-            delete form.dataset.recaptchaBypass;
-            return;
-        }
-        event.preventDefault();
-        const status = form.querySelector('[data-recaptcha-status]');
-        const submit = event.submitter || form.querySelector('button[type="submit"]');
-        if (form.dataset.recaptchaPending === 'true') return;
-        form.dataset.recaptchaPending = 'true';
-        submit?.setAttribute('aria-busy', 'true');
-        if (status) status.textContent = 'Verifying secure access…';
-        try {
-            const value = await requestToken(recaptchaConfig.siteKey, action);
-            if (!value || typeof value !== 'string') throw new Error('Empty reCAPTCHA token');
-            token.value = value;
-            form.dataset.recaptchaBypass = 'true';
-            form.requestSubmit();
-        } catch {
-            if (status) status.textContent = 'We could not verify this request. Please try again.';
-        } finally {
-            delete form.dataset.recaptchaPending;
-            submit?.removeAttribute('aria-busy');
-        }
-    });
-});
+    return token;
+};
+
+// Use one delegated capture-phase listener instead of scanning the document
+// once. This covers forms rendered after the bundle starts and prevents a
+// fast submit from reaching Laravel before the token handler is attached.
+document.addEventListener('submit', async (event) => {
+    const form = event.target instanceof HTMLFormElement ? event.target : null;
+    const config = recaptchaConfig();
+    const action = form ? recaptchaActionForForm(form) : null;
+    if (!form || !action || !config?.siteKey) return;
+
+    if (form.dataset.recaptchaBypass === 'true') {
+        delete form.dataset.recaptchaBypass;
+        return;
+    }
+
+    event.preventDefault();
+    if (form.dataset.recaptchaPending === 'true') return;
+
+    const token = ensureTokenField(form);
+    const status = form.querySelector('[data-recaptcha-status]');
+    const submit = event.submitter || form.querySelector('button[type="submit"]');
+    form.dataset.recaptchaPending = 'true';
+    submit?.setAttribute('aria-busy', 'true');
+    if (status) status.textContent = 'Verifying secure access…';
+
+    try {
+        const value = await requestToken(config.siteKey, action);
+        if (!value || typeof value !== 'string') throw new Error('Empty reCAPTCHA token');
+        token.value = value;
+        form.dataset.recaptchaBypass = 'true';
+        form.requestSubmit(submit || undefined);
+    } catch {
+        if (status) status.textContent = 'We could not verify this request. Please try again.';
+    } finally {
+        delete form.dataset.recaptchaPending;
+        submit?.removeAttribute('aria-busy');
+    }
+}, true);

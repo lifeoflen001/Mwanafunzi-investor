@@ -22,10 +22,12 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}?v=favicon4" sizes="180x180">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     <title>@yield('title', $isAdmin ? 'Admin sign in' : 'Client sign in') — {{ $brandName }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php($recaptcha = app(\App\Services\RecaptchaService::class))
     @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
         <script>window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
+    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
         <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode($recaptcha->siteKey()) }}" async defer></script>
     @endif
     @include('components.design-tokens')

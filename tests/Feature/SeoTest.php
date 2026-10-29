@@ -44,6 +44,23 @@ class SeoTest extends TestCase
             ->assertSee('This site is protected by reCAPTCHA.', false);
     }
 
+    public function test_auth_recaptcha_configuration_precedes_the_vite_module(): void
+    {
+        config()->set([
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.enforce_in_testing' => true,
+        ]);
+
+        $html = $this->get(route('login'))->assertOk()->getContent();
+        $configurationPosition = strpos($html, 'window.mwanafunziRecaptcha');
+        $modulePosition = strpos($html, '<script type="module"');
+
+        $this->assertNotFalse($configurationPosition);
+        $this->assertNotFalse($modulePosition);
+        $this->assertLessThan($modulePosition, $configurationPosition);
+    }
+
     public function test_built_in_cms_aliases_redirect_and_are_not_listed_in_sitemap(): void
     {
         foreach (['services', 'projects', 'faqs', 'blog', 'about', 'home'] as $key) {
