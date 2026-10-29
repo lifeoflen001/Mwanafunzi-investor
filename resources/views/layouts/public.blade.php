@@ -82,7 +82,7 @@
     @yield('structured_data')
     @php($recaptcha = app(\App\Services\RecaptchaService::class))
     @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
-        <script>window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
+        <script nonce="{{ request()->attributes->get('csp_nonce') }}">window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))

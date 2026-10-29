@@ -58,6 +58,7 @@ class SeoTest extends TestCase
 
         $this->assertNotFalse($configurationPosition);
         $this->assertNotFalse($modulePosition);
+        $this->assertMatchesRegularExpression('/<script nonce="[^"]+">window\.mwanafunziRecaptcha/', $html);
         $this->assertLessThan($modulePosition, $configurationPosition);
     }
 
