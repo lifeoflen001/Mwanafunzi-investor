@@ -1,6 +1,9 @@
 if (document.querySelector('[data-avatar-form]')) import('./modules/avatar-crop.js');
 if (document.querySelector('[data-media-picker], [data-rich-editor-wrapper]')) import('./modules/media-editor.js');
-if (window.mwanafunziRecaptcha?.siteKey) import('./modules/recaptcha.js');
+// Bind protected forms from the main bundle so the handler is ready even when
+// the third-party Google script is still loading. The module remains inert
+// when reCAPTCHA is not configured for the current environment.
+import './modules/recaptcha.js';
 
 const header = document.querySelector('[data-header]');
 const menuToggle = document.querySelector('[data-menu-toggle]');

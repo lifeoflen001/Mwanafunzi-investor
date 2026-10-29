@@ -1,6 +1,31 @@
 // The provider script and this integration are loaded only when reCAPTCHA is
 // enabled. The server-side rule remains authoritative for every form.
 const recaptchaConfig = window.mwanafunziRecaptcha;
+
+// The Google script is loaded asynchronously in the shared layouts. Keep the
+// form handler independent from that load order so a quick submit cannot
+// reach Laravel with an empty token.
+const waitForRecaptcha = (timeout = 15000) => new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+    const check = () => {
+        if (window.grecaptcha?.ready && window.grecaptcha?.execute) {
+            resolve(window.grecaptcha);
+            return;
+        }
+        if (Date.now() - startedAt >= timeout) {
+            reject(new Error('reCAPTCHA did not become available'));
+            return;
+        }
+        window.setTimeout(check, 100);
+    };
+    check();
+});
+
+const requestToken = (siteKey, action) => waitForRecaptcha().then((grecaptcha) => new Promise((resolve, reject) => {
+    grecaptcha.ready(() => {
+        Promise.resolve(grecaptcha.execute(siteKey, { action })).then(resolve, reject);
+    });
+}));
 const recaptchaActionForForm = (form) => {
     const path = new URL(form.action || window.location.href, window.location.origin).pathname;
     if (path.endsWith('/admin/login')) return 'admin_login';
@@ -26,7 +51,7 @@ document.querySelectorAll('form[method="post"]').forEach((form) => {
         token.dataset.recaptchaToken = 'true';
         form.append(token);
     }
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         if (form.dataset.recaptchaBypass === 'true') {
             delete form.dataset.recaptchaBypass;
             return;
@@ -35,21 +60,20 @@ document.querySelectorAll('form[method="post"]').forEach((form) => {
         event.preventDefault();
         const status = form.querySelector('[data-recaptcha-status]');
         const submit = event.submitter || form.querySelector('button[type="submit"]');
+        if (form.dataset.recaptchaPending === 'true') return;
+        form.dataset.recaptchaPending = 'true';
         submit?.setAttribute('aria-busy', 'true');
         if (status) status.textContent = 'Verifying secure access…';
-        const execute = () => window.grecaptcha.execute(recaptchaConfig.siteKey, { action })
-            .then((value) => {
-                token.value = value;
-                form.dataset.recaptchaBypass = 'true';
-                form.requestSubmit();
-            })
-            .catch(() => {
-                if (status) status.textContent = 'We could not verify this request. Please try again.';
-                submit?.removeAttribute('aria-busy');
-            });
-        if (window.grecaptcha?.ready) window.grecaptcha.ready(execute);
-        else {
-            if (status) status.textContent = 'Secure verification is unavailable. Please refresh and try again.';
+        try {
+            const value = await requestToken(recaptchaConfig.siteKey, action);
+            if (!value || typeof value !== 'string') throw new Error('Empty reCAPTCHA token');
+            token.value = value;
+            form.dataset.recaptchaBypass = 'true';
+            form.requestSubmit();
+        } catch {
+            if (status) status.textContent = 'We could not verify this request. Please try again.';
+        } finally {
+            delete form.dataset.recaptchaPending;
             submit?.removeAttribute('aria-busy');
         }
     });
