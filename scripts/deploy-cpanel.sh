@@ -26,6 +26,22 @@ test -f "$WEB/index.php"
 test -s "$IN/release.tar.gz"
 command -v curl >/dev/null
 
+# Keep generated release artifacts from exhausting the cPanel account quota.
+# The active release and the newest rollback backup are preserved; persistent
+# uploads, databases and application storage live outside these directories.
+prune_release_artifacts() {
+    find "$BASE/incoming" -mindepth 1 -maxdepth 1 -type d ! -path "$IN" -exec rm -rf -- {} +
+
+    local newest_backup=""
+    newest_backup="$(find "$BASE/backups" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2- || true)"
+    while IFS= read -r backup; do
+        [[ -z "$backup" || "$backup" == "$newest_backup" ]] && continue
+        rm -rf -- "$backup"
+    done < <(find "$BASE/backups" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | cut -d' ' -f2-)
+}
+
+prune_release_artifacts
+
 # Do not interfere with pre-existing maintenance mode.
 if [[ -e "$LIVE/storage/framework/down" ||
       -e "$LIVE/storage/framework/maintenance.php" ]]; then
@@ -158,5 +174,6 @@ done
 
 STARTED=0
 printf '%s\n' "$ID" > "$BASE/last-successful-release"
+rm -rf -- "$IN"
 echo "Deployment succeeded: $ID"
 echo "Code backup: $BACKUP"
