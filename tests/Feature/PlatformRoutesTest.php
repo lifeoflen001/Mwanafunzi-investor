@@ -51,6 +51,20 @@ class PlatformRoutesTest extends TestCase
         $this->get('/forex-academy')->assertRedirect('/financial-academy');
     }
 
+    public function test_financial_academy_omits_retired_sections(): void
+    {
+        $html = $this->get('/financial-academy')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('academy-intro', $html);
+        $this->assertStringNotContainsString('The learning position', $html);
+        $this->assertStringNotContainsString('academy-framework', $html);
+        $this->assertStringNotContainsString('The Student of Money Framework.', $html);
+        $this->assertStringNotContainsString('academy-final', $html);
+        $this->assertStringNotContainsString('Become trustworthy with the decisions in front of you.', $html);
+        $this->assertStringContainsString('Financial Academy', $html);
+        $this->assertStringContainsString('Ask a question', $html);
+    }
+
     public function test_policy_pages_have_specific_document_titles(): void
     {
         $this->get('/privacy-policy')->assertSee('<title>Privacy Policy — Mwanafunzi Investor</title>', false);

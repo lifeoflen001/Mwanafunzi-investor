@@ -1,13 +1,10 @@
 @extends('layouts.public')
 
 @php
-    $intro = $page?->section('academy-intro');
     $pillars = $page?->section('academy-pillars');
     $academyCourses = $page?->section('academy-courses');
     $toolsSection = $page?->section('academy-tools');
     $risk = $page?->section('academy-risk');
-    $framework = $page?->section('academy-framework');
-    $finalCta = $page?->section('academy-final');
 @endphp
 
 @section('title', $page?->seo_title ?: 'Financial Academy — Mwanafunzi Investor')
@@ -21,8 +18,6 @@
         <x-public-hero class="academy-hero" :eyebrow="$page?->hero_eyebrow ?: 'Mwanafunzi Investor / Financial Academy'" :title="$page?->hero_title ?: 'Become a'" :title-html="$page?->hero_highlight ? e($page->hero_title ?: 'Become a').'<br> <em>'.e($page->hero_highlight).'</em>' : 'Become a<br> <em>Student of Money.</em>'" :summary="$page?->hero_summary ?: 'Learn systematic trading, probability, risk planning and disciplined execution without the hype.'" setting="hero_learn_image" :fallback-image="config('public.hero_defaults.learn')" :overlay="$page?->hero_overlay ?: 'strong'">
             <div class="hero-buttons">@if($pillars)<a class="button button-accent" href="#{{ \App\Support\CmsContent::value($pillars, 'anchor_id', 'learning-pillars') }}">Explore the academy <span aria-hidden="true">↓</span></a>@endif<a class="text-link text-link-light" href="{{ route('contact', ['module' => 'forex']) }}">Ask a question <span aria-hidden="true">↗</span></a></div>
         </x-public-hero>
-
-        @if($intro && $intro->is_enabled)<section class="academy-intro section"><div class="container two-column"><div><p class="eyebrow"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($intro, 'eyebrow', 'The learning position') }}</p><h2>{{ $intro->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($intro->body) !!}</div></div></section>@endif
 
         @if($pillars && $pillars->is_enabled)<section class="academy-pillars section" id="{{ \App\Support\CmsContent::value($pillars, 'anchor_id', 'learning-pillars') }}"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($pillars, 'eyebrow', 'What the academy teaches') }}</p><h2>{{ $pillars->heading }}</h2></div>@if($pillars->body)<p class="body-copy">{{ $pillars->body }}</p>@endif</div><div class="academy-pillar-grid">@foreach($topics->take(8) as $topic)<a class="academy-pillar" href="{{ route('learn.show', $topic) }}"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $topic->title }}</h3><p>{{ $topic->short_description }}</p><b aria-hidden="true">↗</b></a>@endforeach</div></div></section>@endif
 
@@ -45,8 +40,5 @@
 
         @if($risk && $risk->is_enabled)<section class="academy-risk section"><div class="container two-column"><div><p class="eyebrow"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($risk, 'eyebrow', 'Risk first. Process always.') }}</p><h2>{{ $risk->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($risk->body) !!}</div></div></section>@endif
 
-        @if($framework && $framework->is_enabled)<section class="platform-dark academy-framework"><div class="container"><div class="framework-header"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($framework, 'eyebrow', 'Student of Money principles') }}</p><h2>{{ $framework->heading }}</h2><p>{{ $framework->body }}</p></div><div class="framework-steps">@foreach(($framework->payload['steps'] ?? []) as $step)<div class="framework-step"><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><strong>{{ $step['title'] ?? '' }}</strong><p>{{ $step['body'] ?? '' }}</p></div>@endforeach</div></div></section>@endif
-
-        @if($finalCta && $finalCta->is_enabled)<section class="academy-final final-cta"><div class="container final-cta-inner"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($finalCta, 'eyebrow', 'Start with a stronger foundation') }}</p><h2>{{ $finalCta->heading }}</h2><p>{{ $finalCta->body }}</p><div class="hero-buttons">@if($finalCta->cta_label && $finalCta->cta_url)<a class="button button-accent" href="{{ \App\Support\Seo::resolve($finalCta->cta_url, '#') }}">{{ $finalCta->cta_label }} <span aria-hidden="true">↗</span></a>@endif @if(\App\Support\CmsContent::value($finalCta, 'secondary_cta_label') && \App\Support\CmsContent::value($finalCta, 'secondary_cta_url'))<a class="text-link text-link-light" href="{{ \App\Support\Seo::resolve(\App\Support\CmsContent::value($finalCta, 'secondary_cta_url'), '#') }}">{{ \App\Support\CmsContent::value($finalCta, 'secondary_cta_label') }} <span aria-hidden="true">→</span></a>@endif</div></div></section>@endif
     </div>
 @endsection
