@@ -151,7 +151,7 @@
 
         <div class="footer-bottom">
             <span>{{ $footerCopyright }}</span>
-            <div class="footer-bottom-links"><a href="{{ $resolvePublicUrl(\App\Support\CookieConsentSettings::all()['policy_url']) }}" data-cookie-preferences>Cookie Preferences</a><strong>{{ $footerBottomStatement }}</strong></div>
+            <div class="footer-bottom-links">@if(app(\App\Services\RecaptchaService::class)->isEnabled())<span class="recaptcha-disclosure">This site is protected by reCAPTCHA.</span>@endif<a href="{{ $resolvePublicUrl(\App\Support\CookieConsentSettings::all()['policy_url']) }}" data-cookie-preferences>Cookie Preferences</a><strong>{{ $footerBottomStatement }}</strong></div>
         </div>
     </div>
 </footer>

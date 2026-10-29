@@ -24,7 +24,8 @@
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .reveal { opacity:1; transform:none; transition:none; } .button,.text-link span,.course-arrow,.service-card,.mobile-menu { transition:none; } }
 
 /* Keep Google's reCAPTCHA disclosure visible without competing with the bottom-right chat widget. */
-.grecaptcha-badge { position:fixed !important; left:12px !important; right:auto !important; bottom:12px !important; }
+.grecaptcha-badge { position:fixed !important; left:12px !important; right:auto !important; bottom:12px !important; width:70px !important; overflow:hidden !important; }
+.recaptcha-disclosure { margin:0; color:var(--muted); font-size:10px; line-height:1.4; }
 
 /* Shared authentication system — compact split layout using the Mwanafunzi palette. */
 .auth-page { min-height:100vh; background:var(--paper); color:var(--ink); overflow-x:hidden; }

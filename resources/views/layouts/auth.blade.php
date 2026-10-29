@@ -54,7 +54,7 @@
                 </div>
                 @include('partials.form-feedback', ['show_validation_details' => trim($__env->yieldContent('auth_validation_details')) !== 'false'])
                 <div class="auth-content">@yield('content')</div>
-                <div class="auth-legal"><span>Protected by Mwanafunzi Investor security controls.</span><a href="{{ route('legal', 'privacy-policy') }}">Privacy</a><a href="{{ route('legal', 'terms') }}">Terms</a></div>
+                <div class="auth-legal"><span>Protected by Mwanafunzi Investor security controls.</span>@if($recaptcha->isEnabled())<span class="recaptcha-disclosure">This site is protected by reCAPTCHA.</span>@endif<a href="{{ route('legal', 'privacy-policy') }}">Privacy</a><a href="{{ route('legal', 'terms') }}">Terms</a></div>
             </div>
         </section>
     </main>

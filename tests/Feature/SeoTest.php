@@ -40,7 +40,8 @@ class SeoTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('window.mwanafunziRecaptcha', false)
             ->assertSee('https://www.google.com/recaptcha/api.js?render=site-key', false)
-            ->assertSee('name="recaptcha_token"', false);
+            ->assertSee('name="recaptcha_token"', false)
+            ->assertSee('This site is protected by reCAPTCHA.', false);
     }
 
     public function test_built_in_cms_aliases_redirect_and_are_not_listed_in_sitemap(): void
