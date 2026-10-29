@@ -144,17 +144,10 @@ class PublicSiteController extends Controller
             'gallery' => fn ($query) => $query->where('media.status', 'published'),
             'testimonials' => fn ($query) => $query->published()->orderBy('sort_order'),
         ]);
-        $relatedProjects = Project::published()
-            ->whereKeyNot($project->id)
-            ->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))
-            ->with(['services', 'gallery'])
-            ->orderBy('display_order')
-            ->limit(3)
-            ->get();
         $this->preloadTestimonialMedia($project->testimonials);
-        PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
+        PublicHero::preloadMedia([$project->featured_image]);
 
-        return view('public.projects.digital-show', compact('project', 'relatedProjects', 'module'));
+        return view('public.projects.digital-show', compact('project', 'module'));
     }
 
     public function home()
@@ -180,13 +173,7 @@ class PublicSiteController extends Controller
 
     public function services()
     {
-        $services = Service::active()->with('projects')->orderBy('sort_order')->orderBy('title')->get();
-        $featuredProjects = Project::published()->where('is_featured', true)->with('services')->orderBy('display_order')->limit(3)->get();
-        PublicHero::preloadMedia($services->pluck('featured_image')->merge($featuredProjects->pluck('featured_image')));
-
         return view('public.services.index', [
-            'services' => $services,
-            'featuredProjects' => $featuredProjects,
             'businessUnits' => BusinessUnit::active()->orderBy('sort_order')->get(),
             'serviceRoutes' => ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')],
             'page' => $this->cmsPage('services'),
@@ -228,20 +215,9 @@ class PublicSiteController extends Controller
         $this->preloadTestimonialMedia($project->testimonials);
         $studioService = $project->services->first(fn ($service) => $service->businessUnit?->slug === 'studio');
         $isStudioProject = $studioService !== null;
-        $relatedProjects = collect();
+        PublicHero::preloadMedia([$project->featured_image]);
 
-        if (! $isStudioProject) {
-            $relatedProjects = Project::published()
-                ->whereKeyNot($project->id)
-                ->with(['services.businessUnit'])
-                ->orderBy('display_order')
-                ->limit(3)
-                ->get();
-        }
-
-        PublicHero::preloadMedia([$project->featured_image, ...$relatedProjects->pluck('featured_image')->all()]);
-
-        return view('public.projects.show', compact('project', 'relatedProjects', 'isStudioProject', 'studioService'));
+        return view('public.projects.show', compact('project', 'isStudioProject', 'studioService'));
     }
 
     public function academy()

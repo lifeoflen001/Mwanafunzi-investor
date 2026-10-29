@@ -2,8 +2,6 @@
 
 @php($pageSections = $page?->sections?->where('is_enabled', true)->keyBy('key') ?? collect())
 @php($divisionsSection = $pageSections->get('divisions'))
-@php($offerSection = $pageSections->get('offer'))
-@php($projectsSection = $pageSections->get('projects'))
 @php($finalCtaSection = $pageSections->get('final-cta'))
 @section('title', $page?->seo_title ?: 'Services — Mwanafunzi Investor')
 @section('description', $page?->seo_description ?: 'Digital software, websites and operational tools shaped around real business needs.')
@@ -32,25 +30,6 @@
 </section>
 @endif
 
-@if($offerSection && $services->isNotEmpty())
-<section class="platform-section portfolio-services-section" id="services">
-    <div class="container">
-        <div class="split-heading">
-            <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($offerSection, 'eyebrow', 'What I offer') }}</p>
-                <h2>{{ $offerSection->heading }}</h2>
-            </div>
-            @if($offerSection->body)<p class="body-copy">{{ $offerSection->body }}</p>@endif
-        </div>
-        <div class="portfolio-service-grid">@foreach($services as $service)<article class="portfolio-service-card">
-                <div class="portfolio-service-card-head"><span class="portfolio-service-icon">{{ $service->icon ?: str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><span>{{ $service->pricingText() }}</span></div>
-                <h3>{{ $service->title }}</h3>
-                <p>{{ $service->short_description }}</p>@if($service->delivery_estimate)<small>Typical delivery · {{ $service->delivery_estimate }}</small>@endif<a class="text-link" href="{{ route('services.show', $service) }}">View service <span aria-hidden="true">→</span></a>
-            </article>@endforeach</div>
-    </div>
-</section>
-@endif
-
 @if($pageSections->get('process'))
 @php($process = $pageSections->get('process'))
 <section class="platform-dark portfolio-process-section">
@@ -65,23 +44,6 @@
                 <h3>{{ $step['title'] ?? '' }}</h3>
                 <p>{{ $step['body'] ?? '' }}</p>
             </div>@endforeach</div>@endif
-    </div>
-</section>
-@endif
-
-@if($projectsSection && $featuredProjects->isNotEmpty())
-<section class="platform-section portfolio-projects-tease">
-    <div class="container">
-        <div class="split-heading">
-            <div>
-                <p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($projectsSection, 'eyebrow', 'Selected work') }}</p>
-                <h2>{{ $projectsSection->heading }}</h2>
-            </div>@if($projectsSection->cta_label && $projectsSection->cta_url)<a class="text-link" href="{{ \App\Support\Seo::resolve($projectsSection->cta_url, route('projects')) }}">{{ $projectsSection->cta_label }} <span aria-hidden="true">→</span></a>@endif
-        </div>
-        <div class="portfolio-project-grid">@foreach($featuredProjects as $project)@php($projectImage = $project->featured_image ? \App\Support\PublicHero::candidate($project->featured_image) : null)<a class="portfolio-project-card" href="{{ route('projects.show', $project) }}">@if($projectImage)<img src="{{ $projectImage['url'] }}" @if($projectImage['srcset']) srcset="{{ $projectImage['srcset'] }}" sizes="(max-width: 760px) 100vw, 50vw" @endif alt="{{ $project->title }}" loading="lazy">@endif<div><span>{{ $project->project_type ?: 'Case study' }}</span>
-                    <h3>{{ $project->title }}</h3>
-                    <p>{{ $project->short_description }}</p>
-                </div></a>@endforeach</div>
     </div>
 </section>
 @endif

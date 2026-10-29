@@ -26,16 +26,10 @@ $socialLinks = \App\Support\PublicSiteData::socialLinks();
 $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
 $brandIntro = $homeSections->get('philosophy');
 $divisions = $homeSections->get('divisions');
-$learning = $homeSections->get('learning');
-$probability = $homeSections->get('probability');
-$discipline = $homeSections->get('discipline');
 $framework = $homeSections->get('framework');
-$toolsSection = $homeSections->get('tools');
-$journal = $homeSections->get('journal');
-$coursesSection = $homeSections->get('courses');
 $finalCta = $homeSections->get('final_cta');
 $homeFinalSecondaryUrl = $finalCta?->payload['secondary_cta_url'] ?? null;
-if ($homeFinalSecondaryUrl === '#tools') $homeFinalSecondaryUrl = $toolsSection?->is_enabled ? route('tools') : null;
+if ($homeFinalSecondaryUrl === '#tools') $homeFinalSecondaryUrl = route('tools');
 $serviceRoutes = ['forex' => route('forex-academy'), 'development' => route('digital-systems'), 'studio' => route('creative-studio')];
 $serviceImages = ['forex' => config('public.hero_defaults.learn'), 'development' => config('public.hero_defaults.tools'), 'studio' => config('public.hero_defaults.about')];
 $serviceEyebrows = ['forex' => 'Learn', 'development' => 'Build', 'studio' => 'Create'];
@@ -44,7 +38,7 @@ $homeHeroPrimaryLabel = $homePage?->hero_primary_label;
 $homeHeroPrimaryUrl = $homePage?->hero_primary_url;
 $homeHeroSecondaryLabel = $homePage?->hero_secondary_label;
 $homeHeroSecondaryUrl = $homePage?->hero_secondary_url;
-if ($homeHeroSecondaryUrl === '#tools') $homeHeroSecondaryUrl = $toolsSection?->is_enabled ? route('tools') : null;
+if ($homeHeroSecondaryUrl === '#tools') $homeHeroSecondaryUrl = route('tools');
 $homeHeroNote = $homePage?->hero_note;
 $homeHeroAside = $homePage?->hero_aside;
 $homeHeroAsideIndex = $homePage?->hero_aside_index;
@@ -149,6 +143,10 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
         </section>
         @endif
 
+        @if($framework && $framework->is_enabled)
+        @include('public.home.framework', ['section' => $framework])
+        @endif
+
         @if($featuredTestimonials->isNotEmpty())
         <section class="mother-home-proof section testimonial-section" id="client-perspective" aria-labelledby="client-perspective-heading">
             <div class="container">
@@ -162,34 +160,6 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
                 @include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'home-testimonials'])
             </div>
         </section>
-        @endif
-
-        @if($learning && $learning->is_enabled)
-        @include('public.home.learning', ['section' => $learning, 'learningTopics' => $learningTopics])
-        @endif
-
-        @if($probability && $probability->is_enabled)
-        @include('public.home.probability', ['section' => $probability])
-        @endif
-
-        @if($discipline && $discipline->is_enabled)
-        @include('public.home.discipline', ['section' => $discipline])
-        @endif
-
-        @if($toolsSection && $toolsSection->is_enabled)
-        @include('public.home.tools', ['section' => $toolsSection, 'products' => $products])
-        @endif
-
-        @if($framework && $framework->is_enabled)
-        @include('public.home.framework', ['section' => $framework])
-        @endif
-
-        @if($journal && $journal->is_enabled)
-        @include('public.home.journal', ['section' => $journal, 'featuredArticle' => $featuredArticle])
-        @endif
-
-        @if($coursesSection && $coursesSection->is_enabled)
-        @include('public.home.courses', ['section' => $coursesSection, 'courses' => $courses])
         @endif
 
         @if($finalCta && $finalCta->is_enabled)

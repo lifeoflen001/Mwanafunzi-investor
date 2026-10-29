@@ -1238,7 +1238,13 @@ class PlatformRoutesTest extends TestCase
             ]],
         ])->assertRedirect();
         $homepage = $this->get('/')->assertOk()->getContent();
-        $this->assertLessThan(strpos($homepage, 'The Student of Money Framework.'), strpos($homepage, 'Make the process visible.'));
+        $this->assertStringContainsString('The Student of Money Framework.', $homepage);
+        $this->assertStringNotContainsString('Build the habits behind the chart.', $homepage);
+        $this->assertStringNotContainsString("You don't need to be right on every trade.", $homepage);
+        $this->assertStringNotContainsString('Discipline Beyond The Charts.', $homepage);
+        $this->assertStringNotContainsString('Make the process visible.', $homepage);
+        $this->assertStringNotContainsString('Courses for the long game.', $homepage);
+        $this->assertStringNotContainsString('Real Updates. Real Journey.', $homepage);
 
         $navigation = NavigationItem::where('location', 'header')->where('label', 'About')->firstOrFail();
         $this->actingAs($admin)->get(route('admin.navigation'))->assertOk()->assertSee('Navigation');
