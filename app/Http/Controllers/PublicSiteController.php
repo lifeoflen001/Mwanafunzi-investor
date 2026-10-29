@@ -24,7 +24,9 @@ use App\Support\PublicHero;
 use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class PublicSiteController extends Controller
 {
@@ -545,17 +547,37 @@ class PublicSiteController extends Controller
             $entries->put($canonical, $lastModified?->toAtomString());
         };
         $isIndexable = fn ($record): bool => ! str_contains((string) ($record->robots ?? 'index,follow'), 'noindex');
+        $routeUrl = function (string $name, mixed $parameters = []): ?string {
+            if (! Route::has($name)) {
+                report(new \RuntimeException("Skipped unknown sitemap route [{$name}]."));
+
+                return null;
+            }
+
+            try {
+                return route($name, $parameters);
+            } catch (Throwable $exception) {
+                report($exception);
+
+                return null;
+            }
+        };
 
         foreach ([
-            ['home', route('home')], ['learn', route('forex-academy')], ['development', route('digital-systems')],
-            ['studio', route('creative-studio')], ['services', route('services')], ['projects', route('projects')],
-            ['learn-index', route('learn')], ['courses', route('courses')], ['tools', route('tools')],
-            ['blog', route('blog')], ['faqs', route('faqs')], ['site-map', route('site-map')], ['about', route('about')], ['contact', route('contact')],
-            ['student-of-money', route('student-of-money')], ['privacy-policy', route('legal', 'privacy-policy')],
-            ['terms', route('legal', 'terms')], ['risk-disclosure', route('legal', 'risk-disclosure')],
-            ['refund-policy', route('legal', 'refund-policy')], ['disclaimer', route('legal', 'disclaimer')],
-            ['cookie-policy', route('cookie-policy')],
-        ] as [$key, $url]) {
+            ['home', 'home'], ['learn', 'forex-academy'], ['development', 'digital-systems'],
+            ['studio', 'creative-studio'], ['services', 'services'], ['projects', 'projects'],
+            ['learn-index', 'learn'], ['courses', 'courses'], ['tools', 'tools'],
+            ['blog', 'blog'], ['faqs', 'faqs'], ['site-map', 'site-map'], ['about', 'about'], ['contact', 'contact'],
+            ['student-of-money', 'student-of-money'], ['privacy-policy', 'legal', 'privacy-policy'],
+            ['terms', 'legal', 'terms'], ['risk-disclosure', 'legal', 'risk-disclosure'],
+            ['refund-policy', 'legal', 'refund-policy'], ['disclaimer', 'legal', 'disclaimer'],
+            ['cookie-policy', 'cookie-policy'],
+        ] as $definition) {
+            [$key, $routeName, $parameters] = [$definition[0], $definition[1], $definition[2] ?? []];
+            $url = $routeUrl($routeName, $parameters);
+            if (! $url) {
+                continue;
+            }
             $page = Page::published()->where('key', $key)->first();
             if (! $page || $isIndexable($page)) {
                 $add($url, $page?->updated_at);
@@ -565,18 +587,68 @@ class PublicSiteController extends Controller
         // The legacy /studio route renders the same public page as /creative-studio.
         // Keep the canonical route in the sitemap and expose the legacy route only
         // through its canonical link.
-        BusinessUnit::active()->whereNotNull('route_name')->whereNotIn('route_name', ['home', 'studio'])->get()->each(fn ($unit) => $add(route($unit->route_name), $unit->updated_at));
-        TeamMember::active()->get()->filter($isIndexable)->each(fn ($member) => $add($member->canonical_url ?: route('team.show', $member->slug), $member->updated_at));
-        LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(fn ($topic) => $add($topic->canonical_url ?: route('learn.show', $topic), $topic->updated_at));
-        Course::published()->get()->filter($isIndexable)->each(fn ($course) => $add($course->canonical_url ?: route('courses.show', $course), $course->updated_at));
-        Product::available()->get()->filter($isIndexable)->each(fn ($product) => $add($product->canonical_url ?: route('tools.show', $product), $product->updated_at));
-        Article::published()->get()->filter($isIndexable)->each(fn ($article) => $add($article->canonicalUrl(), $article->updated_at ?: $article->published_at));
-        ArticleCategory::where('is_active', true)->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($category) => $add(route('blog.category', $category), $category->updated_at));
-        Tag::whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($tag) => $add(route('blog.tag', $tag), $tag->updated_at));
-        TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($member) => $add(route('blog.author', $member), $member->updated_at));
-        Service::active()->get()->filter($isIndexable)->each(fn ($service) => $add($service->canonical_url ?: route('services.show', $service), $service->updated_at));
-        Project::published()->get()->filter($isIndexable)->each(fn ($project) => $add($project->canonical_url ?: route('projects.show', $project), $project->updated_at ?: $project->published_at));
-        Page::published()->whereNotNull('slug')->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', ['slug' => $page->slug]), $page->updated_at));
+        BusinessUnit::active()->whereNotNull('route_name')->whereNotIn('route_name', ['home', 'studio'])->get()->each(function ($unit) use ($add, $routeUrl): void {
+            if ($url = $routeUrl($unit->route_name)) {
+                $add($url, $unit->updated_at);
+            }
+        });
+        TeamMember::active()->get()->filter($isIndexable)->each(function ($member) use ($add, $routeUrl): void {
+            if ($url = $member->canonical_url ?: $routeUrl('team.show', $member->slug)) {
+                $add($url, $member->updated_at);
+            }
+        });
+        LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(function ($topic) use ($add, $routeUrl): void {
+            if ($url = $topic->canonical_url ?: $routeUrl('learn.show', $topic)) {
+                $add($url, $topic->updated_at);
+            }
+        });
+        Course::published()->get()->filter($isIndexable)->each(function ($course) use ($add, $routeUrl): void {
+            if ($url = $course->canonical_url ?: $routeUrl('courses.show', $course)) {
+                $add($url, $course->updated_at);
+            }
+        });
+        Product::available()->get()->filter($isIndexable)->each(function ($product) use ($add, $routeUrl): void {
+            if ($url = $product->canonical_url ?: $routeUrl('tools.show', $product)) {
+                $add($url, $product->updated_at);
+            }
+        });
+        Article::published()->get()->filter($isIndexable)->each(function ($article) use ($add): void {
+            try {
+                $add($article->canonicalUrl(), $article->updated_at ?: $article->published_at);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        });
+        ArticleCategory::where('is_active', true)->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($category) use ($add, $routeUrl): void {
+            if ($url = $routeUrl('blog.category', $category)) {
+                $add($url, $category->updated_at);
+            }
+        });
+        Tag::whereHas('articles', fn ($query) => $query->published())->get()->each(function ($tag) use ($add, $routeUrl): void {
+            if ($url = $routeUrl('blog.tag', $tag)) {
+                $add($url, $tag->updated_at);
+            }
+        });
+        TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($member) use ($add, $routeUrl): void {
+            if ($url = $routeUrl('blog.author', $member)) {
+                $add($url, $member->updated_at);
+            }
+        });
+        Service::active()->get()->filter($isIndexable)->each(function ($service) use ($add, $routeUrl): void {
+            if ($url = $service->canonical_url ?: $routeUrl('services.show', $service)) {
+                $add($url, $service->updated_at);
+            }
+        });
+        Project::published()->get()->filter($isIndexable)->each(function ($project) use ($add, $routeUrl): void {
+            if ($url = $project->canonical_url ?: $routeUrl('projects.show', $project)) {
+                $add($url, $project->updated_at ?: $project->published_at);
+            }
+        });
+        Page::published()->whereNotNull('slug')->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->filter($isIndexable)->each(function ($page) use ($add, $routeUrl): void {
+            if ($url = $page->canonical_url ?: $routeUrl('pages.show', ['slug' => $page->slug])) {
+                $add($url, $page->updated_at);
+            }
+        });
 
         $xml = view('seo.sitemap', ['entries' => $entries])->render();
 

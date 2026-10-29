@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\AdminSeoController;
 use App\Models\Article;
+use App\Models\BusinessUnit;
 use App\Models\Course;
 use App\Models\Page;
 use App\Models\User;
 use App\Support\HeroFocalPoint;
+use App\Support\Seo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,7 +37,7 @@ class SeoTest extends TestCase
                 'is_visible' => true, 'published_at' => now()->subDay(),
             ]);
             $this->get('/pages/'.$page->slug)->assertStatus(301)
-                ->assertRedirect(\App\Support\Seo::pageUrl($key));
+                ->assertRedirect(Seo::pageUrl($key));
         }
 
         $sitemap = $this->get('/sitemap.xml')->assertOk()->getContent();
@@ -72,7 +75,7 @@ class SeoTest extends TestCase
 
         $this->assertNotEmpty($organization['logo']);
         $this->assertSame($organization['@id'], $website['publisher']['@id']);
-        $this->assertSame(\App\Support\Seo::siteUrl('/'), $website['url']);
+        $this->assertSame(Seo::siteUrl('/'), $website['url']);
     }
 
     public function test_footer_links_to_primary_public_sections(): void
@@ -92,6 +95,16 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('<lastmod>', $response->getContent());
         $this->assertStringNotContainsString($draft->slug, $response->getContent());
         $this->assertStringNotContainsString('/feed', $response->getContent());
+    }
+
+    public function test_sitemap_skips_stale_dynamic_routes_without_failing(): void
+    {
+        BusinessUnit::create([
+            'slug' => 'stale-route', 'name' => 'Stale route', 'route_name' => 'missing.public.route',
+            'is_active' => true,
+        ]);
+
+        $this->get('/sitemap.xml')->assertOk()->assertDontSee('stale-route');
     }
 
     public function test_homepage_structured_data_is_valid_json(): void
@@ -117,7 +130,7 @@ class SeoTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin)->get(route('admin.seo'))->assertOk();
 
-        $dashboard = collect($this->app->make(\App\Http\Controllers\AdminSeoController::class)->index()->getData()['pages'])
+        $dashboard = collect($this->app->make(AdminSeoController::class)->index()->getData()['pages'])
             ->pluck('url')->map(fn (string $url) => rtrim($url, '/'))->sort()->values();
         preg_match_all('/<loc>(.*?)<\\/loc>/', $this->get('/sitemap.xml')->getContent(), $matches);
         $sitemap = collect($matches[1])->map(fn (string $url) => rtrim($url, '/'))->sort()->values();
