@@ -6,12 +6,17 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CustomerAuthController;
 use App\Http\Middleware\RedirectPortalEntryPoints;
 use App\Support\PortalLinks;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class PortalSubdomainTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected $seed = true;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -76,6 +81,13 @@ class PortalSubdomainTest extends TestCase
 
         config(['portals.enabled' => false]);
         $this->assertNull(PortalLinks::googleCallbackFor(Request::create('https://client.mwanafunziinvestor.com/auth/google/redirect')));
+    }
+
+    public function test_public_entry_links_open_client_login_in_a_new_tab(): void
+    {
+        $this->get('https://mwanafunziinvestor.com/')
+            ->assertOk()
+            ->assertSee('href="https://client.mwanafunziinvestor.com/login" target="_blank" rel="noopener"', false);
     }
 
     private function throughMiddleware(string $url, string $method = 'GET'): Response
