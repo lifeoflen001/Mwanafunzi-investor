@@ -530,21 +530,25 @@ class PublicSiteController extends Controller
     {
         $entries = collect();
         $add = function (?string $url, mixed $lastModified = null) use (&$entries): void {
-            if (blank($url)) {
-                return;
-            }
-
-            if (filter_var($url, FILTER_VALIDATE_URL)) {
-                $host = strtolower((string) parse_url($url, PHP_URL_HOST));
-                $siteHost = strtolower((string) parse_url(Seo::siteUrl(), PHP_URL_HOST));
-                if ($host && $siteHost && $host !== $siteHost) {
+            try {
+                if (blank($url)) {
                     return;
                 }
-            }
 
-            $path = Seo::routePath($url);
-            $canonical = Seo::canonical($path);
-            $entries->put($canonical, $lastModified?->toAtomString());
+                if (filter_var($url, FILTER_VALIDATE_URL)) {
+                    $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+                    $siteHost = strtolower((string) parse_url(Seo::siteUrl(), PHP_URL_HOST));
+                    if ($host && $siteHost && $host !== $siteHost) {
+                        return;
+                    }
+                }
+
+                $path = Seo::routePath($url);
+                $canonical = Seo::canonical($path);
+                $entries->put($canonical, $lastModified?->toAtomString());
+            } catch (Throwable $exception) {
+                report($exception);
+            }
         };
         $isIndexable = fn ($record): bool => ! str_contains((string) ($record->robots ?? 'index,follow'), 'noindex');
         $routeUrl = function (string $name, mixed $parameters = []): ?string {
@@ -570,31 +574,33 @@ class PublicSiteController extends Controller
             }
         };
 
-        foreach ([
-            ['home', 'home'], ['learn', 'forex-academy'], ['development', 'digital-systems'],
-            ['studio', 'creative-studio'], ['services', 'services'], ['projects', 'projects'],
-            ['learn-index', 'learn'], ['courses', 'courses'], ['tools', 'tools'],
-            ['blog', 'blog'], ['faqs', 'faqs'], ['site-map', 'site-map'], ['about', 'about'], ['contact', 'contact'],
-            ['student-of-money', 'student-of-money'], ['privacy-policy', 'legal', 'privacy-policy'],
-            ['terms', 'legal', 'terms'], ['risk-disclosure', 'legal', 'risk-disclosure'],
-            ['refund-policy', 'legal', 'refund-policy'], ['disclaimer', 'legal', 'disclaimer'],
-            ['cookie-policy', 'cookie-policy'],
-        ] as $definition) {
-            [$key, $routeName, $parameters] = [$definition[0], $definition[1], $definition[2] ?? []];
-            $url = $routeUrl($routeName, $parameters);
-            if (! $url) {
-                continue;
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            foreach ([
+                ['home', 'home'], ['learn', 'forex-academy'], ['development', 'digital-systems'],
+                ['studio', 'creative-studio'], ['services', 'services'], ['projects', 'projects'],
+                ['learn-index', 'learn'], ['courses', 'courses'], ['tools', 'tools'],
+                ['blog', 'blog'], ['faqs', 'faqs'], ['site-map', 'site-map'], ['about', 'about'], ['contact', 'contact'],
+                ['student-of-money', 'student-of-money'], ['privacy-policy', 'legal', 'privacy-policy'],
+                ['terms', 'legal', 'terms'], ['risk-disclosure', 'legal', 'risk-disclosure'],
+                ['refund-policy', 'legal', 'refund-policy'], ['disclaimer', 'legal', 'disclaimer'],
+                ['cookie-policy', 'cookie-policy'],
+            ] as $definition) {
+                [$key, $routeName, $parameters] = [$definition[0], $definition[1], $definition[2] ?? []];
+                $url = $routeUrl($routeName, $parameters);
+                if (! $url) {
+                    continue;
+                }
+                try {
+                    $page = Page::published()->where('key', $key)->first();
+                } catch (Throwable $exception) {
+                    report($exception);
+                    $page = null;
+                }
+                if (! $page || $isIndexable($page)) {
+                    $add($url, $page?->updated_at);
+                }
             }
-            try {
-                $page = Page::published()->where('key', $key)->first();
-            } catch (Throwable $exception) {
-                report($exception);
-                $page = null;
-            }
-            if (! $page || $isIndexable($page)) {
-                $add($url, $page?->updated_at);
-            }
-        }
+        });
 
         // The legacy /studio route renders the same public page as /creative-studio.
         // Keep the canonical route in the sitemap and expose the legacy route only
@@ -686,7 +692,20 @@ class PublicSiteController extends Controller
             });
         });
 
-        $xml = view('seo.sitemap', ['entries' => $entries])->render();
+        try {
+            $xml = view('seo.sitemap', ['entries' => $entries])->render();
+        } catch (Throwable $exception) {
+            report($exception);
+            $xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+            foreach ($entries as $url => $lastmod) {
+                $xml .= '<url><loc>'.htmlspecialchars((string) $url, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc>';
+                if ($lastmod) {
+                    $xml .= '<lastmod>'.htmlspecialchars((string) $lastmod, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</lastmod>';
+                }
+                $xml .= '</url>';
+            }
+            $xml .= '</urlset>';
+        }
 
         return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');
     }
