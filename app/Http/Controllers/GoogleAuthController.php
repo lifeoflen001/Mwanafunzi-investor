@@ -6,6 +6,7 @@ use App\Models\SocialIdentity;
 use App\Models\User;
 use App\Services\AuthenticationRedirectService;
 use App\Services\GoogleIdentityService;
+use App\Support\PortalLinks;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -40,10 +41,7 @@ class GoogleAuthController extends Controller
         }
 
         try {
-            $google = Socialite::driver('google')
-                ->scopes(['openid', 'email', 'profile'])
-                ->enablePKCE()
-                ->user();
+            $google = $this->provider($request)->user();
         } catch (InvalidStateException) {
             return $this->googleFailure($request, $redirects, $failureRoute, $destination, 'That Google sign-in session expired. Please try again.');
         } catch (Throwable $exception) {
@@ -132,10 +130,7 @@ class GoogleAuthController extends Controller
             $request->session()->forget('google.pending_identity');
         }
 
-        return Socialite::driver('google')
-            ->scopes(['openid', 'email', 'profile'])
-            ->enablePKCE()
-            ->redirect();
+        return $this->provider($request)->redirect();
     }
 
     private function linkIdentity(Request $request, GoogleIdentityService $identities, array $claims, string $destination)
@@ -165,6 +160,19 @@ class GoogleAuthController extends Controller
         $user->forceFill(['last_login_at' => now()])->saveQuietly();
 
         return redirect()->to($destination);
+    }
+
+    private function provider(Request $request)
+    {
+        $provider = Socialite::driver('google')
+            ->scopes(['openid', 'email', 'profile'])
+            ->enablePKCE();
+
+        if ($callback = PortalLinks::googleCallbackFor($request)) {
+            $provider->redirectUrl($callback);
+        }
+
+        return $provider;
     }
 
     private function googleFailure(Request $request, AuthenticationRedirectService $redirects, string $route, string $destination, string $message)

@@ -46,6 +46,12 @@ use App\Support\Seo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
+// Register the admin host's /login before the generic client login route.
+Route::domain((string) parse_url(config('portals.admin_url'), PHP_URL_HOST))->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'create'])->name('admin.portal.login');
+    Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:5,1')->name('admin.portal.login.store');
+});
+
 Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('/financial-academy', 'academy')->name('forex-academy');

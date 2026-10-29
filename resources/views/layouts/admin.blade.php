@@ -112,7 +112,7 @@
                 @auth
                     <form method="post" action="{{ route('admin.logout') }}">@csrf<button class="portal-signout" type="submit">Sign out</button></form>
                 @else
-                    <a href="{{ route('admin.login') }}">Admin sign in</a>
+                    <a href="{{ \App\Support\PortalLinks::adminLogin() }}" target="_blank" rel="noopener">Admin sign in</a>
                 @endauth
             </div>
         </aside>

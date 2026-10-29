@@ -19,6 +19,8 @@ class NavigationItem extends Model
     public function href(): string
     {
         $routeName = $this->publicRouteName();
+        if ($routeName === 'login') return \App\Support\PortalLinks::clientLogin();
+        if ($routeName === 'admin.login') return \App\Support\PortalLinks::adminLogin();
         if ($routeName === 'legal' && $this->url) return route('legal', $this->url);
         if ($routeName && \Illuminate\Support\Facades\Route::has($routeName)) return route($routeName);
         return \App\Support\Seo::resolve($this->url, '#') ?: '#';
