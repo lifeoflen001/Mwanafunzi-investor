@@ -51,6 +51,11 @@
                     @empty
                         <a href="{{ route('blog') }}">Blog</a><a href="{{ route('about') }}">About</a><a href="{{ route('contact') }}">Contact</a>
                     @endforelse
+                    @foreach(['services' => 'Services', 'projects' => 'Projects', 'site-map' => 'Site map'] as $footerRoute => $footerLabel)
+                        @unless($companyLinks->contains(fn ($link) => rtrim($link->href(), '/') === rtrim(route($footerRoute), '/')))
+                            <a href="{{ route($footerRoute) }}">{{ $footerLabel }}</a>
+                        @endunless
+                    @endforeach
                 </nav>
 
                 <nav class="footer-group footer-explore" aria-label="Explore links">
@@ -60,6 +65,11 @@
                     @empty
                         <a href="{{ route('learn') }}">Learn</a><a href="{{ route('courses') }}">Courses</a><a href="{{ route('tools') }}">Tools</a>
                     @endforelse
+                    @foreach(['forex-academy' => 'Financial Academy', 'digital-systems' => 'Digital Software', 'creative-studio' => 'Creative Studio'] as $footerRoute => $footerLabel)
+                        @unless($exploreLinks->contains(fn ($link) => rtrim($link->href(), '/') === rtrim(route($footerRoute), '/')))
+                            <a href="{{ route($footerRoute) }}">{{ $footerLabel }}</a>
+                        @endunless
+                    @endforeach
                 </nav>
 
                 <nav class="footer-group footer-legal" aria-label="Legal links">

@@ -78,11 +78,7 @@
     <meta property="og:locale" content="{{ config('seo.locale', 'en_TZ') }}">
     @if($googleVerification)<meta name="google-site-verification" content="{{ $googleVerification }}">@endif
     @if($bingVerification)<meta name="msvalidate.01" content="{{ $bingVerification }}">@endif
-    @php($schemaContext = chr(64).'context')
-    @php($organizationSchema = [$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']])
-    @php($websiteSchema = [$schemaContext => 'https://schema.org', '@type' => 'WebSite', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'inLanguage' => 'en-TZ', 'publisher' => ['@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl()]])
-    <script type="application/ld+json">{!! json_encode($organizationSchema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
-    @if(request()->routeIs('home'))<script type="application/ld+json">{!! json_encode($websiteSchema, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>@endif
+    @include('partials.brand-schema', ['includeWebsiteSchema' => request()->routeIs('home')])
     @yield('structured_data')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php($recaptcha = app(\App\Services\RecaptchaService::class))

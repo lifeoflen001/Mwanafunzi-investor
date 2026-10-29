@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', $page?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title'))
+@section('title', $page?->seo_title ?: 'About — Mwanafunzi Investor')
 @section('description', $page?->seo_description ?: $page?->hero_summary)
 @php
     $cmsPhilosophy = $page?->sections?->where('is_enabled', true)->firstWhere('key', 'philosophy');

@@ -51,7 +51,7 @@ class AdminSeoController extends Controller
             $add($label, $url, $page?->seo_title ?: $title, $page?->seo_description ?: $description, $page?->robots, $page?->canonical_url ?: $url, $page?->primary_keyword ?: ($target['primary'] ?? null), $page ? route('admin.pages.edit', $page) : null, $type, $page?->hero_image);
         }
 
-        Page::published()->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->each(function ($page) use ($add): void {
+        Page::published()->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->each(function ($page) use ($add): void {
             $url = route('pages.show', ['slug' => $page->slug]);
             $add($page->name, $url, $page->seo_title ?: $page->name.' — Mwanafunzi Investor', $page->seo_description ?: $page->hero_summary, $page->robots, $page->canonical_url ?: $url, $page->primary_keyword, route('admin.pages.edit', $page), 'Standalone page', $page->hero_image);
         });

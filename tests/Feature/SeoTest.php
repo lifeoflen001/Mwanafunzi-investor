@@ -26,6 +26,64 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('og:site_name', $html);
     }
 
+    public function test_built_in_cms_aliases_redirect_and_are_not_listed_in_sitemap(): void
+    {
+        foreach (['services', 'projects', 'faqs', 'blog', 'about', 'home'] as $key) {
+            $page = Page::updateOrCreate(['key' => $key], [
+                'slug' => 'cms-'.$key, 'name' => ucfirst($key), 'status' => 'published',
+                'is_visible' => true, 'published_at' => now()->subDay(),
+            ]);
+            $this->get('/pages/'.$page->slug)->assertStatus(301)
+                ->assertRedirect(\App\Support\Seo::pageUrl($key));
+        }
+
+        $sitemap = $this->get('/sitemap.xml')->assertOk()->getContent();
+        $this->assertStringNotContainsString('/pages/cms-', $sitemap);
+        $this->assertStringContainsString('<loc>'.route('projects').'</loc>', $sitemap);
+        $this->assertStringContainsString('<loc>'.route('services').'</loc>', $sitemap);
+    }
+
+    public function test_unpublished_cms_alias_does_not_redirect(): void
+    {
+        Page::updateOrCreate(['key' => 'projects'], [
+            'slug' => 'hidden-projects', 'name' => 'Projects', 'status' => 'draft', 'is_visible' => false,
+        ]);
+
+        $this->get('/pages/hidden-projects')->assertNotFound();
+    }
+
+    public function test_custom_cms_page_still_renders(): void
+    {
+        Page::create([
+            'key' => 'community', 'slug' => 'community', 'name' => 'Community',
+            'status' => 'published', 'is_visible' => true, 'hero_title' => 'Our community',
+        ]);
+
+        $this->get('/pages/community')->assertOk()->assertSee('Our community');
+    }
+
+    public function test_brand_schema_links_website_to_organization_and_logo(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        preg_match_all('/<script type="application\/ld\+json">(.*?)<\/script>/s', $html, $matches);
+        $schemas = collect($matches[1])->map(fn ($json) => json_decode($json, true));
+        $organization = $schemas->firstWhere('@type', 'Organization');
+        $website = $schemas->firstWhere('@type', 'WebSite');
+
+        $this->assertNotEmpty($organization['logo']);
+        $this->assertSame($organization['@id'], $website['publisher']['@id']);
+        $this->assertSame(\App\Support\Seo::siteUrl('/'), $website['url']);
+    }
+
+    public function test_footer_links_to_primary_public_sections(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $footer = substr($html, strpos($html, '<footer'));
+        foreach (['services', 'projects', 'forex-academy', 'digital-systems', 'creative-studio', 'site-map'] as $route) {
+            $this->assertStringContainsString('href="'.route($route).'"', $footer);
+        }
+    }
+
     public function test_sitemap_contains_lastmod_and_excludes_unpublished_articles(): void
     {
         $draft = Article::create(['title' => 'Private draft for sitemap', 'slug' => 'private-draft-for-sitemap', 'content' => '<p>Draft content.</p>', 'content_type' => 'article', 'status' => 'draft', 'published_at' => null]);

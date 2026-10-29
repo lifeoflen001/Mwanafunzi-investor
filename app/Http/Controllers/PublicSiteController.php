@@ -309,6 +309,9 @@ class PublicSiteController extends Controller
             abort(404);
         }
         abort_unless($page->status === 'published' && $page->is_visible && (! $page->published_at || $page->published_at->isPast()), 404);
+        if ($destination = Seo::pageUrl($page->key)) {
+            return redirect()->to($destination, 301);
+        }
         $page->load(['sections', 'faqs']);
 
         return view('public.pages.cms', compact('page'));
@@ -573,7 +576,7 @@ class PublicSiteController extends Controller
         TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(fn ($member) => $add(route('blog.author', $member), $member->updated_at));
         Service::active()->get()->filter($isIndexable)->each(fn ($service) => $add($service->canonical_url ?: route('services.show', $service), $service->updated_at));
         Project::published()->get()->filter($isIndexable)->each(fn ($project) => $add($project->canonical_url ?: route('projects.show', $project), $project->updated_at ?: $project->published_at));
-        Page::published()->whereNotNull('slug')->whereNotIn('key', ['home', 'learn', 'courses', 'tools', 'journal', 'about', 'contact', 'student-of-money', 'development', 'studio', 'privacy-policy', 'terms', 'risk-disclosure', 'refund-policy', 'disclaimer', 'cookie-policy'])->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', ['slug' => $page->slug]), $page->updated_at));
+        Page::published()->whereNotNull('slug')->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->filter($isIndexable)->each(fn ($page) => $add($page->canonical_url ?: route('pages.show', ['slug' => $page->slug]), $page->updated_at));
 
         $xml = view('seo.sitemap', ['entries' => $entries])->render();
 

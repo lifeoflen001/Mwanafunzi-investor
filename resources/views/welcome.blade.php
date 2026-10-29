@@ -42,9 +42,9 @@ if ($homeHeroSecondaryUrl === '#tools') $homeHeroSecondaryUrl = route('tools');
 $homeHeroNote = $homePage?->hero_note;
 $homeHeroAside = $homePage?->hero_aside;
 $homeHeroAsideIndex = $homePage?->hero_aside_index;
-$homeSeoTitle = $homePage?->seo_title ?: \App\Models\SiteSetting::getValue('default_seo_title');
+$homeSeoTitle = \App\Support\Seo::title($homePage?->seo_title, \App\Models\SiteSetting::getValue('default_seo_title'));
 $homeSeoDescription = $homePage?->seo_description ?: $seoDescription;
-$homeCanonical = $homePage?->canonical_url ?: \App\Support\Seo::canonical('/');
+$homeCanonical = \App\Support\Seo::resolve($homePage?->canonical_url, \App\Support\Seo::canonical('/'));
 $homeRobots = $homePage?->robots ?: 'index,follow';
 $homeOgTitle = $homePage?->og_title ?: $homeSeoTitle;
 $homeOgDescription = $homePage?->og_description ?: $homeSeoDescription;
@@ -80,9 +80,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=favicon4">
     <link rel="alternate" type="application/rss+xml" title="Mwanafunzi Investor Blog" href="{{ route('feed') }}">
     <title>{{ $homeSeoTitle }}</title>
-    @php($schemaContext = chr(64).'context')
-    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'Organization', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'email' => $email, 'telephone' => $phone, 'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'TZ']], JSON_UNESCAPED_SLASHES) !!}</script>
-    <script type="application/ld+json">{!! json_encode([$schemaContext => 'https://schema.org', '@type' => 'WebSite', 'name' => $brandName, 'url' => \App\Support\Seo::siteUrl(), 'inLanguage' => 'en-TZ', 'publisher' => ['@type' => 'Organization', 'name' => $brandName]], JSON_UNESCAPED_SLASHES) !!}</script>
+    @include('partials.brand-schema', ['includeWebsiteSchema' => true])
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('components.design-tokens')
 </head>

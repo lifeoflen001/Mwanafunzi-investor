@@ -6,6 +6,29 @@ use Illuminate\Support\Str;
 
 class Seo
 {
+    /** Built-in CMS pages have a public destination outside /pages/{slug}. */
+    public static function pageRoutes(): array
+    {
+        return [
+            'home' => ['home'], 'learn' => ['learn'], 'courses' => ['courses'],
+            'tools' => ['tools'], 'journal' => ['blog'], 'blog' => ['blog'],
+            'about' => ['about'], 'contact' => ['contact'], 'faqs' => ['faqs'],
+            'services' => ['services'], 'projects' => ['projects'],
+            'student-of-money' => ['student-of-money'], 'development' => ['digital-systems'],
+            'studio' => ['creative-studio'], 'cookie-policy' => ['cookie-policy'],
+            'privacy-policy' => ['legal', 'privacy-policy'], 'terms' => ['legal', 'terms'],
+            'risk-disclosure' => ['legal', 'risk-disclosure'],
+            'refund-policy' => ['legal', 'refund-policy'], 'disclaimer' => ['legal', 'disclaimer'],
+        ];
+    }
+
+    public static function pageUrl(string $key): ?string
+    {
+        $destination = static::pageRoutes()[$key] ?? null;
+
+        return $destination ? route($destination[0], $destination[1] ?? []) : null;
+    }
+
     public static function siteUrl(?string $path = null): string
     {
         $request = (! app()->runningInConsole() || app()->environment('testing')) && app()->bound('request') ? request() : null;
