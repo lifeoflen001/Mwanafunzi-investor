@@ -61,6 +61,10 @@ class PlatformRoutesTest extends TestCase
         $this->assertStringNotContainsString('The Student of Money Framework.', $html);
         $this->assertStringNotContainsString('academy-final', $html);
         $this->assertStringNotContainsString('Become trustworthy with the decisions in front of you.', $html);
+        $this->assertStringContainsString('academy-pillars', $html);
+        $this->assertStringContainsString('academy-courses', $html);
+        $this->assertStringContainsString('academy-tools', $html);
+        $this->assertStringContainsString('academy-risk', $html);
         $this->assertStringContainsString('Financial Academy', $html);
         $this->assertStringContainsString('Ask a question', $html);
     }

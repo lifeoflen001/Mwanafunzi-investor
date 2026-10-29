@@ -6679,3 +6679,75 @@ body .site-footer .footer-newsletter-form input#footer-newsletter-email::placeho
         gap:10px;
     }
 }
+
+/* Public content rhythm: keep hero controls and section content comfortably separated at every width. */
+.public-hero-inner > .eyebrow { margin-bottom:clamp(20px,2.5vw,30px); }
+.public-hero-inner > h1 { margin-bottom:clamp(22px,2.8vw,32px); }
+.public-hero-inner > .lede { margin-bottom:0; }
+.public-hero-inner > .hero-buttons,
+.public-hero-inner > .detail-actions,
+.public-hero-inner > .public-hero-metadata + .hero-buttons,
+.public-hero-inner > .public-hero-metadata + .detail-actions { margin-top:clamp(28px,3.5vw,42px); }
+.public-hero-inner > .hero-buttons { row-gap:16px; }
+.section > .container > .split-heading + *,
+.platform-section > .container > .split-heading + *,
+.platform-dark > .container > .split-heading + * { margin-top:clamp(38px,5vw,64px); }
+.split-heading > .text-link { margin-bottom:4px; }
+.detail-actions { gap:22px; }
+
+/* Course rows need a compact intermediate layout before the mobile breakpoint. */
+@media (min-width:761px) and (max-width:1050px) {
+    .platform-course-list .course-row {
+        grid-template-columns:38px minmax(0,1fr) 24px;
+        column-gap:16px;
+        align-items:start;
+        min-height:0;
+        padding:24px 0 27px;
+    }
+
+    .platform-course-list .course-row .course-name { grid-column:2; min-width:0; }
+    .platform-course-list .course-row .course-detail { grid-column:2; grid-row:2; flex-direction:row; gap:18px; margin-top:16px; }
+    .platform-course-list .course-row .course-arrow { grid-column:3; grid-row:1 / span 2; }
+    .platform-course-list .course-row-media { width:min(100%,220px); margin-bottom:20px; }
+}
+
+@media (max-width:760px) {
+    .public-hero-inner > .hero-buttons,
+    .public-hero-inner > .detail-actions,
+    .public-hero-inner > .public-hero-metadata + .hero-buttons,
+    .public-hero-inner > .public-hero-metadata + .detail-actions { margin-top:26px; }
+
+    .section > .container > .split-heading + *,
+    .platform-section > .container > .split-heading + *,
+    .platform-dark > .container > .split-heading + * { margin-top:34px; }
+
+    .split-heading > .text-link { margin-top:4px; }
+    .detail-actions { gap:14px; }
+}
+
+/* Separate course records into readable containers instead of one continuous block. */
+.platform-course-list {
+    display:grid;
+    gap:16px;
+    border-top:0;
+}
+.platform-course-list .course-row {
+    min-height:155px;
+    padding:28px 20px;
+    border:1px solid var(--line);
+}
+.platform-course-list .course-row:hover,
+.platform-course-list .course-row:focus-visible {
+    padding:28px 20px;
+    background:var(--white);
+}
+@media (max-width:760px) {
+    .platform-course-list { gap:12px; }
+    .platform-course-list .course-row {
+        grid-template-columns:48px minmax(0,1fr) 20px;
+        column-gap:16px;
+    }
+    .platform-course-list .course-row,
+    .platform-course-list .course-row:hover,
+    .platform-course-list .course-row:focus-visible { padding:22px 14px; }
+}
