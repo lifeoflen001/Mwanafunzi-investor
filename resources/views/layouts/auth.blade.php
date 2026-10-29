@@ -30,7 +30,7 @@
     @endif
     @include('components.design-tokens')
 </head>
-<body class="auth-page auth-page-{{ $authMode }}">
+<body class="auth-page auth-page-{{ $authMode }} {{ trim($__env->yieldContent('auth_page_class')) }}">
     <main class="auth-shell {{ $isAdmin ? 'admin-auth-shell' : 'client-auth-layout' }}">
         <section class="auth-brand {{ $isAdmin ? 'admin-auth-brand' : 'client-auth-showcase' }}" aria-label="{{ $brandName }}">
             <div class="auth-brand-inner">

@@ -121,6 +121,7 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('client-password-confirmation', false)
             ->assertSee('data-password-toggle', false)
             ->assertSee('auth-shell', false)
+            ->assertSee('auth-page-register', false)
             ->assertSee('client-auth-layout', false)
             ->assertSee('client-auth-panel', false)
             ->assertSee('client-auth-showcase', false)
@@ -131,6 +132,8 @@ class PlatformRoutesTest extends TestCase
             ->assertDontSee('data-auth-slide', false)
             ->assertDontSee('client-phone', false)
             ->assertDontSee('client-country', false)
+            ->assertSee('client-register-consent', false)
+            ->assertSee('client-register-submit', false)
             ->assertSeeInOrder(['id="client-name"', 'id="client-email"', 'id="client-password"', 'data-auth-submit', '<span>or</span>', 'Continue with Google'], false);
 
         $this->post(route('login.store'), ['email' => 'not-an-email', 'password' => ''])
