@@ -48,6 +48,7 @@ jobs:
       - name: Run application tests
         env:
           APP_ENV: testing
+          ADMIN_MFA_REQUIRED: 'false'
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"
           CACHE_STORE: array
