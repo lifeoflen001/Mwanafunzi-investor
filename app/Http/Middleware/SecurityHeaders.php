@@ -28,8 +28,8 @@ class SecurityHeaders
             "style-src-attr 'unsafe-inline'",
             "img-src 'self' data: blob: https: tawk.link https://*.tawk.to",
             "font-src 'self' data: https: https://*.tawk.to",
-            "connect-src 'self' ws: wss: https://*.tawk.to https://www.google.com/recaptcha/".$viteDevSources,
-            "frame-src 'self' https://*.flutterwave.com https://*.tawk.to",
+            "connect-src 'self' ws: wss: https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/".$viteDevSources,
+            "frame-src 'self' https://*.flutterwave.com https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
             "form-action 'self' https://*.flutterwave.com https://*.tawk.to",
         ]));
         if ($request->user() && ($request->is('account') || $request->is('account/*') || $request->is('admin') || $request->is('admin/*') || $request->is('checkout/*') || $request->is('payments/*') || $request->is('downloads/*'))) {
