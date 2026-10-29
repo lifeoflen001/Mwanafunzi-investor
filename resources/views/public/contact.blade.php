@@ -54,22 +54,21 @@
 
             <form class="contact-form" method="post" action="{{ route('contact.submit') }}">
                 @csrf
-                @include('partials.form-feedback', ['show_validation_details' => false])
+                @include('partials.form-feedback')
                 @include('components.recaptcha', ['action' => 'contact'])
                 <p class="contact-form-intro">{{ $contactFormIntro }}</p>
                 <label class="honeypot" aria-hidden="true">Website<input tabindex="-1" autocomplete="off" name="website"></label>
                 <div class="form-row">
-                    <label for="name">Name<input id="name" name="name" value="{{ old('name') }}" required autocomplete="name">@error('name')<small>{{ $message }}</small>@enderror</label>
-                    <label for="email">Email<input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">@error('email')<small>{{ $message }}</small>@enderror</label>
+                    <label for="name">Name<input id="name" name="name" value="{{ old('name') }}" required autocomplete="name"></label>
+                    <label for="email">Email<input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
                 </div>
                 <div class="form-row">
                     <label for="phone">Phone (optional)<input id="phone" name="phone" value="{{ old('phone') }}" autocomplete="tel"></label>
                     <label for="business_unit_id">I am enquiring about<select id="business_unit_id" name="business_unit_id"><option value="">Mwanafunzi platform</option>@foreach($businessUnits as $businessUnit)<option value="{{ $businessUnit->id }}" @selected((string) old('business_unit_id', $selectedBusinessUnit?->id) === (string) $businessUnit->id)>{{ $businessUnit->name }}</option>@endforeach</select></label>
                 </div>
                 <label for="category">What can we help with?<select id="category" name="category" required><option value="">Select a reason</option><option value="general">General question</option><option value="course">Course question</option><option value="product">Digital product support</option><option value="partnership">Partnership</option><option value="support">Technical support</option><option value="other">Other</option></select></label>
-                <label for="message">Message<textarea id="message" name="message" rows="5" required>{{ old('message') }}</textarea>@error('message')<small>{{ $message }}</small>@enderror</label>
+                <label for="message">Message<textarea id="message" name="message" rows="5" required>{{ old('message') }}</textarea></label>
                 <label class="consent"><input type="checkbox" name="consent" value="1" required> <span>I agree that Mwanafunzi Investor may use the information in this form to respond to my enquiry. This is an educational platform, not personalised financial advice. <a href="{{ route('legal', 'privacy-policy') }}">Read the Privacy Policy</a> and <a href="{{ route('legal', 'risk-disclosure') }}">Risk Disclosure</a>.</span></label>
-                @error('consent')<small>{{ $message }}</small>@enderror
                 <button class="button button-dark contact-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
                 <p class="contact-response-note">{{ $contactResponseNote }}</p>
             </form>

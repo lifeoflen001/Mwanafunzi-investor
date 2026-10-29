@@ -155,6 +155,8 @@ class PlatformRoutesTest extends TestCase
         $page->assertOk()
             ->assertDontSee('Review the form errors below.')
             ->assertDontSee('Please correct the highlighted field.')
+            ->assertSee('feedback-validation-summary')
+            ->assertSee('data-validation-fields')
             ->assertSee('The email or password is incorrect.');
 
         $this->assertSame(1, substr_count($page->getContent(), 'The email or password is incorrect.'));

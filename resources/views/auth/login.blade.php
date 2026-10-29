@@ -5,7 +5,6 @@
 @section('auth_brand_foot', 'Student of Money. Probability. Systems. Discipline.')
 @section('auth_back_url', route('home'))
 @section('auth_back_label', 'Back to website')
-@section('auth_validation_details', 'false')
 @section('title', 'Client login')
 @section('content')
 <div class="auth-form-wrap">
@@ -14,8 +13,8 @@
         @csrf
         @if(request()->filled('redirect'))<input type="hidden" name="redirect" value="{{ request('redirect') }}">@endif
         @include('components.recaptcha', ['action' => 'login'])
-        <label class="auth-field" for="client-email">Email<input id="client-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" aria-describedby="client-email-error">@error('email')<small class="auth-field-error" id="client-email-error">{{ $message }}</small>@enderror</label>
-        <label class="auth-field" for="client-password">Password<div class="auth-password-field"><input id="client-password" type="password" name="password" required autocomplete="current-password" aria-describedby="client-password-error"><x-password-toggle class="client-password-toggle" /></div>@error('password')<small class="auth-field-error" id="client-password-error">{{ $message }}</small>@enderror</label>
+        <label class="auth-field" for="client-email">Email<input id="client-email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email"></label>
+        <label class="auth-field" for="client-password">Password<div class="auth-password-field"><input id="client-password" type="password" name="password" required autocomplete="current-password"><x-password-toggle class="client-password-toggle" /></div></label>
         <div class="auth-options"><label><input type="checkbox" name="remember" value="1"> <span>Remember me</span></label><a href="{{ route('password.request') }}">Forgot password?</a></div>
         <button class="button auth-primary client-auth-submit" type="submit" data-auth-submit><span data-auth-submit-label>Sign in</span> <span aria-hidden="true">↗</span></button>
     </form>
