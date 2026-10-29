@@ -562,6 +562,13 @@ class PublicSiteController extends Controller
                 return null;
             }
         };
+        $runSource = function (callable $source): void {
+            try {
+                $source();
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        };
 
         foreach ([
             ['home', 'home'], ['learn', 'forex-academy'], ['development', 'digital-systems'],
@@ -578,7 +585,12 @@ class PublicSiteController extends Controller
             if (! $url) {
                 continue;
             }
-            $page = Page::published()->where('key', $key)->first();
+            try {
+                $page = Page::published()->where('key', $key)->first();
+            } catch (Throwable $exception) {
+                report($exception);
+                $page = null;
+            }
             if (! $page || $isIndexable($page)) {
                 $add($url, $page?->updated_at);
             }
@@ -587,67 +599,91 @@ class PublicSiteController extends Controller
         // The legacy /studio route renders the same public page as /creative-studio.
         // Keep the canonical route in the sitemap and expose the legacy route only
         // through its canonical link.
-        BusinessUnit::active()->whereNotNull('route_name')->whereNotIn('route_name', ['home', 'studio'])->get()->each(function ($unit) use ($add, $routeUrl): void {
-            if ($url = $routeUrl($unit->route_name)) {
-                $add($url, $unit->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl): void {
+            BusinessUnit::active()->whereNotNull('route_name')->whereNotIn('route_name', ['home', 'studio'])->get()->each(function ($unit) use ($add, $routeUrl): void {
+                if ($url = $routeUrl($unit->route_name)) {
+                    $add($url, $unit->updated_at);
+                }
+            });
         });
-        TeamMember::active()->get()->filter($isIndexable)->each(function ($member) use ($add, $routeUrl): void {
-            if ($url = $member->canonical_url ?: $routeUrl('team.show', $member->slug)) {
-                $add($url, $member->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            TeamMember::active()->get()->filter($isIndexable)->each(function ($member) use ($add, $routeUrl): void {
+                if ($url = $member->canonical_url ?: $routeUrl('team.show', $member->slug)) {
+                    $add($url, $member->updated_at);
+                }
+            });
         });
-        LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(function ($topic) use ($add, $routeUrl): void {
-            if ($url = $topic->canonical_url ?: $routeUrl('learn.show', $topic)) {
-                $add($url, $topic->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            LearningTopic::where('is_published', true)->where('status', 'published')->get()->filter($isIndexable)->each(function ($topic) use ($add, $routeUrl): void {
+                if ($url = $topic->canonical_url ?: $routeUrl('learn.show', $topic)) {
+                    $add($url, $topic->updated_at);
+                }
+            });
         });
-        Course::published()->get()->filter($isIndexable)->each(function ($course) use ($add, $routeUrl): void {
-            if ($url = $course->canonical_url ?: $routeUrl('courses.show', $course)) {
-                $add($url, $course->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            Course::published()->get()->filter($isIndexable)->each(function ($course) use ($add, $routeUrl): void {
+                if ($url = $course->canonical_url ?: $routeUrl('courses.show', $course)) {
+                    $add($url, $course->updated_at);
+                }
+            });
         });
-        Product::available()->get()->filter($isIndexable)->each(function ($product) use ($add, $routeUrl): void {
-            if ($url = $product->canonical_url ?: $routeUrl('tools.show', $product)) {
-                $add($url, $product->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            Product::available()->get()->filter($isIndexable)->each(function ($product) use ($add, $routeUrl): void {
+                if ($url = $product->canonical_url ?: $routeUrl('tools.show', $product)) {
+                    $add($url, $product->updated_at);
+                }
+            });
         });
-        Article::published()->get()->filter($isIndexable)->each(function ($article) use ($add): void {
-            try {
-                $add($article->canonicalUrl(), $article->updated_at ?: $article->published_at);
-            } catch (Throwable $exception) {
-                report($exception);
-            }
+        $runSource(function () use ($add, $isIndexable): void {
+            Article::published()->get()->filter($isIndexable)->each(function ($article) use ($add): void {
+                try {
+                    $add($article->canonicalUrl(), $article->updated_at ?: $article->published_at);
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            });
         });
-        ArticleCategory::where('is_active', true)->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($category) use ($add, $routeUrl): void {
-            if ($url = $routeUrl('blog.category', $category)) {
-                $add($url, $category->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl): void {
+            ArticleCategory::where('is_active', true)->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($category) use ($add, $routeUrl): void {
+                if ($url = $routeUrl('blog.category', $category)) {
+                    $add($url, $category->updated_at);
+                }
+            });
         });
-        Tag::whereHas('articles', fn ($query) => $query->published())->get()->each(function ($tag) use ($add, $routeUrl): void {
-            if ($url = $routeUrl('blog.tag', $tag)) {
-                $add($url, $tag->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl): void {
+            Tag::whereHas('articles', fn ($query) => $query->published())->get()->each(function ($tag) use ($add, $routeUrl): void {
+                if ($url = $routeUrl('blog.tag', $tag)) {
+                    $add($url, $tag->updated_at);
+                }
+            });
         });
-        TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($member) use ($add, $routeUrl): void {
-            if ($url = $routeUrl('blog.author', $member)) {
-                $add($url, $member->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl): void {
+            TeamMember::active()->whereHas('articles', fn ($query) => $query->published())->get()->each(function ($member) use ($add, $routeUrl): void {
+                if ($url = $routeUrl('blog.author', $member)) {
+                    $add($url, $member->updated_at);
+                }
+            });
         });
-        Service::active()->get()->filter($isIndexable)->each(function ($service) use ($add, $routeUrl): void {
-            if ($url = $service->canonical_url ?: $routeUrl('services.show', $service)) {
-                $add($url, $service->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            Service::active()->get()->filter($isIndexable)->each(function ($service) use ($add, $routeUrl): void {
+                if ($url = $service->canonical_url ?: $routeUrl('services.show', $service)) {
+                    $add($url, $service->updated_at);
+                }
+            });
         });
-        Project::published()->get()->filter($isIndexable)->each(function ($project) use ($add, $routeUrl): void {
-            if ($url = $project->canonical_url ?: $routeUrl('projects.show', $project)) {
-                $add($url, $project->updated_at ?: $project->published_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            Project::published()->get()->filter($isIndexable)->each(function ($project) use ($add, $routeUrl): void {
+                if ($url = $project->canonical_url ?: $routeUrl('projects.show', $project)) {
+                    $add($url, $project->updated_at ?: $project->published_at);
+                }
+            });
         });
-        Page::published()->whereNotNull('slug')->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->filter($isIndexable)->each(function ($page) use ($add, $routeUrl): void {
-            if ($url = $page->canonical_url ?: $routeUrl('pages.show', ['slug' => $page->slug])) {
-                $add($url, $page->updated_at);
-            }
+        $runSource(function () use ($add, $routeUrl, $isIndexable): void {
+            Page::published()->whereNotNull('slug')->whereNotIn('key', array_keys(Seo::pageRoutes()))->get()->filter($isIndexable)->each(function ($page) use ($add, $routeUrl): void {
+                if ($url = $page->canonical_url ?: $routeUrl('pages.show', ['slug' => $page->slug])) {
+                    $add($url, $page->updated_at);
+                }
+            });
         });
 
         $xml = view('seo.sitemap', ['entries' => $entries])->render();
