@@ -29,6 +29,20 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('og:site_name', $html);
     }
 
+    public function test_homepage_includes_recaptcha_provider_when_enabled(): void
+    {
+        config()->set([
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.enforce_in_testing' => true,
+        ]);
+
+        $this->get('/')->assertOk()
+            ->assertSee('window.mwanafunziRecaptcha', false)
+            ->assertSee('https://www.google.com/recaptcha/api.js?render=site-key', false)
+            ->assertSee('name="recaptcha_token"', false);
+    }
+
     public function test_built_in_cms_aliases_redirect_and_are_not_listed_in_sitemap(): void
     {
         foreach (['services', 'projects', 'faqs', 'blog', 'about', 'home'] as $key) {

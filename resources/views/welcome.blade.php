@@ -82,6 +82,11 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     <title>{{ $homeSeoTitle }}</title>
     @include('partials.brand-schema', ['includeWebsiteSchema' => true])
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php($recaptcha = app(\App\Services\RecaptchaService::class))
+    @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
+        <script>window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
+        <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode($recaptcha->siteKey()) }}" async defer></script>
+    @endif
     @include('components.design-tokens')
 </head>
 
