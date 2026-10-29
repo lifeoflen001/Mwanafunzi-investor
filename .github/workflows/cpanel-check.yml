@@ -1,0 +1,87 @@
+name: Check cPanel deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Verify Laravel and frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, bcmath, pdo_mysql, pdo_sqlite, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Configure Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Verify build output
+        run: test -s public/build/manifest.json
+
+  connection:
+    name: Verify SSH connection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Connect and verify server access
+        shell: bash
+        env:
+          SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+        run: |
+          set -euo pipefail
+
+          : "${SSH_KEY:?Missing CPANEL_SSH_KEY}"
+          : "${KNOWN_HOSTS:?Missing CPANEL_KNOWN_HOSTS}"
+          : "${SSH_HOST:?Missing CPANEL_HOST}"
+          : "${SSH_PORT:?Missing CPANEL_PORT}"
+          : "${SSH_USER:?Missing CPANEL_USER}"
+
+          SSH_DIR="$(mktemp -d)"
+          trap 'rm -rf "$SSH_DIR"' EXIT
+          chmod 700 "$SSH_DIR"
+
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > "$SSH_DIR/key"
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > "$SSH_DIR/known_hosts"
+          chmod 600 "$SSH_DIR/key" "$SSH_DIR/known_hosts"
+
+          ssh \
+            -i "$SSH_DIR/key" \
+            -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$SSH_DIR/known_hosts" \
+            -o ConnectTimeout=20 \
+            "$SSH_USER@$SSH_HOST" \
+            'whoami; /usr/local/bin/php -v'
