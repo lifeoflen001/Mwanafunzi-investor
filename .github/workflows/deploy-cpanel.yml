@@ -1,0 +1,131 @@
+name: Deploy to cPanel
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpanel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Download source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, bcmath, pdo_mysql, pdo_sqlite, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Configure Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+          test -s public/build/manifest.json
+
+      - name: Run application tests
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          MAIL_MAILER: array
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
+
+      - name: Prepare production package
+        run: |
+          composer install \
+            --no-dev \
+            --no-scripts \
+            --optimize-autoloader \
+            --no-interaction \
+            --prefer-dist \
+            --no-progress
+
+          tar \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.env*' \
+            --exclude='./node_modules' \
+            --exclude='./storage' \
+            --exclude='./bootstrap/cache/*.php' \
+            --exclude='./public/hot' \
+            --exclude='./tests' \
+            --exclude='./docs' \
+            -czf "$RUNNER_TEMP/release.tar.gz" .
+
+      - name: Upload and deploy
+        shell: bash
+        env:
+          SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+        run: |
+          set -euo pipefail
+
+          : "${SSH_KEY:?Missing SSH key}"
+          : "${KNOWN_HOSTS:?Missing trusted host keys}"
+          : "${SSH_HOST:?Missing SSH hostname}"
+          : "${SSH_PORT:?Missing SSH port}"
+          : "${SSH_USER:?Missing SSH username}"
+
+          SSH_DIR="$(mktemp -d)"
+          trap 'rm -rf "$SSH_DIR"' EXIT
+
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > "$SSH_DIR/key"
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > "$SSH_DIR/known_hosts"
+          chmod 700 "$SSH_DIR"
+          chmod 600 "$SSH_DIR/key" "$SSH_DIR/known_hosts"
+
+          OPTIONS=(
+            -i "$SSH_DIR/key"
+            -o IdentitiesOnly=yes
+            -o BatchMode=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$SSH_DIR/known_hosts"
+            -o ConnectTimeout=20
+          )
+
+          TARGET="$SSH_USER@$SSH_HOST"
+          RELEASE="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          REMOTE="/home/mwanafun/deploy/incoming/$RELEASE"
+
+          ssh "${OPTIONS[@]}" -p "$SSH_PORT" "$TARGET" \
+            "umask 077; mkdir -p '$REMOTE'"
+
+          scp "${OPTIONS[@]}" -P "$SSH_PORT" \
+            "$RUNNER_TEMP/release.tar.gz" \
+            scripts/deploy-cpanel.sh \
+            "$TARGET:$REMOTE/"
+
+          ssh "${OPTIONS[@]}" -p "$SSH_PORT" "$TARGET" \
+            "bash '$REMOTE/deploy-cpanel.sh' '$RELEASE'"
