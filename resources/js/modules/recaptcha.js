@@ -7,15 +7,31 @@ const recaptchaConfig = () => {
     return siteKey ? { siteKey } : null;
 };
 
-// The Google script is loaded asynchronously in the shared layouts. Keep the
-// form handler independent from that load order so a quick submit cannot
-// reach Laravel with an empty token.
-const waitForRecaptcha = (timeout = 15000) => new Promise((resolve, reject) => {
+// The provider script is loaded asynchronously in the shared layouts. Keep
+// the form handler independent from that load order so a quick submit cannot
+// reach Laravel with an empty token. recaptcha.net is Google's documented
+// alternate host and helps when a network or privacy filter blocks google.com.
+const loadFallbackProvider = (siteKey) => {
+    if (document.querySelector('script[data-recaptcha-fallback]')) return;
+    const script = document.createElement('script');
+    script.src = `https://www.recaptcha.net/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
+    script.async = true;
+    script.defer = true;
+    script.dataset.recaptchaFallback = 'true';
+    document.head.append(script);
+};
+
+const waitForRecaptcha = (timeout = 15000, siteKey = '') => new Promise((resolve, reject) => {
     const startedAt = Date.now();
+    let fallbackRequested = false;
     const check = () => {
         if (window.grecaptcha?.ready && window.grecaptcha?.execute) {
             resolve(window.grecaptcha);
             return;
+        }
+        if (!fallbackRequested && Date.now() - startedAt >= 3000 && siteKey) {
+            fallbackRequested = true;
+            loadFallbackProvider(siteKey);
         }
         if (Date.now() - startedAt >= timeout) {
             reject(new Error('reCAPTCHA did not become available'));
@@ -26,7 +42,7 @@ const waitForRecaptcha = (timeout = 15000) => new Promise((resolve, reject) => {
     check();
 });
 
-const requestToken = (siteKey, action) => waitForRecaptcha().then((grecaptcha) => new Promise((resolve, reject) => {
+const requestToken = (siteKey, action) => waitForRecaptcha(15000, siteKey).then((grecaptcha) => new Promise((resolve, reject) => {
     grecaptcha.ready(() => {
         Promise.resolve(grecaptcha.execute(siteKey, { action })).then(resolve, reject);
     });

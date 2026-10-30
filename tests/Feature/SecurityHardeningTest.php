@@ -116,6 +116,7 @@ class SecurityHardeningTest extends TestCase
         $this->assertStringContainsString("frame-src 'self' https://*.flutterwave.com https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/", $csp);
         $this->assertStringContainsString('connect-src', $csp);
         $this->assertStringContainsString('https://www.google.com/recaptcha/', $csp);
+        $this->assertStringContainsString('https://www.recaptcha.net/recaptcha/', $csp);
 
         $this->get('/storage/commerce/private.pdf')->assertNotFound();
     }

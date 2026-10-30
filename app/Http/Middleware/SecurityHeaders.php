@@ -23,13 +23,13 @@ class SecurityHeaders
             "base-uri 'self'",
             "object-src 'none'",
             "frame-ancestors 'none'",
-            "script-src 'self' 'nonce-{$cspNonce}' https://embed.tawk.to https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/".$viteDevSources,
+            "script-src 'self' 'nonce-{$cspNonce}' https://embed.tawk.to https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/recaptcha/".$viteDevSources,
             "style-src 'self' 'unsafe-inline' https: https://*.tawk.to".$viteDevSources,
             "style-src-attr 'unsafe-inline'",
             "img-src 'self' data: blob: https: tawk.link https://*.tawk.to",
             "font-src 'self' data: https: https://*.tawk.to",
-            "connect-src 'self' ws: wss: https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/".$viteDevSources,
-            "frame-src 'self' https://*.flutterwave.com https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+            "connect-src 'self' ws: wss: https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/recaptcha/".$viteDevSources,
+            "frame-src 'self' https://*.flutterwave.com https://*.tawk.to https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/recaptcha/",
             "form-action 'self' https://*.flutterwave.com https://*.tawk.to",
         ]));
         if ($request->user() && ($request->is('account') || $request->is('account/*') || $request->is('admin') || $request->is('admin/*') || $request->is('checkout/*') || $request->is('payments/*') || $request->is('downloads/*'))) {
