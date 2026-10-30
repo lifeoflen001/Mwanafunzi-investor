@@ -39,6 +39,8 @@ class SeoTest extends TestCase
 
         $this->get('/')->assertOk()
             ->assertSee('window.mwanafunziRecaptcha', false)
+            ->assertSee('name="mwanafunzi-recaptcha-site-key"', false)
+            ->assertSee('content="site-key"', false)
             ->assertSee('https://www.google.com/recaptcha/api.js?render=site-key', false)
             ->assertSee('name="recaptcha_token"', false)
             ->assertSee('This site is protected by reCAPTCHA.', false);

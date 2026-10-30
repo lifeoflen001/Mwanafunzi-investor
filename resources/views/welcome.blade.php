@@ -83,6 +83,7 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
     @include('partials.brand-schema', ['includeWebsiteSchema' => true])
     @php($recaptcha = app(\App\Services\RecaptchaService::class))
     @if($recaptcha->isEnabled() && filled($recaptcha->siteKey()))
+        <meta name="mwanafunzi-recaptcha-site-key" content="{{ $recaptcha->siteKey() }}">
         <script nonce="{{ request()->attributes->get('csp_nonce') }}">window.mwanafunziRecaptcha = { siteKey: @js($recaptcha->siteKey()) };</script>
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])

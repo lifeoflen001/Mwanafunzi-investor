@@ -1,6 +1,11 @@
 // The provider script and this integration are loaded only when reCAPTCHA is
 // enabled. The server-side rule remains authoritative for every form.
-const recaptchaConfig = () => window.mwanafunziRecaptcha;
+const recaptchaConfig = () => {
+    const siteKey = window.mwanafunziRecaptcha?.siteKey
+        || document.querySelector('meta[name="mwanafunzi-recaptcha-site-key"]')?.content;
+
+    return siteKey ? { siteKey } : null;
+};
 
 // The Google script is loaded asynchronously in the shared layouts. Keep the
 // form handler independent from that load order so a quick submit cannot
