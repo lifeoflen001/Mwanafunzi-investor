@@ -75,8 +75,7 @@ class RecaptchaService
                 if ($responseAction !== $action || $score < $this->minScore()) return false;
             }
 
-            $hostname = $this->hostname();
-            return ! filled($hostname) || hash_equals($hostname, (string) $response->json('hostname', ''));
+            return $this->hostnameMatches($this->hostname(), (string) $response->json('hostname', ''));
         } catch (Throwable $exception) {
             Log::warning('reCAPTCHA verification failed safely.', [
                 'action' => $action,
@@ -102,5 +101,33 @@ class RecaptchaService
         $value = SiteSetting::getValue($key, $default);
 
         return filled($value) ? (string) $value : null;
+    }
+
+    /**
+     * Match the configured base host and its first-party subdomains without
+     * accepting look-alike domains such as attacker-example.com.
+     */
+    private function hostnameMatches(?string $configured, string $verified): bool
+    {
+        $configuredHost = $this->normalizeHostname($configured);
+        $verifiedHost = $this->normalizeHostname($verified);
+
+        if ($configuredHost === null) return true;
+        if ($verifiedHost === null) return false;
+
+        return $verifiedHost === $configuredHost
+            || str_ends_with($verifiedHost, '.'.$configuredHost);
+    }
+
+    private function normalizeHostname(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') return null;
+
+        $host = parse_url(str_contains($value, '://') ? $value : 'https://'.$value, PHP_URL_HOST);
+        $host = is_string($host) ? $host : $value;
+        $host = strtolower(rtrim($host, '.'));
+
+        return $host !== '' ? $host : null;
     }
 }

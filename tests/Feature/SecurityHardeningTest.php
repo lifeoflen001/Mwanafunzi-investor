@@ -207,6 +207,44 @@ class SecurityHardeningTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://www.google.com/recaptcha/api/siteverify' && $request['secret'] === 'secret-key' && $request['response'] === 'token');
     }
 
+    public function test_recaptcha_accepts_a_configured_base_url_and_its_first_party_subdomain(): void
+    {
+        config()->set([
+            'recaptcha.enforce_in_testing' => true,
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.secret_key' => 'secret-key',
+            'recaptcha.hostname' => 'https://example.test/',
+        ]);
+        Http::fake(['https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'password_reset',
+            'score' => 0.9,
+            'hostname' => 'client.example.test',
+        ])]);
+
+        $this->assertTrue(app(RecaptchaService::class)->verify('token', 'password_reset', request()));
+    }
+
+    public function test_recaptcha_rejects_a_lookalike_hostname(): void
+    {
+        config()->set([
+            'recaptcha.enforce_in_testing' => true,
+            'recaptcha.enabled' => true,
+            'recaptcha.site_key' => 'site-key',
+            'recaptcha.secret_key' => 'secret-key',
+            'recaptcha.hostname' => 'example.test',
+        ]);
+        Http::fake(['https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'password_reset',
+            'score' => 0.9,
+            'hostname' => 'example.test.attacker.test',
+        ])]);
+
+        $this->assertFalse(app(RecaptchaService::class)->verify('token', 'password_reset', request()));
+    }
+
     public function test_enabled_recaptcha_rejects_missing_token_before_login_attempt(): void
     {
         config()->set(['recaptcha.enforce_in_testing' => true, 'recaptcha.enabled' => true, 'recaptcha.site_key' => 'site-key', 'recaptcha.secret_key' => 'secret-key']);
