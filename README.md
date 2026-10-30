@@ -1,90 +1,94 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mwanafunzi Investor
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel application for Mwanafunzi Investor's financial education, digital products, and digital software services. It combines a public website, a customer workspace, and an administration CMS.
 
-## About Laravel
+## Features in the codebase
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Financial academy pages, courses, tools, and customer course workflows.
+- Digital software project catalogue and studio enquiries.
+- Blog/journal publishing, categories, tags, comments, and reactions.
+- Commerce, customer accounts, and controlled downloads.
+- Newsletter subscription, signed confirmation and unsubscribe links.
+- CMS controls for pages, navigation, media, services, team members, testimonials, redirects, and SEO.
+- Google sign-in, customer security settings, and administrator MFA.
+- XML/HTML sitemaps and public metadata.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+External services require valid configuration; a route or controller does not establish that its production integration is operational.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Technology
 
-## Learning Laravel
+PHP 8.2+, Laravel 12, Blade, Tailwind CSS, Vite, Laravel Socialite, and PHPUnit. The environment example targets MySQL/MariaDB for production, with SQLite suitable for isolated tests.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Local setup
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-## Mwanafunzi Investor platform
-
-This repository contains the Laravel public platform and CMS foundation for Mwanafunzi Investor. The approved homepage remains the visual source of truth; public learning, course, tool, journal, contact, legal and disclosure routes are database-backed.
-
-### Local XAMPP setup
-
-From `C:\xampp\htdocs\Mwanafunzi-investor`:
+Requirements: PHP 8.2+ with the extensions required by Composer, Composer 2, a compatible Node.js release (Node 22.12+ is a suitable baseline for these Vite dependencies), npm, and a database.
 
 ```bash
+git clone https://github.com/lifeoflen001/Mwanafunzi-investor.git
+cd Mwanafunzi-investor
+cp .env.example .env
 composer install
-copy .env.example .env
 php artisan key:generate
-php artisan migrate --seed
-php artisan storage:link
-npm install
-npm run build
+npm ci
 ```
 
-Serve the app through Apache at `/public/`:
+Before migrating, configure `APP_URL` and the database in your local `.env`. For SQLite, create `database/database.sqlite` if it does not exist; for MySQL/PostgreSQL, create a dedicated local database and set its connection values. Use a separate test database.
 
-`http://localhost/Mwanafunzi-investor/public/`
+```bash
+php artisan migrate
+php artisan storage:link
+npm run build
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-Create an authorised CMS user locally with `php artisan app:make-admin your@email.example --name="Your Name"`, then open `/admin/login`. The command prompts for the password if `--password` is omitted.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The `cp` command above uses a Unix-style shell; in PowerShell use `Copy-Item .env.example .env`.
 
-### Verification
+Review seeders before running them. Run `php artisan db:seed` only when you explicitly want their data in a disposable development database; do not assume they are safe for a populated installation.
 
-Run `php artisan test`, `php artisan view:cache` and `npm run build` before pushing changes. The test suite uses SQLite; local XAMPP and production deployments use MySQL/MariaDB configured through `.env`.
+## Configuration
 
-### Deployment
+Use [`.env.example`](.env.example) as the configuration reference.
 
-See [HOSTING.md](HOSTING.md) for the project-specific production, cPanel, storage, queue, cache, backup, rollback and post-deployment instructions.
+| Area | Settings |
+| --- | --- |
+| Application | `APP_URL`, `APP_TIMEZONE`, `SEO_SITE_URL` |
+| Portals | `PORTAL_PUBLIC_URL`, `PORTAL_CLIENT_URL`, `PORTAL_ADMIN_URL` |
+| Storage and assets | `FILESYSTEM_DISK`, `ASSET_URL`, `CDN_URL` |
+| Mail and jobs | `MAIL_*`, `QUEUE_CONNECTION` |
+| Google sign-in | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` |
+| Forms | `RECAPTCHA_*` |
+| Commerce | `PAYMENT_PROVIDER`, `PAYMENT_ENVIRONMENT`, `FLW_*` |
+| Administrator access | `ADMIN_MFA_REQUIRED` |
+
+For local HTTP development, override `SESSION_SECURE_COOKIE=false`; the example deliberately enables secure cookies. `MAIL_MAILER=log` records messages locally and does not deliver email. Keep payments in sandbox while developing.
+
+Production portal defaults point to `mwanafunziinvestor.com`, `client.mwanafunziinvestor.com`, and `admin.mwanafunziinvestor.com`. Configure DNS, TLS, web-server routing, and OAuth callback URLs for the deployment you actually use.
+
+## Development and checks
+
+```bash
+composer dev
+php artisan test
+npm run build
+php artisan route:list
+```
+
+`composer dev` runs the local server, queue listener, logs, and Vite together. The test command uses the project's PHPUnit configuration; ensure it cannot connect to production data.
+
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `app/Http/Controllers` | Public, commerce, customer, and admin request handlers |
+| `resources/views` | Blade views and shared UI |
+| `routes/web.php` | Web routes and access middleware |
+| `routes/console.php` | Console/scheduled work definitions |
+| `database` | Migrations, factories, and seeders |
+| `tests` | Automated tests |
+| `docs` | Architecture, audits, and deployment guidance |
+
+## Deployment and security
+
+Follow [HOSTING.md](HOSTING.md) and [SECURITY.md](SECURITY.md). Serve Laravel through `public/`, use `APP_DEBUG=false`, configure real mail delivery and queue processing, and provision the scheduler as required by the application. Keep secrets outside Git and review migrations before deployment.
+
+Financial education content does not promise trading returns.
