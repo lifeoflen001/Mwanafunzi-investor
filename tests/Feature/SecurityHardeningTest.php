@@ -33,7 +33,12 @@ class SecurityHardeningTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertRedirect(route('admin.mfa.setup'));
-        $this->actingAs($admin)->get(route('admin.mfa.setup'))->assertOk()->assertSee('Protect the admin desk.');
+        $this->actingAs($admin)->get(route('admin.mfa.setup'))
+            ->assertOk()
+            ->assertSee('Protect the admin desk.')
+            ->assertSee('Show setup details')
+            ->assertSee('admin-mfa-manual-setup')
+            ->assertSee('Provisioning URI');
     }
 
     public function test_enabled_admin_must_complete_challenge_and_recovery_code_is_one_time(): void

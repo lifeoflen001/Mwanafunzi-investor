@@ -731,6 +731,31 @@ document.addEventListener('keydown', (event) => {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
 
+/* Keep first-time MFA secrets out of the main form until the administrator asks to view them. */
+document.querySelectorAll('[data-mfa-setup-open]').forEach((trigger) => {
+    const dialog = document.getElementById(trigger.dataset.mfaSetupOpen);
+    if (!dialog) return;
+    let returnFocus = null;
+    const close = () => {
+        if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+        else { dialog.removeAttribute('open'); dialog.classList.remove('is-open'); }
+        returnFocus?.focus?.();
+        returnFocus = null;
+    };
+    trigger.addEventListener('click', () => {
+        returnFocus = trigger;
+        if (typeof dialog.showModal === 'function') dialog.showModal();
+        else { dialog.setAttribute('open', ''); dialog.classList.add('is-open'); }
+        dialog.querySelector('[data-mfa-setup-close]')?.focus();
+    });
+    dialog.querySelectorAll('[data-mfa-setup-close]').forEach((button) => button.addEventListener('click', close));
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) close(); });
+    dialog.addEventListener('cancel', (event) => { event.preventDefault(); close(); });
+    dialog.addEventListener('close', () => {
+        if (returnFocus) { returnFocus.focus?.(); returnFocus = null; }
+    });
+});
+
 document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
     if (form.dataset.confirmed === 'true') { delete form.dataset.confirmed; return; }
     const method = form.querySelector('input[name="_method"]')?.value?.toLowerCase();

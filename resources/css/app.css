@@ -104,9 +104,42 @@
 .auth-page .admin-auth-title p { margin:10px 0 28px; color:var(--muted); font-size:14px; line-height:1.6; }
 .auth-page .admin-auth-prompt,.auth-page .admin-auth-back { color:var(--copper-dark); font-size:12px; }
 .auth-page .admin-auth-back { display:inline-block; margin-top:18px; }
-.auth-page .admin-mfa-secret { margin:0 0 18px; padding:14px; border:1px solid var(--line); background:rgba(255,255,255,.4); color:var(--muted); font-size:12px; }
+.auth-page .admin-mfa-setup-card { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 0 18px; padding:15px 16px; border:1px solid var(--line); background:rgba(255,255,255,.4); color:var(--muted); font-size:12px; line-height:1.5; }
+.auth-page .admin-mfa-setup-card p { max-width:330px; margin:5px 0 0; }
+.auth-page .admin-mfa-setup-trigger { flex:0 0 auto; padding:0; border:0; background:transparent; color:var(--copper-dark); font:600 12px var(--sans); cursor:pointer; text-align:right; }
+.auth-page .admin-mfa-setup-trigger span { margin-left:5px; font-size:14px; }
+.auth-page .admin-mfa-setup-trigger:hover { color:var(--ink); }
+.auth-page .admin-mfa-setup-trigger:focus-visible,.auth-page .admin-mfa-dialog-close:focus-visible { outline:2px solid var(--copper); outline-offset:3px; }
+.auth-page .admin-mfa-dialog { width:min(calc(100% - 32px),560px); max-height:min(80vh,680px); margin:auto; padding:0; border:1px solid var(--line); background:var(--paper); color:var(--ink); box-shadow:0 22px 70px rgba(18,28,36,.25); }
+.auth-page .admin-mfa-dialog::backdrop { background:rgba(18,28,36,.68); }
+.auth-page .admin-mfa-dialog-card { padding:24px; }
+.auth-page .admin-mfa-dialog-header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+.auth-page .admin-mfa-dialog-header h2 { margin:7px 0 0; color:var(--ink); font-size:clamp(20px,3vw,26px); line-height:1.1; letter-spacing:-.04em; }
+.auth-page .admin-mfa-dialog-close { display:inline-grid; place-items:center; width:32px; height:32px; flex:0 0 32px; border:1px solid var(--line); border-radius:50%; background:transparent; color:var(--ink); font:400 22px/1 var(--sans); cursor:pointer; }
+.auth-page .admin-mfa-dialog-close:hover { border-color:var(--copper); color:var(--copper-dark); }
+.auth-page .admin-mfa-dialog-intro { margin:16px 0; color:var(--muted); font-size:12px; line-height:1.6; }
+.auth-page .admin-mfa-dialog-intro strong { color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
+.auth-page .admin-mfa-dialog-field { display:grid; gap:7px; margin-top:13px; }
+.auth-page .admin-mfa-dialog-label { color:var(--copper-dark); font:600 10px var(--sans); letter-spacing:.12em; text-transform:uppercase; }
+.auth-page .admin-mfa-secret-value,.auth-page .admin-mfa-uri { display:block; padding:11px 12px; border:1px solid var(--line); background:rgba(255,255,255,.55); color:var(--ink); font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; word-break:break-word; }
+.auth-page .admin-mfa-secret-value { letter-spacing:.1em; }
+.auth-page .admin-mfa-uri { max-height:116px; overflow:auto; white-space:pre-wrap; }
+.auth-page .admin-mfa-dialog-actions { display:flex; justify-content:flex-end; margin-top:20px; }
+.auth-page .admin-mfa-dialog-actions .button { min-width:94px; min-height:40px; }
+.auth-page .admin-mfa-dialog[open] { animation:admin-mfa-dialog-in .16s ease-out both; }
+@keyframes admin-mfa-dialog-in { from { opacity:0; transform:translateY(8px) scale(.985); } to { opacity:1; transform:none; } }
 .auth-page .button-primary { width:100%; min-height:46px; border-radius:7px; background:var(--copper); border-color:var(--copper); color:#fff; }
 .auth-page .button-primary:hover { background:var(--ink); border-color:var(--ink); }
+
+@media (prefers-reduced-motion:reduce) {
+    .auth-page .admin-mfa-dialog[open] { animation:none; }
+}
+
+@media (max-width:520px) {
+    .auth-page .admin-mfa-setup-card { align-items:flex-start; flex-direction:column; gap:12px; }
+    .auth-page .admin-mfa-setup-trigger { text-align:left; }
+    .auth-page .admin-mfa-dialog-card { padding:19px; }
+}
 
 @media (max-width:1100px) {
     .auth-shell { grid-template-columns:minmax(0,1.25fr) minmax(360px,1fr); }
@@ -2841,6 +2874,29 @@ body.studio-gallery-open { overflow:hidden; }
 .student-dashboard-two-column { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-top:30px; }.student-dashboard-two-column .student-dashboard-section-heading h2 { font-size:21px; }.student-dashboard-dark-copy { margin:18px 0 2px; color:rgba(255,255,255,.68); }.student-dashboard-next-panel .student-eyebrow { color:var(--copper); }
 .student-dashboard-services-section { margin-top:24px; }.student-service-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }.student-service-card { min-width:0; padding:18px; border:1px solid var(--student-border); border-radius:5px; background:var(--student-surface); box-shadow:0 3px 12px rgba(28,38,34,.035); }.student-service-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }.student-service-card .student-eyebrow { margin-bottom:5px; }.student-service-card h3 { margin:0 0 8px; font-size:19px; line-height:1.12; letter-spacing:-.035em; }.student-service-card h3 a:hover { color:var(--copper-dark); }.student-service-card-meta { min-height:34px; margin:0 0 16px; color:var(--student-muted); font-size:11px; line-height:1.5; }.student-list-icon-copper { background:rgba(196,108,56,.13); color:var(--copper-dark); }
 .student-notification-row,.student-session-row { display:flex; align-items:flex-start; gap:13px; padding:16px 0; border-bottom:1px solid var(--student-border-soft); }.student-notification-row:last-child,.student-session-row:last-child { border-bottom:0; }.student-notification-row.is-unread { background:rgba(197,108,56,.045); }.student-notification-marker { flex:0 0 25px; color:var(--copper); font-size:12px; }.student-notification-row>div,.student-session-row>div { min-width:0; flex:1; }.student-notification-row strong,.student-session-row strong { display:block; color:var(--ink); font-size:13px; }.student-notification-row p { margin:4px 0; color:var(--student-muted); font-size:12px; line-height:1.45; }.student-notification-row small,.student-session-row small { display:block; margin-top:4px; color:var(--student-muted); font-size:11px; }.student-session-row { align-items:center; }.student-session-row form { flex:0 0 auto; }.student-saved-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }.student-saved-card { display:flex; flex-direction:column; min-height:210px; }.student-saved-card h2 { margin:17px 0 8px; font-size:21px; line-height:1.1; letter-spacing:-.04em; }.student-saved-card h2 a:hover { color:var(--copper-dark); }.student-saved-card p { margin:0 0 18px; color:var(--student-muted); font-size:13px; line-height:1.55; }.student-saved-card .student-text-link { margin-top:auto; }.student-secret-key { display:block; width:max-content; max-width:100%; margin:15px 0; padding:12px 14px; background:var(--night); color:#fff; font:600 15px var(--mono); letter-spacing:.08em; overflow-wrap:anywhere; }.student-recovery-panel { margin-top:18px; border-color:var(--copper); }.student-recovery-codes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:17px; }.student-recovery-codes code { padding:10px 12px; background:var(--student-soft); color:var(--ink); font:600 13px var(--mono); letter-spacing:.04em; }
+.account-portal .student-mfa-setup-card { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:18px 0; padding:15px 16px; border:1px solid var(--student-border); background:var(--student-soft); }
+.account-portal .student-mfa-setup-card p { max-width:360px; margin:5px 0 0; }
+.account-portal .student-mfa-setup-trigger { flex:0 0 auto; padding:0; border:0; background:transparent; color:var(--copper-dark); font:600 12px var(--sans); cursor:pointer; text-align:right; }
+.account-portal .student-mfa-setup-trigger span { margin-left:5px; font-size:14px; }
+.account-portal .student-mfa-setup-trigger:hover { color:var(--ink); }
+.account-portal .student-mfa-setup-trigger:focus-visible,.account-portal .student-mfa-dialog-close:focus-visible { outline:2px solid var(--copper); outline-offset:3px; }
+.account-portal .student-mfa-dialog { width:min(calc(100% - 32px),560px); max-height:min(80vh,680px); margin:auto; padding:0; border:1px solid var(--student-border); background:var(--student-surface); color:var(--ink); box-shadow:0 22px 70px rgba(28,38,34,.22); }
+.account-portal .student-mfa-dialog::backdrop { background:rgba(18,28,36,.68); }
+.account-portal .student-mfa-dialog-card { padding:24px; }
+.account-portal .student-mfa-dialog-header { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding-bottom:16px; border-bottom:1px solid var(--student-border-soft); }
+.account-portal .student-mfa-dialog-header h2 { margin:7px 0 0; color:var(--ink); font-size:clamp(20px,3vw,26px); line-height:1.1; letter-spacing:-.04em; }
+.account-portal .student-mfa-dialog-close { display:inline-grid; place-items:center; width:32px; height:32px; flex:0 0 32px; border:1px solid var(--student-border); border-radius:50%; background:transparent; color:var(--ink); font:400 22px/1 var(--sans); cursor:pointer; }
+.account-portal .student-mfa-dialog-close:hover { border-color:var(--copper); color:var(--copper-dark); }
+.account-portal .student-mfa-dialog-intro { margin:16px 0; color:var(--student-muted); font-size:12px; line-height:1.6; }
+.account-portal .student-mfa-dialog-field { display:grid; gap:7px; margin-top:13px; }
+.account-portal .student-mfa-dialog-label { color:var(--copper-dark); font:600 10px var(--sans); letter-spacing:.12em; text-transform:uppercase; }
+.account-portal .student-mfa-dialog .student-secret-key,.account-portal .student-mfa-uri { width:auto; margin:0; padding:11px 12px; border:1px solid var(--student-border); background:var(--night); color:#fff; font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; word-break:break-word; }
+.account-portal .student-mfa-uri { background:var(--student-soft); color:var(--ink); max-height:116px; overflow:auto; white-space:pre-wrap; }
+.account-portal .student-mfa-dialog-actions { display:flex; justify-content:flex-end; margin-top:20px; }
+.account-portal .student-mfa-dialog[open] { animation:admin-mfa-dialog-in .16s ease-out both; }
+.account-portal .student-mfa-dialog-actions .student-button { min-width:94px; }
+
+@media (prefers-reduced-motion:reduce) { .account-portal .student-mfa-dialog[open] { animation:none; } }
 @media (max-width:1100px) { .student-dashboard-catalog-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.student-dashboard-course-grid { grid-template-columns:1fr; } }
 @media (max-width:1100px) { .student-service-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:1050px) { .student-saved-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

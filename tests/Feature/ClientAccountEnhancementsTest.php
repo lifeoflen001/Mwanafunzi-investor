@@ -100,6 +100,8 @@ class ClientAccountEnhancementsTest extends TestCase
         $this->actingAs($customer)->get(route('account.security.2fa.setup'))
             ->assertOk()
             ->assertSee('Connect your authenticator.')
+            ->assertSee('Show setup details')
+            ->assertSee('student-mfa-manual-setup')
             ->assertSee('otpauth://totp/', false)
             ->assertDontSee('admin_mfa_secret');
     }

@@ -10,9 +10,38 @@
         <x-portal-card class="student-panel">
             <p class="student-eyebrow">Step 1</p>
             <h2>Connect your authenticator.</h2>
-            <p class="student-muted">Use any TOTP authenticator app. If you cannot scan a QR code, enter this key manually:</p>
-            <code class="student-secret-key">{{ $secret }}</code>
-            <p class="student-muted student-breakable">{{ $provisioningUri }}</p>
+            <div class="student-mfa-setup-card">
+                <div>
+                    <span class="student-eyebrow">Authenticator setup</span>
+                    <p class="student-muted">Use any TOTP authenticator app, then confirm the current six-digit code.</p>
+                </div>
+                <button class="student-mfa-setup-trigger" type="button" data-mfa-setup-open="student-mfa-manual-setup">
+                    Show setup details <span aria-hidden="true">↗</span>
+                </button>
+            </div>
+            <dialog class="student-mfa-dialog" id="student-mfa-manual-setup" aria-labelledby="student-mfa-dialog-title">
+                <div class="student-mfa-dialog-card">
+                    <div class="student-mfa-dialog-header">
+                        <div>
+                            <span class="student-eyebrow">Manual setup key</span>
+                            <h2 id="student-mfa-dialog-title">Connect your authenticator.</h2>
+                        </div>
+                        <button class="student-mfa-dialog-close" type="button" data-mfa-setup-close aria-label="Close setup details">×</button>
+                    </div>
+                    <p class="student-mfa-dialog-intro">Use the key below if your authenticator cannot scan a QR code. Keep this setup information private.</p>
+                    <div class="student-mfa-dialog-field">
+                        <span class="student-mfa-dialog-label">Manual setup key</span>
+                        <code class="student-secret-key">{{ $secret }}</code>
+                    </div>
+                    <div class="student-mfa-dialog-field">
+                        <span class="student-mfa-dialog-label">Provisioning URI</span>
+                        <code class="student-mfa-uri">{{ $provisioningUri }}</code>
+                    </div>
+                    <div class="student-mfa-dialog-actions">
+                        <button class="student-button student-button-dark" type="button" data-mfa-setup-close>Done</button>
+                    </div>
+                </div>
+            </dialog>
             <form class="student-form" method="post" action="{{ route('account.security.2fa.setup.store') }}">
                 @csrf
                 @if(auth()->user()->password !== null)
