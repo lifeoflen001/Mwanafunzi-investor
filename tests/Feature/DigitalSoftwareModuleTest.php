@@ -119,6 +119,6 @@ class DigitalSoftwareModuleTest extends TestCase
             ->assertSee('Tour Operator Management Platform')
             ->assertDontSee('A better digital front door and a clearer operation.')
             ->assertDontSee('From guest experience to back-office workflow.')
-            ->assertDontSee('Tell us where the current workflow gets in the way.');
+            ->assertSee('Tell us where the current workflow gets in the way.');
     }
 }
