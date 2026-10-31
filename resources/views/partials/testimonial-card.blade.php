@@ -1,4 +1,4 @@
-@props(['testimonial', 'dark' => false])
+@props(['testimonial', 'dark' => false, 'featured' => false])
 @php
     $clientImage = $testimonial->client_photo ? \App\Support\PublicHero::candidate($testimonial->client_photo) : null;
     $companyLogo = ! $clientImage && $testimonial->company_logo ? \App\Support\PublicHero::candidate($testimonial->company_logo) : null;
@@ -8,7 +8,7 @@
     $hasReadMore = mb_strlen($quote) > 240;
     $sourceHost = $testimonial->source_url ? parse_url($testimonial->source_url, PHP_URL_HOST) : null;
 @endphp
-<article class="testimonial-card{{ $dark ? ' testimonial-card-dark' : '' }}">
+<article class="testimonial-card{{ $dark ? ' testimonial-card-dark' : '' }}{{ $featured ? ' testimonial-card-featured' : '' }}">
     <div class="testimonial-card-identity">
         @if($clientImage || $companyLogo)
             <div class="testimonial-card-media">
@@ -33,6 +33,7 @@
         </div>
     @endif
     <blockquote class="testimonial-card-quote">
+        <span class="testimonial-card-quote-mark" aria-hidden="true">“</span>
         <p>{{ $hasReadMore ? \Illuminate\Support\Str::limit($quote, 240) : $quote }}</p>
         @if($hasReadMore)
             <details class="testimonial-card-more">
@@ -40,8 +41,9 @@
                 <p>{{ $quote }}</p>
             </details>
         @endif
+        @if($sourceHost || $projectIsPublic || $testimonial->source_url)
         <footer>
-            <span class="testimonial-card-source">{{ $sourceHost ? 'Source: '.$sourceHost : 'Client perspective' }}</span>
+            @if($sourceHost)<span class="testimonial-card-source">Source: {{ $sourceHost }}</span>@endif
             @if($projectIsPublic)
                 <a class="testimonial-card-project" href="{{ route('projects.show', $relatedProject) }}">{{ $relatedProject->title }} <span aria-hidden="true">↗</span></a>
             @endif
@@ -49,5 +51,6 @@
                 <a class="testimonial-card-project" href="{{ $testimonial->source_url }}" target="_blank" rel="noopener">View source <span aria-hidden="true">↗</span></a>
             @endif
         </footer>
+        @endif
     </blockquote>
 </article>

@@ -11,6 +11,7 @@
     $finalCta = $sections->get('final_cta');
     $selectedWork = $sections->get('selected-work');
     $industriesSection = $sections->get('industries');
+    $testimonials = $sections->get('testimonials');
     $capabilityCards = collect($capabilities?->payload['cards'] ?? [])->values();
     $heroTitle = $page->hero_title ?: 'Websites and software built around real business operations.';
     $heroSummary = $page->hero_summary ?: 'Professional websites, custom business systems, portals, dashboards and integrations for hospitality, tourism, education and growing organisations.';
@@ -69,8 +70,8 @@
         <section class="platform-section platform-muted software-languages" id="languages"><div class="container"><div class="split-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Supporting evidence</p><h2>{{ $languages->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($languages->body) !!}</div></div><div class="service-card-grid">@foreach($languages->payload['cards'] ?? [] as $card)<article class="service-card service-card-muted"><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div></div></section>
     @endif
 
-    @if($featuredTestimonials->isNotEmpty())
-        <section class="platform-section testimonial-section" id="testimonials" aria-labelledby="development-testimonials-heading"><div class="container"><div class="testimonial-section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> Client perspective</p><h2 id="development-testimonials-heading">Approved perspectives connected to the work.</h2></div><p class="testimonial-section-description">Published only when the relevant permission and review state are recorded.</p></div>@include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'development-testimonials'])</div></section>
+    @if($testimonials && $featuredTestimonials->isNotEmpty())
+        <section class="platform-section testimonial-section" id="testimonials" aria-labelledby="development-testimonials-heading"><div class="container"><div class="testimonial-section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($testimonials, 'eyebrow', 'Client perspective') }}</p><h2 id="development-testimonials-heading">{{ is_null($testimonials->heading) ? 'What our clients say.' : $testimonials->heading }}</h2></div><div class="testimonial-section-description rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div>@include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'development-testimonials'])</div></section>
     @endif
 
     @if($finalCta)<section class="platform-dark digital-final-cta" aria-labelledby="digital-final-cta-heading"><div class="container"><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($finalCta, 'eyebrow', 'Have a project in mind?') }}</p><h2 id="digital-final-cta-heading">{{ $finalCta->heading }}</h2><p>{{ $finalCta->body }}</p>@if($finalCta->cta_label && $finalCta->cta_url)<a class="button button-accent" href="{{ \App\Support\Seo::resolve($finalCta->cta_url, '#') }}" target="{{ \App\Support\CmsContent::value($finalCta, 'cta_target', '_self') }}" @if(\App\Support\CmsContent::value($finalCta, 'cta_target', '_self') === '_blank') rel="noopener" @endif>{{ $finalCta->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></section>@endif

@@ -254,67 +254,6 @@ document.addEventListener('keydown', (event) => {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
 
-/* Public testimonial carousels use native scroll snapping with small controls around it. */
-document.querySelectorAll('[data-testimonial-carousel]').forEach((carousel) => {
-    const viewport = carousel.querySelector('[data-carousel-viewport]');
-    const slides = [...carousel.querySelectorAll('[data-carousel-slide]')];
-    const previous = carousel.querySelector('[data-carousel-prev]');
-    const next = carousel.querySelector('[data-carousel-next]');
-    const dots = carousel.querySelector('[data-carousel-dots]');
-    if (!viewport || slides.length < 2) return;
-
-    let currentIndex = 0;
-    let frame = null;
-    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const visibleCount = () => Math.max(1, Math.round(viewport.clientWidth / Math.max(1, slides[0].getBoundingClientRect().width + 16)));
-    const lastIndex = () => Math.max(0, slides.length - visibleCount());
-    const nearestIndex = () => {
-        const left = viewport.scrollLeft + 3;
-        return slides.reduce((nearest, slide, index) => Math.abs(slide.offsetLeft - left) < Math.abs(slides[nearest].offsetLeft - left) ? index : nearest, 0);
-    };
-    const goTo = (index) => {
-        const target = Math.max(0, Math.min(lastIndex(), index));
-        slides[target]?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest', inline: 'start' });
-        currentIndex = target;
-        update();
-    };
-    const update = () => {
-        currentIndex = Math.max(0, Math.min(lastIndex(), nearestIndex()));
-        if (previous) previous.disabled = currentIndex === 0;
-        if (next) next.disabled = currentIndex >= lastIndex();
-        dots?.querySelectorAll('button').forEach((dot, index) => dot.setAttribute('aria-current', String(index === currentIndex)));
-    };
-    const renderDots = () => {
-        if (!dots) return;
-        dots.replaceChildren();
-        for (let index = 0; index <= lastIndex(); index += 1) {
-            const dot = document.createElement('button');
-            dot.type = 'button';
-            dot.className = 'testimonial-carousel-dot';
-            dot.setAttribute('aria-label', `Show testimonial ${index + 1}`);
-            dot.setAttribute('aria-current', String(index === currentIndex));
-            dot.addEventListener('click', () => goTo(index));
-            dots.append(dot);
-        }
-    };
-    previous?.addEventListener('click', () => goTo(currentIndex - 1));
-    next?.addEventListener('click', () => goTo(currentIndex + 1));
-    viewport.addEventListener('scroll', () => {
-        if (frame) return;
-        frame = window.requestAnimationFrame(() => { frame = null; update(); });
-    }, { passive: true });
-    viewport.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowLeft') { event.preventDefault(); goTo(currentIndex - 1); }
-        if (event.key === 'ArrowRight') { event.preventDefault(); goTo(currentIndex + 1); }
-        if (event.key === 'Home') { event.preventDefault(); goTo(0); }
-        if (event.key === 'End') { event.preventDefault(); goTo(lastIndex()); }
-    });
-    const resizeObserver = new ResizeObserver(() => { renderDots(); update(); });
-    resizeObserver.observe(viewport);
-    renderDots();
-    update();
-});
-
 const adminProfile = document.querySelector('[data-admin-profile]');
 const adminProfileToggle = document.querySelector('[data-admin-profile-toggle]');
 const adminProfileMenu = document.querySelector('[data-admin-profile-menu]');

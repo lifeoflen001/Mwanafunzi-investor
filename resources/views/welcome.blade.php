@@ -27,6 +27,7 @@ $homeSections = $homePage?->sections?->keyBy('key') ?? collect();
 $brandIntro = $homeSections->get('philosophy');
 $divisions = $homeSections->get('divisions');
 $framework = $homeSections->get('framework');
+$homeTestimonials = $homeSections->get('testimonials');
 $finalCta = $homeSections->get('final_cta');
 $homeFinalSecondaryUrl = $finalCta?->payload['secondary_cta_url'] ?? null;
 if ($homeFinalSecondaryUrl === '#tools') $homeFinalSecondaryUrl = route('tools');
@@ -153,15 +154,15 @@ $homeOgImageUrl = $homeOgImage['url'] ?? $socialImageUrl;
         @include('public.home.framework', ['section' => $framework])
         @endif
 
-        @if($featuredTestimonials->isNotEmpty())
+        @if(($homeTestimonials?->is_enabled ?? true) && $featuredTestimonials->isNotEmpty())
         <section class="mother-home-proof section testimonial-section" id="client-perspective" aria-labelledby="client-perspective-heading">
             <div class="container">
                 <div class="testimonial-section-heading">
                     <div>
-                        <p class="eyebrow"><span class="eyebrow-line"></span>Client perspective</p>
-                        <h2 id="client-perspective-heading">What the work felt like from the other side.</h2>
+                        <p class="eyebrow"><span class="eyebrow-line"></span>{{ \App\Support\CmsContent::value($homeTestimonials, 'eyebrow', 'Client perspective') }}</p>
+                        <h2 id="client-perspective-heading">{{ is_null($homeTestimonials?->heading) ? 'What our clients say.' : $homeTestimonials->heading }}</h2>
                     </div>
-                    <p class="testimonial-section-description">Approved perspectives from work made with real people, real constraints and a clear purpose.</p>
+                    <p class="testimonial-section-description">{{ is_null($homeTestimonials?->body) ? 'Approved perspectives from work made with real people, real constraints and a clear purpose.' : $homeTestimonials->body }}</p>
                 </div>
                 @include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'carouselId' => 'home-testimonials'])
             </div>
