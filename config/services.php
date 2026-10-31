@@ -47,6 +47,11 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
+        // Public review CTA. The Places API credentials remain server-side only.
+        'review_url' => env('GOOGLE_REVIEW_URL', 'https://g.page/r/CQ30z52TUXjhEAI/review'),
+        'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
+        'places_place_id' => env('GOOGLE_PLACES_PLACE_ID', 'ChIJF178_ZXjNhgRDfTPnZNReOE'),
+        'reviews_auto_publish' => env('GOOGLE_REVIEWS_AUTO_PUBLISH', true),
     ],
 
 ];

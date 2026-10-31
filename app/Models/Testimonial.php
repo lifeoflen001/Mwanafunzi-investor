@@ -10,7 +10,7 @@ class Testimonial extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['client_name', 'client_role', 'company', 'testimonial', 'client_photo', 'company_logo', 'project_id', 'business_unit_id', 'rating', 'source_url', 'consent_confirmed', 'consent_confirmed_at', 'consent_notes', 'anonymous_display', 'initials_only', 'hide_company', 'is_featured', 'is_published', 'sort_order', 'testimonial_date'];
+    protected $fillable = ['client_name', 'client_role', 'company', 'testimonial', 'client_photo', 'company_logo', 'project_id', 'business_unit_id', 'rating', 'source_url', 'source_author_url', 'consent_confirmed', 'consent_confirmed_at', 'consent_notes', 'anonymous_display', 'initials_only', 'hide_company', 'is_featured', 'is_published', 'sort_order', 'testimonial_date'];
 
     protected function casts(): array { return ['rating' => 'integer', 'consent_confirmed' => 'boolean', 'consent_confirmed_at' => 'datetime', 'anonymous_display' => 'boolean', 'initials_only' => 'boolean', 'hide_company' => 'boolean', 'is_featured' => 'boolean', 'is_published' => 'boolean', 'testimonial_date' => 'date']; }
 

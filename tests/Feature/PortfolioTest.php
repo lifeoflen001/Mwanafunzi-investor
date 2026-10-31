@@ -100,6 +100,7 @@ class PortfolioTest extends TestCase
             'company' => 'Example organisation',
             'testimonial' => str_repeat('A considered perspective from a completed project. ', 8),
             'rating' => 4,
+            'source_url' => 'https://www.google.com/maps/contrib/example/reviews',
             'is_published' => true,
             'is_featured' => true,
             'consent_confirmed' => true,
@@ -124,6 +125,8 @@ class PortfolioTest extends TestCase
             ->assertSee('Rating: 4 out of 5')
             ->assertSee('Read more')
             ->assertSee('Confirmed client')
+            ->assertSee('Google review')
+            ->assertSee('Write a review on Google')
             ->assertDontSee('Project lead')
             ->assertDontSee('Example organisation');
     }

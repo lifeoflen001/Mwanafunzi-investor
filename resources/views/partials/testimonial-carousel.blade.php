@@ -1,7 +1,8 @@
-@props(['testimonials', 'dark' => false, 'carouselId' => 'testimonials'])
+@props(['testimonials', 'dark' => false, 'carouselId' => 'testimonials', 'reviewUrl' => null])
 @php
     $testimonialItems = $testimonials instanceof \Illuminate\Pagination\LengthAwarePaginator ? $testimonials->getCollection() : collect($testimonials);
     $testimonialCount = $testimonialItems->count();
+    $reviewUrl = $reviewUrl ?: config('services.google.review_url');
 @endphp
 @if($testimonialItems->isNotEmpty())
     <div class="testimonial-carousel{{ $dark ? ' testimonial-carousel-dark' : '' }}" id="{{ $carouselId }}" data-testimonial-carousel data-carousel-count="{{ $testimonialCount }}">
@@ -22,6 +23,12 @@
                     <button class="testimonial-carousel-arrow" type="button" data-carousel-prev aria-label="Previous testimonials" disabled>←</button>
                     <button class="testimonial-carousel-arrow" type="button" data-carousel-next aria-label="Next testimonials">→</button>
                 </div>
+            </div>
+        @endif
+        @if(filter_var($reviewUrl, FILTER_VALIDATE_URL))
+            <div class="testimonial-review-cta">
+                <p>Have you worked with us? Share your experience on Google.</p>
+                <a class="text-link{{ $dark ? ' text-link-light' : '' }}" href="{{ $reviewUrl }}" target="_blank" rel="noopener">Write a review on Google <span aria-hidden="true">↗</span></a>
             </div>
         @endif
     </div>
