@@ -115,10 +115,10 @@ class DigitalSoftwareModuleTest extends TestCase
 
         $this->get(route('digital-software.hospitality'))
             ->assertOk()
-            ->assertSee('Lodgix')
-            ->assertSee('Tour Operator Management Platform')
-            ->assertDontSee('A better digital front door and a clearer operation.')
-            ->assertDontSee('From guest experience to back-office workflow.')
+            ->assertDontSee('Lodgix')
+            ->assertDontSee('Tour Operator Management Platform')
+            ->assertSee('A better digital front door and a clearer operation.')
+            ->assertSee('From guest experience to back-office workflow.')
             ->assertSee('Tell us where the current workflow gets in the way.');
     }
 }

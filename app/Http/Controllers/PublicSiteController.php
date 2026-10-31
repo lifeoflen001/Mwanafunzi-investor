@@ -118,21 +118,8 @@ class PublicSiteController extends Controller
     {
         $module = BusinessUnit::query()->active()->where('slug', 'development')->firstOrFail();
         $page = $this->cmsPage('development');
-        $terms = ['hospital', 'lodge', 'safari', 'tourism', 'tour operator', 'travel'];
-        $projects = Project::published()
-            ->whereHas('services', fn ($query) => $query->where('business_unit_id', $module->id))
-            ->where(function ($query) use ($terms): void {
-                foreach ($terms as $term) {
-                    $query->orWhere('industry', 'like', '%'.$term.'%')->orWhere('project_type', 'like', '%'.$term.'%');
-                }
-            })
-            ->with(['services', 'gallery'])
-            ->orderBy('display_order')
-            ->orderByDesc('project_date')
-            ->paginate(9);
-        PublicHero::preloadMedia($projects->getCollection()->pluck('featured_image'));
 
-        return view('public.digital-software.hospitality', compact('module', 'page', 'projects'));
+        return view('public.digital-software.hospitality', compact('module', 'page'));
     }
 
     public function digitalProject(Project $project)
