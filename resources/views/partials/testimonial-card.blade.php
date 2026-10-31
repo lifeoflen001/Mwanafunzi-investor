@@ -4,9 +4,14 @@
     $quote = trim((string) $testimonial->testimonial);
     $sourceUrl = filter_var($testimonial->source_url, FILTER_VALIDATE_URL) ? $testimonial->source_url : null;
     $sourceHost = $sourceUrl ? strtolower((string) parse_url($sourceUrl, PHP_URL_HOST)) : '';
-    $sourceLabel = $sourceUrl && (str_contains($sourceHost, 'google.') || str_contains($sourceHost, 'g.page'))
-        ? 'Google review'
-        : ($sourceUrl ? 'Review source' : null);
+    $sourceLabel = match (true) {
+        $sourceUrl && (str_contains($sourceHost, 'google.') || str_contains($sourceHost, 'g.page')) => 'Google review',
+        $sourceUrl && str_contains($sourceHost, 'tripadvisor.') => 'Tripadvisor review',
+        $sourceUrl && str_contains($sourceHost, 'trustpilot.') => 'Trustpilot review',
+        $sourceUrl && str_contains($sourceHost, 'facebook.') => 'Facebook review',
+        $sourceUrl => 'Review source',
+        default => null,
+    };
 @endphp
 <article class="testimonial-card{{ $dark ? ' testimonial-card-dark' : '' }}">
     <div class="testimonial-card-identity">
@@ -32,6 +37,9 @@
         <button class="testimonial-card-more" type="button" data-testimonial-more aria-controls="{{ $quoteId }}" aria-expanded="false" hidden>Read more</button>
     </blockquote>
     @if($sourceUrl && $sourceLabel)
-        <a class="testimonial-card-origin" href="{{ $sourceUrl }}" target="_blank" rel="noopener" aria-label="View {{ strtolower($sourceLabel) }} from {{ $testimonial->displayName() }}">{{ $sourceLabel }} <span aria-hidden="true">↗</span></a>
+        <div class="testimonial-card-origin">
+            <span class="testimonial-card-origin-label">Source:</span>
+            <a href="{{ $sourceUrl }}" target="_blank" rel="noopener" aria-label="View {{ strtolower($sourceLabel) }} from {{ $testimonial->displayName() }}">{{ $sourceLabel }} <span aria-hidden="true">↗</span></a>
+        </div>
     @endif
 </article>

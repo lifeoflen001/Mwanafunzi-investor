@@ -125,6 +125,7 @@ class PortfolioTest extends TestCase
             ->assertSee('Rating: 4 out of 5')
             ->assertSee('Read more')
             ->assertSee('Confirmed client')
+            ->assertSee('Source:')
             ->assertSee('Google review')
             ->assertSee('Write a review on Google')
             ->assertDontSee('Project lead')
