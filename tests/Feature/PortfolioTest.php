@@ -117,16 +117,18 @@ class PortfolioTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('testimonial-card', false)
-            ->assertSee('data-testimonial-grid', false)
-            ->assertSee('data-testimonial-count="2"', false)
-            ->assertDontSee('data-carousel-next', false)
+            ->assertSee('data-testimonial-carousel', false)
+            ->assertSee('data-carousel-count="2"', false)
+            ->assertSee('data-carousel-next', false)
             ->assertSee('testimonial-section-heading', false)
             ->assertSee('Rating: 4 out of 5')
             ->assertSee('Read more')
-            ->assertSee('Confirmed client');
+            ->assertSee('Confirmed client')
+            ->assertDontSee('Project lead')
+            ->assertDontSee('Example organisation');
     }
 
-    public function test_testimonial_layout_changes_by_published_count_without_carousel_markup(): void
+    public function test_testimonial_carousel_keeps_one_card_compact_and_supports_internal_read_more(): void
     {
         Testimonial::create([
             'client_name' => 'Single confirmed client',
@@ -138,9 +140,10 @@ class PortfolioTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('testimonial-grid-count-1', false)
-            ->assertSee('testimonial-card-featured', false)
-            ->assertDontSee('role="group"', false);
+            ->assertSee('data-testimonial-carousel', false)
+            ->assertSee('data-carousel-count="1"', false)
+            ->assertSee('testimonial-card-text', false)
+            ->assertDontSee('data-carousel-next', false);
 
         foreach (['Second confirmed client', 'Third confirmed client'] as $name) {
             Testimonial::create([
@@ -154,10 +157,10 @@ class PortfolioTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('data-testimonial-count="3"', false)
-            ->assertSee('testimonial-grid-count-3', false)
-            ->assertDontSee('testimonial-card-featured', false)
-            ->assertDontSee('data-carousel-next', false);
+            ->assertSee('data-carousel-count="3"', false)
+            ->assertSee('data-carousel-next', false)
+            ->assertSee('data-carousel-prev', false)
+            ->assertSee('data-testimonial-more', false);
     }
 
     public function test_creative_studio_project_uses_editorial_gallery_without_repeating_featured_image(): void
