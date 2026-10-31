@@ -111,7 +111,9 @@ class PlatformRoutesTest extends TestCase
             ->assertSee('Creative Studio')
             ->assertSee('Contact us')
             ->assertDontSee('service-nav-label', false)
-            ->assertDontSee('Start a conversation');
+            ->assertDontSee('Start a conversation')
+            ->assertDontSee('Make room for the real.')
+            ->assertDontSee('Calm on set.');
     }
 
     public function test_client_login_surface_uses_accessible_auth_controls(): void

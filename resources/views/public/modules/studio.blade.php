@@ -7,8 +7,6 @@
     $services = $sections->get('services');
     $formats = $sections->get('formats');
     $testimonials = $sections->get('testimonials');
-    $approach = $sections->get('approach');
-    $process = $sections->get('process');
     $selectedWork = $sections->get('selected-work');
     $heroTitleHtml = $page->hero_highlight ? e($page->hero_title ?: $module->name).'<br> <em>'.e($page->hero_highlight).'</em>' : null;
     $cards = $services?->payload['cards'] ?? [];
@@ -63,25 +61,6 @@
         <section class="platform-dark platform-section testimonial-section testimonial-section-dark service-testimonials" id="testimonials" aria-labelledby="studio-testimonials-heading">
             <div class="container"><div class="testimonial-section-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ $testimonials->payload['eyebrow'] ?? 'Client perspective' }}</p><h2 id="studio-testimonials-heading">{{ $testimonials->heading }}</h2></div><div class="testimonial-section-description rich-copy">{!! \App\Support\RichText::render($testimonials->body) !!}</div></div>@include('partials.testimonial-carousel', ['testimonials' => $featuredTestimonials, 'dark' => true, 'carouselId' => 'studio-testimonials'])<a class="text-link text-link-light" href="{{ route('creative-studio.testimonials') }}">Explore studio testimonials <span aria-hidden="true">↗</span></a></div>
         </section>
-    @endif
-
-    @if($approach)
-        <section class="platform-muted platform-section studio-approach">
-            <div class="container two-column">
-                <div>
-                    <p class="eyebrow"><span class="eyebrow-line"></span> {{ $approach->payload['eyebrow'] ?? 'The approach' }}</p>
-                    <h2>{{ $approach->heading }}</h2>
-                </div>
-                <div class="studio-approach-copy">
-                    <div class="rich-copy">{!! \App\Support\RichText::render($approach->body) !!}</div>
-                    @if(!empty($approach->payload['list']))<ul class="check-list">@foreach($approach->payload['list'] as $item)<li>{{ $item }}</li>@endforeach</ul>@endif
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if($process)
-        <section class="platform-dark platform-section studio-process"><div class="container"><div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($process, 'eyebrow', 'From brief to delivery') }}</p><h2>{{ $process->heading }}</h2></div><div class="rich-copy">{!! \App\Support\RichText::render($process->body) !!}</div></div><div class="dev-process-grid">@foreach($process->payload['steps'] ?? [] as $step)<div class="dev-process-step"><span>{{ $step['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $step['title'] ?? '' }}</h3><p>{{ $step['body'] ?? '' }}</p></div>@endforeach</div></div></section>
     @endif
 
 @endsection
