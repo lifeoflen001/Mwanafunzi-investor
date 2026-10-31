@@ -19,10 +19,10 @@ class DigitalSoftwareModuleTest extends TestCase
     {
         $this->get(route('digital-systems'))
             ->assertOk()
-            ->assertSee('Hospitality &amp; Tourism', false)
             ->assertSee('View completed projects')
             ->assertSee('Capabilities')
-            ->assertSee(route('digital-software.projects'));
+            ->assertSee(route('digital-software.projects'))
+            ->assertDontSee('digital-hospitality-section', false);
     }
 
     public function test_published_digital_project_has_scoped_case_study_route(): void

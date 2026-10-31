@@ -290,7 +290,6 @@ class PlatformRoutesTest extends TestCase
     {
         $admin = User::factory()->create(['is_admin' => true]);
         $page = Page::where('key', 'development')->firstOrFail();
-        $hospitality = $page->sections()->where('key', 'hospitality')->firstOrFail();
         $selectedWork = $page->sections()->where('key', 'selected-work')->firstOrFail();
 
         $base = [
@@ -307,32 +306,30 @@ class PlatformRoutesTest extends TestCase
 
         $this->actingAs($admin)->put(route('admin.pages.update', $page), $base + [
             'sections' => [
-                $hospitality->id => ['sort_order' => $hospitality->sort_order, 'is_enabled' => 0],
                 $selectedWork->id => ['sort_order' => $selectedWork->sort_order, 'is_enabled' => 1, 'body' => ''],
             ],
         ])->assertRedirect();
 
         $hidden = $this->get(route('digital-systems'))->assertOk();
         $hidden->assertDontSee('digital-hospitality-section', false)
-            ->assertDontSee('Websites and operational systems for hospitality businesses.')
-            ->assertDontSee('Systems and digital products designed around real workflows, operational needs and business problems.');
+            ->assertDontSee('Websites and operational systems for hospitality businesses.');
 
         $this->actingAs($admin)->put(route('admin.pages.update', $page), $base + [
             'sections' => [
-                $hospitality->id => [
-                    'sort_order' => $hospitality->sort_order,
+                $selectedWork->id => [
+                    'sort_order' => $selectedWork->sort_order,
                     'is_enabled' => 1,
-                    'heading' => 'Verified hospitality systems',
+                    'heading' => 'Verified selected work',
                     'body' => 'CMS restored content.',
                 ],
             ],
         ])->assertRedirect();
 
         $visible = $this->get(route('digital-systems'))->assertOk();
-        $visible->assertSee('digital-hospitality-section', false)
-            ->assertSee('Verified hospitality systems')
+        $visible->assertDontSee('digital-hospitality-section', false)
+            ->assertSee('Verified selected work')
             ->assertSee('CMS restored content.');
-        $this->assertSame('', (string) $selectedWork->fresh()->body);
+        $this->assertSame('CMS restored content.', (string) $selectedWork->fresh()->body);
     }
 
     public function test_about_story_and_mission_vision_are_editable_from_page_cms(): void

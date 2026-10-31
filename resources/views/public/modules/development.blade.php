@@ -10,7 +10,6 @@
     $process = $sections->get('process');
     $finalCta = $sections->get('final_cta');
     $selectedWork = $sections->get('selected-work');
-    $hospitality = $sections->get('hospitality');
     $industriesSection = $sections->get('industries');
     $capabilityCards = collect($capabilities?->payload['cards'] ?? [])->values();
     $heroTitle = $page->hero_title ?: 'Websites and software built around real business operations.';
@@ -46,15 +45,6 @@
                 </div>
             </div>
         </section>
-    @endif
-
-    @if($hospitality)
-    <section class="platform-dark digital-hospitality-section" id="{{ \App\Support\CmsContent::value($hospitality, 'anchor_id', 'hospitality') }}" aria-labelledby="digital-hospitality-heading">
-        <div class="container">
-            <div class="split-heading"><div><p class="eyebrow eyebrow-light"><span class="eyebrow-line"></span> {{ \App\Support\CmsContent::value($hospitality, 'eyebrow', 'Hospitality & Tourism') }}</p><h2 id="digital-hospitality-heading">{{ $hospitality->heading }}</h2></div><div class="body-copy rich-copy">{!! \App\Support\RichText::render($hospitality->body) !!}@if($hospitality->cta_label)<a class="text-link text-link-light" href="{{ route('digital-software.projects') }}" target="{{ \App\Support\CmsContent::value($hospitality, 'cta_target', '_self') }}" @if(\App\Support\CmsContent::value($hospitality, 'cta_target', '_self') === '_blank') rel="noopener" @endif>{{ $hospitality->cta_label }} <span aria-hidden="true">↗</span></a>@endif</div></div>
-            <div class="digital-capability-grid digital-capability-grid-dark">@foreach($hospitality->payload['cards'] ?? [] as $card)<article><span>{{ $card['index'] ?? str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h3>{{ $card['title'] ?? '' }}</h3><p>{{ $card['body'] ?? '' }}</p>@if(!empty($card['tags']))<small>{{ $card['tags'] }}</small>@endif</article>@endforeach</div>
-        </div>
-    </section>
     @endif
 
     @if($capabilityCards->isNotEmpty())
