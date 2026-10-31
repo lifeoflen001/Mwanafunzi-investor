@@ -14,7 +14,7 @@
     $seoPageKey = match (request()->route()?->getName()) {
         'learn', 'courses', 'tools', 'journal', 'about', 'faqs', 'contact', 'student-of-money', 'development', 'studio' => request()->route()?->getName(),
         'forex-academy' => 'learn',
-        'digital-software', 'digital-software.products', 'digital-software.projects', 'digital-software.projects.show', 'digital-software.hospitality', 'digital-software.contact', 'digital-software.testimonials', 'digital-systems' => 'development',
+        'digital-software', 'digital-software.products', 'digital-software.projects', 'digital-software.projects.show', 'digital-software.contact', 'digital-software.testimonials', 'digital-systems' => 'development',
         'creative-studio', 'creative-studio.services', 'creative-studio.projects', 'creative-studio.testimonials' => 'studio',
         'legal' => request()->route('page'),
         default => null,

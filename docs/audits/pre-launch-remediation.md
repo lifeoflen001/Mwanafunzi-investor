@@ -74,7 +74,7 @@ The full route and workflow matrix is in `docs/audits/functional-test-matrix.md`
 ### Browser evidence
 
 - Admin routes `/admin`, `/admin/messages`, `/admin/studio/inquiries`, `/admin/faqs`, `/admin/media`, `/admin/courses`, `/admin/products`, `/admin/articles`, `/admin/pages`, `/admin/customers` and `/admin/newsletter` rendered without a 500/error page.
-- Public routes `/`, `/financial-academy`, `/financial-academy/courses`, `/financial-academy/tools`, `/digital-software`, `/digital-software/hospitality`, `/creative-studio`, `/creative-studio/services`, `/blog`, `/about`, `/contact` and all listed legal pages rendered with expected headings.
+- Public routes `/`, `/financial-academy`, `/financial-academy/courses`, `/financial-academy/tools`, `/digital-software`, `/creative-studio`, `/creative-studio/services`, `/blog`, `/about`, `/contact` and all listed legal pages rendered with expected headings. The former `/digital-software/hospitality` page was removed from the public route inventory.
 - FAQ create and edit completed in the browser with success feedback; no record was deleted.
 - Contact form empty-submit validation fired in the browser. A controlled `.test` contact submission persisted as `new` with consent in the local database; immediate browser confirmation was inconclusive after a browser protocol timeout, so this is not claimed as a browser success message.
 - Blog comment empty-submit validation fired; no comment was submitted.

@@ -56,7 +56,6 @@ Route::controller(PublicSiteController::class)->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('/financial-academy', 'academy')->name('forex-academy');
     Route::get('/digital-software', 'module')->defaults('slug', 'development')->name('digital-systems');
-    Route::get('/digital-software/hospitality', 'hospitality')->name('digital-software.hospitality');
     Route::get('/digital-software/products', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'products')->name('digital-software.products');
     Route::get('/digital-software/projects', 'moduleCollection')->defaults('slug', 'development')->defaults('collection', 'projects')->name('digital-software.projects');
     Route::get('/digital-software/projects/{project:slug}', 'digitalProject')->name('digital-software.projects.show');

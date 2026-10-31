@@ -114,14 +114,6 @@ class PublicSiteController extends Controller
         return view('public.modules.collection', compact('module', 'page', 'collection', 'services', 'projects', 'testimonials', 'projectFilters', 'industries', 'projectTypes'));
     }
 
-    public function hospitality()
-    {
-        $module = BusinessUnit::query()->active()->where('slug', 'development')->firstOrFail();
-        $page = $this->cmsPage('development');
-
-        return view('public.digital-software.hospitality', compact('module', 'page'));
-    }
-
     public function digitalProject(Project $project)
     {
         $module = BusinessUnit::query()->active()->where('slug', 'development')->firstOrFail();

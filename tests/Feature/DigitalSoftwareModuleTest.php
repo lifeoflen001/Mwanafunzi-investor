@@ -22,7 +22,7 @@ class DigitalSoftwareModuleTest extends TestCase
             ->assertSee('Hospitality &amp; Tourism', false)
             ->assertSee('View completed projects')
             ->assertSee('Capabilities')
-            ->assertSee(route('digital-software.hospitality'));
+            ->assertSee(route('digital-software.projects'));
     }
 
     public function test_published_digital_project_has_scoped_case_study_route(): void
@@ -113,12 +113,6 @@ class DigitalSoftwareModuleTest extends TestCase
             ));
         }
 
-        $this->get(route('digital-software.hospitality'))
-            ->assertOk()
-            ->assertDontSee('Lodgix')
-            ->assertDontSee('Tour Operator Management Platform')
-            ->assertSee('A better digital front door and a clearer operation.')
-            ->assertSee('From guest experience to back-office workflow.')
-            ->assertSee('Tell us where the current workflow gets in the way.');
+        $this->get('/digital-software/hospitality')->assertNotFound();
     }
 }
