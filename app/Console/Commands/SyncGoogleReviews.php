@@ -65,7 +65,6 @@ class SyncGoogleReviews extends Command
                 'project_id' => null,
                 'business_unit_id' => null,
                 'rating' => in_array((int) data_get($review, 'rating', 0), range(1, 5), true) ? (int) data_get($review, 'rating') : null,
-                'source_author_url' => data_get($review, 'authorAttribution.uri'),
                 'consent_confirmed' => true,
                 'consent_confirmed_at' => now(),
                 'consent_notes' => 'Imported from Google Places API; Google author and source attribution retained.',

@@ -42,7 +42,6 @@ class GoogleReviewsTest extends TestCase
             'client_name' => 'Google reviewer',
             'testimonial' => 'A published Google review.',
             'source_url' => 'https://www.google.com/maps/contrib/review-1',
-            'source_author_url' => 'https://www.google.com/maps/contrib/reviewer-1',
             'is_published' => true,
             'consent_confirmed' => true,
         ]);

@@ -18,7 +18,7 @@
             <div class="testimonial-card-avatar" aria-hidden="true">{{ strtoupper(substr($testimonial->displayName(), 0, 1)) }}</div>
         @endif
         <cite>
-            @if(filter_var($testimonial->source_author_url, FILTER_VALIDATE_URL))<a href="{{ $testimonial->source_author_url }}" target="_blank" rel="noopener"><strong>{{ $testimonial->displayName() }}</strong></a>@else<strong>{{ $testimonial->displayName() }}</strong>@endif
+            <strong>{{ $testimonial->displayName() }}</strong>
             @if($testimonial->testimonial_date)<time datetime="{{ $testimonial->testimonial_date->format('Y-m-d') }}">{{ $testimonial->testimonial_date->format('j F Y') }}</time>@endif
         </cite>
     </div>
