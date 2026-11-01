@@ -155,6 +155,43 @@ class SeoTest extends TestCase
         }
     }
 
+    public function test_production_seo_urls_use_the_configured_https_site_url(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+
+        config()->set([
+            'app.env' => 'production',
+            'app.debug' => false,
+            'seo.site_url' => 'https://mwanafunziinvestor.com',
+            'portals.enabled' => false,
+        ]);
+
+        $this->get('https://mwanafunziinvestor.com/')->assertOk()
+            ->assertSee('<link rel="canonical" href="https://mwanafunziinvestor.com/">', false)
+            ->assertSee('"url":"https://mwanafunziinvestor.com/"', false);
+    }
+
+    public function test_production_public_http_and_www_requests_redirect_to_https_canonical_host(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+
+        config()->set([
+            'app.env' => 'production',
+            'app.debug' => false,
+            'seo.site_url' => 'https://mwanafunziinvestor.com',
+            'portals.enabled' => true,
+            'portals.public_url' => 'https://mwanafunziinvestor.com',
+        ]);
+
+        $this->get('http://mwanafunziinvestor.com/about?source=legacy')
+            ->assertRedirect('https://mwanafunziinvestor.com/about?source=legacy')
+            ->assertStatus(301);
+
+        $this->get('https://www.mwanafunziinvestor.com/about')
+            ->assertRedirect('https://mwanafunziinvestor.com/about')
+            ->assertStatus(301);
+    }
+
     public function test_public_html_site_map_is_crawlable(): void
     {
         $this->get('/site-map')->assertOk()->assertSee('Find your way around.')->assertSee(route('blog'))->assertSee(route('legal', 'privacy-policy'));

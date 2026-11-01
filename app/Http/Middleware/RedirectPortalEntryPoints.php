@@ -22,6 +22,10 @@ class RedirectPortalEntryPoints
         $path = $trimmedPath === '' ? '/' : '/'.$trimmedPath;
 
         if (in_array($host, [$publicHost, 'www.'.$publicHost], true)) {
+            if ($redirect = $this->redirectToCanonicalPublicHost($request, $host, $publicHost, $path)) {
+                return $redirect;
+            }
+
             return $this->handlePublic($request, $next, $path);
         }
 
@@ -126,5 +130,24 @@ class RedirectPortalEntryPoints
         $query = $request->getQueryString();
 
         return redirect()->away($destination.($query ? '?'.$query : ''), 302);
+    }
+
+    private function redirectToCanonicalPublicHost(Request $request, string $host, string $publicHost, string $path): ?Response
+    {
+        if (! app()->environment('production') || config('app.debug') || ! $this->isReadRequest($request)) {
+            return null;
+        }
+
+        $forwardedProto = trim(strtolower((string) $request->headers->get('x-forwarded-proto')));
+        $scheme = $forwardedProto !== '' ? trim((string) explode(',', $forwardedProto)[0]) : strtolower($request->getScheme());
+        $canonicalBase = rtrim((string) config('portals.public_url', config('seo.site_url')), '/');
+
+        if ($host === $publicHost && $scheme === 'https') {
+            return null;
+        }
+
+        $query = $request->getQueryString();
+
+        return redirect()->away($canonicalBase.$path.($query ? '?'.$query : ''), 301);
     }
 }

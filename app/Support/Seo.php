@@ -32,9 +32,15 @@ class Seo
     public static function siteUrl(?string $path = null): string
     {
         $request = (! app()->runningInConsole() || app()->environment('testing')) && app()->bound('request') ? request() : null;
-        $base = $request
+        // Production SEO URLs must come from the configured canonical site URL,
+        // never from the host or scheme used by an individual request. This
+        // prevents HTTP, www, admin, and client-host requests from publishing
+        // alternate canonical URLs for the public site.
+        $base = app()->environment(['local', 'testing']) && $request
             ? $request->getSchemeAndHttpHost().$request->getBaseUrl()
-            : (string) (app()->environment(['local', 'testing']) ? config('app.url', 'http://localhost') : config('seo.site_url'));
+            : (string) (app()->environment(['local', 'testing'])
+                ? config('app.url', 'http://localhost')
+                : config('seo.site_url'));
 
         $base = rtrim($base, '/');
 
@@ -80,7 +86,7 @@ class Seo
             return static::siteUrl($path).$query;
         }
 
-        return static::siteUrl($url === '/' ? '' : $url);
+        return static::siteUrl($url === '/' ? '/' : $url);
     }
 
     public static function robots(?string $requested = null, bool $preview = false): string
