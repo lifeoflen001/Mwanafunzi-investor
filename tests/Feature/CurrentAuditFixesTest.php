@@ -36,6 +36,31 @@ class CurrentAuditFixesTest extends TestCase
         $this->get('/creative-studio/services/no-such-studio-service')->assertNotFound();
     }
 
+    public function test_public_faq_page_contains_grouped_service_answers_and_footer_link(): void
+    {
+        $response = $this->get(route('faqs'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Financial Academy')
+            ->assertSee('Digital Software')
+            ->assertSee('Creative Studio')
+            ->assertSee('data-faq-accordion', false)
+            ->assertSee('What does Financial Academy teach?')
+            ->assertSee('Who is Financial Academy for?')
+            ->assertSee('Does the Academy provide personal trading advice or guaranteed returns?')
+            ->assertSee('What kind of digital software projects do you take on?')
+            ->assertSee('Can you improve an existing website or business workflow?')
+            ->assertSee('How do Digital Software projects move from idea to delivery?')
+            ->assertSee('What does Creative Studio offer?')
+            ->assertSee('How do you plan a photography or video shoot?')
+            ->assertSee('How do I request a Creative Studio quote?')
+            ->assertSee('How do I contact Mwanafunzi Investor about a question not covered here?')
+            ->assertSee(route('faqs'));
+
+        $this->assertSame(10, substr_count($response->getContent(), 'data-faq-accordion'));
+    }
+
     public function test_active_studio_services_are_published_on_the_public_collection(): void
     {
         $studio = BusinessUnit::where('slug', 'studio')->firstOrFail();

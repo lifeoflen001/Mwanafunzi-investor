@@ -51,7 +51,7 @@
                     @empty
                         <a href="{{ route('blog') }}">Blog</a><a href="{{ route('about') }}">About</a><a href="{{ route('contact') }}">Contact</a>
                     @endforelse
-                    @foreach(['services' => 'Services', 'projects' => 'Projects', 'site-map' => 'Site map'] as $footerRoute => $footerLabel)
+                    @foreach(['services' => 'Services', 'projects' => 'Projects', 'faqs' => 'FAQs', 'site-map' => 'Site map'] as $footerRoute => $footerLabel)
                         @unless($companyLinks->contains(fn ($link) => rtrim($link->href(), '/') === rtrim(route($footerRoute), '/')))
                             <a href="{{ route($footerRoute) }}">{{ $footerLabel }}</a>
                         @endunless

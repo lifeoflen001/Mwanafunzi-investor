@@ -29,9 +29,9 @@
                 </div>
                 <div class="module-list">
                     @foreach($faqs as $faq)
-                        <details>
+                        <details class="faq-accordion" data-faq-accordion>
                             <summary>{{ $faq['question'] }} <span aria-hidden="true">+</span></summary>
-                            <p>{{ $faq['answer'] }}</p>
+                            <div class="faq-answer"><p>{{ $faq['answer'] }}</p></div>
                         </details>
                     @endforeach
                 </div>

@@ -423,8 +423,8 @@ class PublicSiteController extends Controller
         CourseFaq::with('course')->orderBy('sort_order')->orderBy('id')->get()
             ->filter(fn (CourseFaq $faq): bool => $faq->course && in_array($faq->course->status, ['published', 'open', 'coming_soon'], true))
             ->each(fn (CourseFaq $faq) => $items->push([
-                'target' => $faq->course->title,
-                'type' => 'Course',
+                'target' => 'Financial Academy',
+                'type' => 'Service',
                 'question' => $faq->question,
                 'answer' => $faq->answer,
                 'sort_order' => $faq->sort_order,
@@ -445,9 +445,18 @@ class PublicSiteController extends Controller
             })
             ->each(function (Faq $faq) use ($items): void {
                 $target = $faq->faqable;
+                $targetLabel = $target instanceof Page
+                    ? match ($target->key) {
+                        'development' => 'Digital Software',
+                        'studio' => 'Creative Studio',
+                        'faqs' => 'Mwanafunzi Investor',
+                        default => $target->name,
+                    }
+                    : ($target instanceof Product ? $target->name : ($target->title ?? $target->name));
                 $items->push([
-                    'target' => $target instanceof Product ? $target->name : ($target->title ?? $target->name),
+                    'target' => $targetLabel,
                     'type' => match (true) {
+                        $target instanceof Page && in_array($target->key, ['development', 'studio'], true) => 'Service',
                         $target instanceof Product => 'Digital tool',
                         $target instanceof LearningTopic => 'Learning path',
                         default => 'Platform',

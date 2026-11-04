@@ -556,6 +556,16 @@
 .module-list summary { display:flex; justify-content:space-between; cursor:pointer; font:500 22px var(--serif); }
 .module-list summary span { color:var(--copper); }
 .module-list details p { color:var(--muted); }
+.faq-accordion { overflow:hidden; }
+.faq-accordion>summary { list-style:none; }
+.faq-accordion>summary::-webkit-details-marker { display:none; }
+.faq-accordion>summary span { display:inline-block; transition:transform .25s ease; }
+.faq-accordion.is-open>summary span { transform:rotate(45deg); }
+.faq-answer { height:0; overflow:hidden; transition:height .28s ease; }
+.faq-answer p { margin:0; padding-top:12px; }
+@media (prefers-reduced-motion:reduce) {
+    .faq-accordion>summary span,.faq-answer { transition:none; }
+}
 .lesson-row { padding:10px 0; color:var(--muted); font:12px var(--mono); border-top:1px solid var(--line); }
 .platform-card-grid,.article-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
 .platform-card,.article-card { display:flex; flex-direction:column; min-height:310px; padding:28px; overflow:hidden; background:var(--white); border:1px solid var(--line); transition:transform .25s ease,box-shadow .25s ease; }

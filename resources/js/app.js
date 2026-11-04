@@ -38,6 +38,48 @@ menuToggle?.addEventListener('click', () => {
     if (menuToggle.getAttribute('aria-expanded') === 'true') closeMobileMenu();
     else openMobileMenu();
 });
+
+/* FAQ answers expand without jumping the page, while keeping native details semantics. */
+document.querySelectorAll('[data-faq-accordion]').forEach((details) => {
+    const summary = details.querySelector(':scope > summary');
+    const answer = details.querySelector(':scope > .faq-answer');
+    if (!summary || !answer) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finish = (opening) => {
+        answer.style.height = opening ? 'auto' : '0px';
+        details.classList.toggle('is-open', opening);
+    };
+
+    summary.addEventListener('click', (event) => {
+        event.preventDefault();
+        const opening = !details.open;
+        if (reducedMotion) {
+            details.open = opening;
+            finish(opening);
+            return;
+        }
+
+        if (opening) {
+            details.open = true;
+            answer.style.height = '0px';
+            details.classList.add('is-open');
+            requestAnimationFrame(() => { answer.style.height = `${answer.scrollHeight}px`; });
+        } else {
+            answer.style.height = `${answer.scrollHeight}px`;
+            requestAnimationFrame(() => {
+                details.classList.remove('is-open');
+                answer.style.height = '0px';
+            });
+        }
+    });
+
+    answer.addEventListener('transitionend', (event) => {
+        if (event.propertyName !== 'height') return;
+        if (!details.classList.contains('is-open')) details.open = false;
+        else answer.style.height = 'auto';
+    });
+});
 mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeMobileMenu(false)));
 document.addEventListener('click', (event) => {
     if (mobileMenu?.classList.contains('is-open') && !mobileMenu.contains(event.target) && !menuToggle?.contains(event.target)) closeMobileMenu();
