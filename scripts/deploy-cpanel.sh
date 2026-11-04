@@ -7,6 +7,7 @@ WEB=/home/mwanafun/public_html
 BASE=/home/mwanafun/deploy
 PHP=/usr/local/bin/php
 ID="${1:?Release ID required}"
+MIGRATION_PATH="${2:-}"
 
 [[ "$ID" =~ ^[a-f0-9]+-[0-9]+-[0-9]+$ ]] || exit 1
 
@@ -62,12 +63,23 @@ mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/ca
 
 "$PHP" artisan package:discover --no-ansi
 
-# Schema changes require a separately backed-up migration procedure.
+# Keep the normal deployment guard strict. An explicitly supplied migration path
+# is allowed only for a reviewed additive migration included in this release;
+# any other pending migration still stops the deployment before live files move.
 "$PHP" artisan migrate:status --no-ansi > "$IN/migrations.txt"
 if grep -Eq '(^|[[:space:]])Pending([[:space:]]|$)' "$IN/migrations.txt"; then
-    cat "$IN/migrations.txt"
-    echo "Pending database migrations found. Live files were not changed."
-    exit 1
+    if [[ -z "$MIGRATION_PATH" || ! -f "$IN/app/$MIGRATION_PATH" ]]; then
+        cat "$IN/migrations.txt"
+        echo "Pending database migrations found. Live files were not changed."
+        exit 1
+    fi
+
+    MIGRATION_NAME="$(basename "$MIGRATION_PATH" .php)"
+    if ! grep -F "$MIGRATION_NAME" "$IN/migrations.txt" | grep -Eq '(^|[[:space:]])Pending([[:space:]]|$)'; then
+        cat "$IN/migrations.txt"
+        echo "The explicitly requested migration is not the pending migration. Live files were not changed."
+        exit 1
+    fi
 fi
 
 # Private code backups. Database and persistent storage are not changed.
@@ -151,6 +163,12 @@ rsync -a "${PUBLIC_FILTERS[@]}" \
 
 rsync -a "${PUBLIC_FILTERS[@]}" \
     "$IN/app/public/" "$WEB/"
+
+# Apply only the explicitly reviewed additive migration, if one was supplied.
+# This runs while maintenance mode is active and before caches are rebuilt.
+if [[ -n "$MIGRATION_PATH" ]]; then
+    "$PHP" artisan migrate --force --path="$MIGRATION_PATH"
+fi
 
 # Remove only generated framework caches, then rebuild on the server.
 find "$LIVE/bootstrap/cache" -maxdepth 1 -type f -name '*.php' -delete
