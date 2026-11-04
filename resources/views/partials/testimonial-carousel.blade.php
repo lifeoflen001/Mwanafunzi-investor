@@ -20,8 +20,8 @@
             <div class="testimonial-carousel-controls">
                 <div class="testimonial-carousel-dots" data-carousel-dots aria-label="Choose testimonial"></div>
                 <div class="testimonial-carousel-arrows">
-                    <button class="testimonial-carousel-arrow" type="button" data-carousel-prev aria-label="Previous testimonials" disabled>←</button>
-                    <button class="testimonial-carousel-arrow" type="button" data-carousel-next aria-label="Next testimonials">→</button>
+                    <button class="testimonial-carousel-arrow" type="button" data-carousel-prev aria-label="Previous testimonials" disabled><span aria-hidden="true">←</span></button>
+                    <button class="testimonial-carousel-arrow" type="button" data-carousel-next aria-label="Next testimonials"><span aria-hidden="true">→</span></button>
                 </div>
             </div>
         @endif

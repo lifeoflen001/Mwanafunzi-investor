@@ -295,23 +295,31 @@ document.querySelectorAll('[data-testimonial-carousel]').forEach((carousel) => {
     let currentIndex = 0;
     let frame = null;
     const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const visibleCount = () => Math.max(1, Math.floor((viewport.clientWidth + 16) / Math.max(1, slides[0].getBoundingClientRect().width + 16)));
+    const gap = () => {
+        const styles = window.getComputedStyle(slides[0].parentElement);
+        return parseFloat(styles.columnGap || styles.gap) || 0;
+    };
+    const visibleCount = () => Math.max(1, Math.floor((viewport.clientWidth + gap()) / Math.max(1, slides[0].getBoundingClientRect().width + gap())));
     const lastIndex = () => Math.max(0, slides.length - visibleCount());
     const nearestIndex = () => {
-        const left = viewport.scrollLeft + 3;
+        const left = viewport.scrollLeft + (slides[0]?.offsetLeft || 0);
         return slides.reduce((nearest, slide, index) => Math.abs(slide.offsetLeft - left) < Math.abs(slides[nearest].offsetLeft - left) ? index : nearest, 0);
     };
-    const update = () => {
-        currentIndex = Math.max(0, Math.min(lastIndex(), nearestIndex()));
+    const update = (forcedIndex = null) => {
+        const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const atStart = viewport.scrollLeft <= 2;
+        const atEnd = viewport.scrollLeft >= maxScroll - 2;
+        currentIndex = forcedIndex === null
+            ? atStart ? 0 : atEnd ? lastIndex() : Math.max(0, Math.min(lastIndex(), nearestIndex()))
+            : Math.max(0, Math.min(lastIndex(), forcedIndex));
         if (previous) previous.disabled = currentIndex === 0;
         if (next) next.disabled = currentIndex >= lastIndex();
         dots?.querySelectorAll('button').forEach((dot, index) => dot.setAttribute('aria-current', String(index === currentIndex)));
     };
     const goTo = (index) => {
         const target = Math.max(0, Math.min(lastIndex(), index));
-        viewport.scrollTo({ left: slides[target]?.offsetLeft || 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-        currentIndex = target;
-        update();
+        viewport.scrollTo({ left: Math.max(0, (slides[target]?.offsetLeft || 0) - (slides[0]?.offsetLeft || 0)), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        update(target);
     };
     const renderDots = () => {
         if (!dots) return;
