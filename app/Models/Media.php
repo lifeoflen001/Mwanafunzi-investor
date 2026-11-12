@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class Media extends Model
 {
+    use SoftDeletes;
+
     public const STATUSES = ['published', 'unpublished', 'archived'];
 
     protected $table = 'media';

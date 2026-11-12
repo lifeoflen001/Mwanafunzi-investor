@@ -323,10 +323,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/faqs/{source}/{id}', [AdminFaqController::class, 'destroy'])->whereNumber('id')->name('faqs.manage.destroy');
         Route::get('/media/search', [MediaController::class, 'search'])->name('media.search');
         Route::get('/media', [MediaController::class, 'index'])->name('media');
+        Route::get('/media/trash', [MediaController::class, 'trash'])->name('media.trash');
         Route::post('/media', [MediaController::class, 'store'])->name('media.store');
         Route::post('/media/inline', [MediaController::class, 'inlineStore'])->name('media.inline.store');
         Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+        Route::post('/media/{media}/restore', [MediaController::class, 'restore'])->whereNumber('media')->name('media.restore');
+        Route::delete('/media/{media}/purge', [MediaController::class, 'purge'])->whereNumber('media')->name('media.purge');
         Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings');
         Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
         Route::get('/settings/security', [SiteSettingsController::class, 'security'])->name('settings.security');

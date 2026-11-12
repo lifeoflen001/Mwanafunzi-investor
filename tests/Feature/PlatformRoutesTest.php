@@ -857,7 +857,9 @@ class PlatformRoutesTest extends TestCase
         Storage::fake('public');
         $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('editorial.jpg', 120, 'image/jpeg'), 'alt_text' => 'Editorial desk', 'title' => 'Editorial desk'])->assertRedirect();
         $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('unsafe.svg', 10, 'image/svg+xml'), 'alt_text' => 'Unsafe vector'])->assertSessionHasErrors('file');
+        $this->actingAs($admin)->post(route('admin.media.store'), ['file' => UploadedFile::fake()->create('editorial.mp4', 120, 'video/mp4'), 'alt_text' => 'Editorial video'])->assertRedirect();
         $this->assertDatabaseHas('media', ['filename' => 'editorial.jpg', 'alt_text' => 'Editorial desk']);
+        $this->assertDatabaseHas('media', ['filename' => 'editorial.mp4', 'mime_type' => 'video/mp4', 'alt_text' => 'Editorial video']);
         $this->actingAs($admin)->get(route('admin.media.search', ['q' => 'editorial']))->assertOk()->assertJsonPath('0.label', 'editorial.jpg');
         $this->actingAs($admin)->get(route('admin.media', ['q' => 'editorial', 'type' => 'image']))->assertOk()->assertSee('Editorial desk');
 
@@ -931,9 +933,9 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)
             ->delete(route('admin.media.destroy', $media), ['delete_files' => '0'])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Media record removed; stored files were kept.');
+            ->assertSessionHas('success', 'Media moved to trash. Stored files can be restored or permanently deleted from the trash.');
 
-        $this->assertDatabaseMissing('media', ['id' => $media->id]);
+        $this->assertSoftDeleted('media', ['id' => $media->id]);
         Storage::disk('public')->assertExists($media->path);
         $this->assertDatabaseHas('team_members', ['id' => $member->id, 'portrait' => $media->path]);
     }
@@ -957,14 +959,23 @@ class PlatformRoutesTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.media'))
             ->assertOk()
-            ->assertSee('Remove record only')
-            ->assertSee('Delete files too');
+            ->assertSee('Move to trash')
+            ->assertSee(route('admin.media.trash'));
 
         $this->actingAs($admin)
             ->delete(route('admin.media.destroy', $media), ['delete_files' => '1'])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Media and its stored files were deleted.');
+            ->assertSessionHas('success', 'Media moved to trash. Stored files can be restored or permanently deleted from the trash.');
 
+        $this->assertSoftDeleted('media', ['id' => $media->id]);
+        Storage::disk('public')->assertExists('media/original.jpg');
+        Storage::disk('public')->assertExists('media/variants/original-480.webp');
+
+        $this->actingAs($admin)->get(route('admin.media.trash'))->assertOk()->assertSee('original.jpg');
+        $this->actingAs($admin)->post(route('admin.media.restore', $media->id))->assertRedirect();
+        $this->assertDatabaseHas('media', ['id' => $media->id, 'deleted_at' => null]);
+        $this->actingAs($admin)->delete(route('admin.media.destroy', $media), ['delete_files' => '0'])->assertRedirect();
+        $this->actingAs($admin)->delete(route('admin.media.purge', $media->id))->assertRedirect()->assertSessionHas('success', 'Media and its stored files were permanently deleted.');
         $this->assertDatabaseMissing('media', ['id' => $media->id]);
         Storage::disk('public')->assertMissing('media/original.jpg');
         Storage::disk('public')->assertMissing('media/variants/original-480.webp');

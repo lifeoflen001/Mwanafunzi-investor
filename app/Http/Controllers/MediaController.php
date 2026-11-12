@@ -66,9 +66,18 @@ class MediaController extends Controller
         ]);
     }
 
+    public function trash()
+    {
+        $media = Media::onlyTrashed()->with('uploader')->latest('deleted_at')->paginate(24);
+        return view('admin.media.trash', [
+            'media' => $media,
+            'usageCounts' => Media::usageCountsFor($media->getCollection()),
+        ]);
+    }
+
     public function store(Request $request, MediaService $mediaService)
     {
-        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000'], 'source' => ['nullable', 'string', 'max:500'], 'copyright_owner' => ['nullable', 'string', 'max:190'], 'license' => ['nullable', 'string', 'max:190'], 'license_url' => ['nullable', 'url', 'max:500'], 'attribution_required' => ['nullable', 'boolean'], 'attribution_text' => ['nullable', 'string', 'max:500'], 'internal_usage_notes' => ['nullable', 'string', 'max:2000'], 'rights_verified' => ['nullable', 'boolean'], 'status' => ['nullable', 'in:published,unpublished,archived']]);
+        $data = $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,avif,mp4,webm,mov,ogv,m4v', 'max:51200'], 'title' => ['nullable', 'string', 'max:190'], 'alt_text' => ['required', 'string', 'max:190'], 'caption' => ['nullable', 'string', 'max:1000'], 'source' => ['nullable', 'string', 'max:500'], 'copyright_owner' => ['nullable', 'string', 'max:190'], 'license' => ['nullable', 'string', 'max:190'], 'license_url' => ['nullable', 'url', 'max:500'], 'attribution_required' => ['nullable', 'boolean'], 'attribution_text' => ['nullable', 'string', 'max:500'], 'internal_usage_notes' => ['nullable', 'string', 'max:2000'], 'rights_verified' => ['nullable', 'boolean'], 'status' => ['nullable', 'in:published,unpublished,archived']]);
         $file = $request->file('file');
         $media = $mediaService->store($file, 'media', $data['alt_text'], $data['title'] ?? null);
         $media->update(['uploaded_by' => $request->user()->id, ...collect($data)->except('file')->all(), 'attribution_required' => $request->boolean('attribution_required'), 'rights_verified' => $request->boolean('rights_verified')]);
@@ -114,7 +123,7 @@ class MediaController extends Controller
             'internal_usage_notes' => ['nullable', 'string', 'max:2000'],
             'rights_verified' => ['nullable', 'boolean'],
             'status' => ['nullable', 'in:published,unpublished,archived'],
-            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif', 'max:8192'],
+            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,avif,mp4,webm,mov,ogv,m4v', 'max:51200'],
         ]);
         if ($request->hasFile('file')) {
             $file = $request->file('file');
@@ -166,6 +175,26 @@ class MediaController extends Controller
         $filename = $media->filename;
         $mediaService->delete($media, $deleteFiles);
         AdminAudit::record('media.deleted', ($deleteFiles ? 'Deleted media and stored files ' : 'Removed media record while keeping stored files ').$filename, $media);
-        return back()->with('success', $deleteFiles ? 'Media and its stored files were deleted.' : 'Media record removed; stored files were kept.');
+        return back()->with('success', 'Media moved to trash. Stored files can be restored or permanently deleted from the trash.');
+    }
+
+    public function restore(int $media)
+    {
+        $asset = Media::onlyTrashed()->findOrFail($media);
+        $asset->restore();
+        AdminAudit::record('media.restored', 'Restored media '.$asset->filename, $asset);
+        return back()->with('success', 'Media restored to the library.');
+    }
+
+    public function purge(int $media, MediaService $mediaService)
+    {
+        $asset = Media::onlyTrashed()->findOrFail($media);
+        if ($asset->usageCount() > 0) {
+            return back()->withErrors(['media' => 'This asset is still referenced by content. Restore it and replace those references before permanently deleting it.']);
+        }
+        $filename = $asset->filename;
+        $mediaService->purge($asset);
+        AdminAudit::record('media.purged', 'Permanently deleted media '.$filename, $asset);
+        return back()->with('success', 'Media and its stored files were permanently deleted.');
     }
 }

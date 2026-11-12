@@ -132,4 +132,4 @@ jobs:
             "$TARGET:$REMOTE/"
 
           ssh "${OPTIONS[@]}" -p "$SSH_PORT" "$TARGET" \
-            "bash '$REMOTE/deploy-cpanel.sh' '$RELEASE' 'database/migrations/2026_11_04_000001_seed_public_service_faqs.php'"
+            "bash '$REMOTE/deploy-cpanel.sh' '$RELEASE' 'database/migrations/2026_11_12_000001_add_soft_deletes_to_media.php'"

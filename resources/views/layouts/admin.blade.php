@@ -46,7 +46,8 @@
                         <a class="{{ request()->routeIs('admin.categories*') ? 'is-active' : '' }}" href="{{ route('admin.categories') }}"><span class="portal-nav-icon" aria-hidden="true">#</span><span>Categories</span></a>
                         <a class="{{ request()->routeIs('admin.tags*') ? 'is-active' : '' }}" href="{{ route('admin.tags') }}"><span class="portal-nav-icon" aria-hidden="true">⌘</span><span>Tags</span></a>
                         <a class="{{ request()->routeIs('admin.faqs*') ? 'is-active' : '' }}" href="{{ route('admin.faqs') }}"><span class="portal-nav-icon" aria-hidden="true">?</span><span>FAQs</span></a>
-                        <a class="{{ request()->routeIs('admin.media*') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span><span>Media library</span></a>
+                        <a class="{{ request()->routeIs('admin.media') ? 'is-active' : '' }}" href="{{ route('admin.media') }}"><span class="portal-nav-icon" aria-hidden="true">▧</span><span>Media library</span></a>
+                        <a class="{{ request()->routeIs('admin.media.trash') ? 'is-active' : '' }}" href="{{ route('admin.media.trash') }}"><span class="portal-nav-icon" aria-hidden="true">♻</span><span>Media trash</span></a>
                     </nav>
                 </div>
 

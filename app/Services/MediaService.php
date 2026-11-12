@@ -39,13 +39,19 @@ class MediaService
      */
     public function delete(Media $media, bool $deleteFiles = true): void
     {
-        if ($deleteFiles) {
-            Storage::disk($media->disk ?: 'public')->delete($media->path);
-            foreach ($media->variants ?? [] as $variant) {
-                if (! empty($variant['path'])) Storage::disk($media->disk ?: 'public')->delete($variant['path']);
-            }
-        }
+        // Keep the stored asset available for restore. Physical deletion is
+        // intentionally deferred to purge() from the admin trash view.
         $media->delete();
+    }
+
+    public function purge(Media $media): void
+    {
+        $disk = Storage::disk($media->disk ?: 'public');
+        $disk->delete($media->path);
+        foreach ($media->variants ?? [] as $variant) {
+            if (! empty($variant['path'])) $disk->delete($variant['path']);
+        }
+        $media->forceDelete();
     }
 
     private function variants(UploadedFile $file, string $path, array $dimensions): array
