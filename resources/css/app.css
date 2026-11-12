@@ -2341,9 +2341,12 @@ body.studio-gallery-open { overflow:hidden; }
 
 .team-social-links { align-items:center; }
 .team-social-label { margin-right:4px; color:var(--copper-dark); font:500 10px var(--mono); letter-spacing:.1em; text-transform:uppercase; }
-/* Keep About portraits intentionally compact while preserving the complete supplied image. */
-.team-section .team-grid { grid-template-columns:repeat(2,minmax(0,380px)); justify-content:center; gap:24px; }
+/* Keep the complete supplied portraits compact while showing the full team in one desktop row. */
+.team-section .team-grid { grid-template-columns:repeat(3,minmax(0,1fr)); justify-content:center; gap:24px; }
 .team-section .team-card-media { aspect-ratio:1/1.04; padding:18px; }
+@media (max-width:980px) and (min-width:761px) {
+    .team-section .team-grid { grid-template-columns:repeat(2,minmax(0,380px)); }
+}
 @media (max-width:760px) {
     .team-section .team-grid { grid-template-columns:minmax(0,380px); }
     .team-section .team-card-media { padding:16px; }
